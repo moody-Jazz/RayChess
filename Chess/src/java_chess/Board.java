@@ -1,103 +1,77 @@
 package java_chess;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-
-import javax.swing.ImageIcon;
-import javax.swing.JPanel;
-
-public class Board extends JPanel implements MouseListener, MouseMotionListener {
-
-	private static final long serialVersionUID = 1L;
-
-	static int x; // coordinate x
-	static int y; // coordinate y
-
-	static int squareSize = 90;
-
-	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		this.setBackground(Color.white);
-		this.addMouseListener(this);
-		this.addMouseMotionListener(this);
-
-		drawBoard(g);
-		drawPieces(g);
-
-	}
-
-	void drawBoard(Graphics g) {
-		for (int i = 0; i < 64; i += 2) {
-			g.setColor(new Color(245, 245, 220));
-			g.fillRect((i % 8 + (i / 8) % 2) * squareSize, (i / 8) * squareSize, squareSize, squareSize);
-			g.setColor(new Color(130, 102, 68));
-			g.fillRect(((i + 1) % 8 - ((i + 1) / 8) % 2) * squareSize, ((i + 1) / 8) * squareSize, squareSize,
-					squareSize);
-		}
-	}
+public class Board {
 	
-	public void drawPieces(Graphics g) {
-		Image chessPieceImage;
-		chessPieceImage = new ImageIcon("ChessPieces.png").getImage();
-		for (int i = 0; i < 64; i++) {
-			int r = -1, c = -1;
-			switch (Main.chessBoard[i / 8][i % 8]) {
-			case "P": r = 0; c = 5; break;
-			case "p": r = 1; c = 5; break;
-			case "R": r = 0; c = 4; break;
-			case "r": r = 1; c = 4; break;
-			case "K": r = 0; c = 3; break;
-			case "k": r = 1; c = 3; break;
-			case "B": r = 0; c = 2; break;
-			case "b": r = 1; c = 2; break;
-			case "Q": r = 0; c = 1; break;
-			case "q": r = 1; c = 1; break;
-			case "A": r = 0; c = 0; break;
-			case "a": r = 1; c = 0; break;
+	static String chessBoard[][] = { 
+			{ "r", "k", "b", "q", "a", "b", "k", "r" },
+			{ "p", "p", "p", "p", "p", "p", "p", "p" },
+			{ " ", " ", " ", " ", " ", " ", " ", " " },
+			{ " ", " ", " ", " ", " ", " ", " ", " " }, 
+			{ " ", " ", " ", " ", " ", " ", " ", " " },
+			{ " ", " ", " ", " ", " ", " ", " ", " " },
+			{ "P", "P", "P", "P", "P", "P", "P", "P" },
+			{ "R", "K", "B", "Q", "A", "B", "K", "R" } };
+	
+	static int whiteKingPosition, blackKingPosition;
+
+
+	public static void flipBoard() {
+		String temp;
+		for (int i = 0; i < 32; i++) {
+			int r = i / 8, c = i % 8;
+			if (Character.isUpperCase(chessBoard[r][c].charAt(0))) {
+				temp = chessBoard[r][c].toLowerCase();
+			} else {
+				temp = chessBoard[r][c].toUpperCase();
 			}
-			if (r != -1 && c != -1)
-//            	g.drawImage(chessPieceImage, (i%8)*squareSize, (i/8)*squareSize, squareSize, squareSize, this);
-				g.drawImage(chessPieceImage, (i % 8) * squareSize, (i / 8) * squareSize, (i % 8 + 1) * squareSize,
-						(i / 8 + 1) * squareSize, c * 200, r * 200, (c + 1) * 200, (r + 1) * 200, this);
+			if (Character.isUpperCase(chessBoard[7 - r][7 - c].charAt(0))) {
+				chessBoard[r][c] = chessBoard[7 - r][7 - c].toLowerCase();
+			} else {
+				chessBoard[r][c] = chessBoard[7 - r][7 - c].toUpperCase();
+			}
+			chessBoard[7 - r][7 - c] = temp;
+		}
+		int kingTemp = whiteKingPosition;
+		whiteKingPosition = 63 - blackKingPosition;
+		blackKingPosition = 63 - kingTemp;
+	}
+
+	public static void makeMove(String move) {
+		if (move.charAt(4) != 'P') {
+			chessBoard[Character.getNumericValue(move.charAt(2))][Character
+					.getNumericValue(move.charAt(3))] = chessBoard[Character.getNumericValue(move.charAt(0))][Character
+							.getNumericValue(move.charAt(1))];
+			chessBoard[Character.getNumericValue(move.charAt(0))][Character.getNumericValue(move.charAt(1))] = " ";
+			if ("A".equals(
+					chessBoard[Character.getNumericValue(move.charAt(2))][Character.getNumericValue(move.charAt(3))])) {
+				whiteKingPosition = 8 * Character.getNumericValue(move.charAt(2))
+						+ Character.getNumericValue(move.charAt(3));
+			}
+		} else {
+			// if pawn promotion
+			chessBoard[1][Character.getNumericValue(move.charAt(0))] = " ";
+			chessBoard[0][Character.getNumericValue(move.charAt(1))] = String.valueOf(move.charAt(3));
 		}
 	}
 
-	@Override
-	public void mouseMoved(MouseEvent e) {
-		x = e.getX();
-		y = e.getY();
-		repaint();
+	public static void undoMove(String move) {
+		if (move.charAt(4) != 'P') {
+			chessBoard[Character.getNumericValue(move.charAt(0))][Character
+					.getNumericValue(move.charAt(1))] = chessBoard[Character.getNumericValue(move.charAt(2))][Character
+							.getNumericValue(move.charAt(3))];
+			chessBoard[Character.getNumericValue(move.charAt(2))][Character.getNumericValue(move.charAt(3))] = String
+					.valueOf(move.charAt(4));
+			if ("A".equals(
+					chessBoard[Character.getNumericValue(move.charAt(0))][Character.getNumericValue(move.charAt(1))])) {
+				whiteKingPosition = 8 * Character.getNumericValue(move.charAt(0))
+						+ Character.getNumericValue(move.charAt(1));
+			}
+		} else {
+			// if pawn promotion
+			chessBoard[1][Character.getNumericValue(move.charAt(0))] = "P";
+			chessBoard[0][Character.getNumericValue(move.charAt(1))] = String.valueOf(move.charAt(2));
+		}
 	}
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-	}
 
-	@Override
-	public void mouseReleased(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		x = e.getX();
-		y = e.getY();
-		repaint();
-	}
-
-	@Override
-	public void mouseDragged(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-	}
 }
