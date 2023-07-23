@@ -2,7 +2,7 @@ package java_chess;
 
 public class Engine {
 
-	static int globalDepth = 2;
+	static int globalDepth =3;
 	
 	public static String posibleMoves() {
 		String list = "";

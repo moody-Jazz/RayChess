@@ -161,7 +161,6 @@ public class BoardGUI extends JPanel implements MouseListener, MouseMotionListen
 //			System.out.println(mouseClickedY);
 		}
 	}
-
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		if (e.getX() < 8 * squareSize && e.getY() < 8 * squareSize) {
@@ -186,6 +185,7 @@ public class BoardGUI extends JPanel implements MouseListener, MouseMotionListen
 					// if valid move
 					Board.makeMove(dragMove);
 					Board.flipBoard();
+					repaint();
 					Board.makeMove(Engine.alphaBeta(Engine.globalDepth, 1000000, -1000000, "", 0));
 					Board.flipBoard();
 					repaint();
