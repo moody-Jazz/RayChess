@@ -71,18 +71,18 @@ public class Rating {
 			{ -30, -30, 0, 0, 0, 0, -30, -30 },
 			{ -50, -30, -30, -30, -30, -30, -30, -50 } };
 
-	public static int rating(int list, int depth) {
+	public static int rating(int listLength, int depth) {
 		int counter = 0, material;
 		material = rateMaterial();
 		counter += rateAttack();
 		counter += material;
-		counter += rateMoveablitly(list, depth, material);
+		counter += rateMoveablitly(listLength, depth, material);
 		counter += ratePositional(material);
 		Board.flipBoard();
 		material = rateMaterial();
 		counter -= rateAttack();
 		counter -= material;
-		counter -= rateMoveablitly(list, depth, material);
+		counter -= rateMoveablitly(listLength, depth, material);
 		counter -= ratePositional(material);
 		Board.flipBoard();
 		return -(counter + depth * 50);

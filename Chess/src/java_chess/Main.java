@@ -2,6 +2,7 @@ package java_chess;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.IOException;
 
 import javax.swing.*;
 
@@ -17,7 +18,8 @@ public class Main {
 		f.add(ui);
 		Dimension ss = Toolkit.getDefaultToolkit().getScreenSize();
 		Dimension frameSize = new Dimension(610, 635);
-		f.setBounds(ss.width / 2 - frameSize.width / 2, ss.height / 2 - frameSize.height / 2, frameSize.width, frameSize.height);
+		f.setBounds(ss.width / 2 - frameSize.width / 2, ss.height / 2 - frameSize.height / 2, frameSize.width,
+				frameSize.height);
 		f.setVisible(true);
 
 		Object[] option = { "Computer", "Human" };
@@ -29,7 +31,7 @@ public class Main {
 			Board.flipBoard();
 			f.repaint();
 		}
-		System.out.println(Engine.posibleMoves());
+//		System.out.println(Engine.posibleMoves());
 		/*
 		 * // for (int i = 0; i < 8; i++) { //
 		 * System.out.println(Arrays.toString(Board.chessBoard[i])); // }
