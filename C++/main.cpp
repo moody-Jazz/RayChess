@@ -5,7 +5,7 @@ const unsigned int tileSize = 120;
 void drawBoard(){
     Color light{218,217,233,255},
           dark{161,123,185,255},
-          tileColor;  
+          tileColor;
 
     //coloring the board
     for(int row{}; row<8; row++){
