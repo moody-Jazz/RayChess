@@ -7,44 +7,46 @@ typedef struct Piece
 {
     char type;
     Texture2D texture;
-    Vector2 position;
+    int row;
+    int col;
 } Piece;
 
 Piece piece[32];
 
-void InitializePiece(Piece *piece, char type, Texture2D texture, Vector2 position)
+void InitializePiece(Piece *piece, char type, Texture2D texture, int row, int col)
 {
     piece->type = type;
     piece->texture = texture;
-    piece->position = position;
+    piece->row = row;
+    piece->col = col;
 }
 // Function to initialize all pieces
 void InitializePieces(Texture2D texture[])
 {
     // pieceTexture[12] contains the texture of pieces in this order: [br, bk, bb, bq, bking, bpawn, wpawn, wr, wk, wb, wq, wking]
     // Initialize black pieces
-    InitializePiece(&piece[0], 'r', texture[0], (Vector2){0, 0}); // Rook
-    InitializePiece(&piece[1], 'n', texture[1], (Vector2){1, 0}); // Knight
-    InitializePiece(&piece[2], 'b', texture[2], (Vector2){2, 0}); // Bishop
-    InitializePiece(&piece[3], 'q', texture[3], (Vector2){3, 0}); // Queen
-    InitializePiece(&piece[4], 'k', texture[4], (Vector2){4, 0}); // King
-    InitializePiece(&piece[5], 'b', texture[2], (Vector2){5, 0}); // Bishop
-    InitializePiece(&piece[6], 'n', texture[1], (Vector2){6, 0}); // Knight
-    InitializePiece(&piece[7], 'r', texture[0], (Vector2){7, 0}); // Rook
+    InitializePiece(&piece[0], 'r', texture[0], 0,0); // Rook
+    InitializePiece(&piece[1], 'n', texture[1], 0,1); // Knight
+    InitializePiece(&piece[2], 'b', texture[2], 0,2); // Bishop
+    InitializePiece(&piece[3], 'q', texture[3], 0,3); // Queen
+    InitializePiece(&piece[4], 'k', texture[4], 0,4); // King
+    InitializePiece(&piece[5], 'b', texture[2], 0,5); // Bishop
+    InitializePiece(&piece[6], 'n', texture[1], 0,6); // Knight
+    InitializePiece(&piece[7], 'r', texture[0], 0,7); // Rook
     for (int i = 0; i < 8; i++)
-        InitializePiece(&piece[8 + i], 'p', texture[5], (Vector2){i, 1}); // Pawns
+        InitializePiece(&piece[8 + i], 'p', texture[5], 1,i); // Pawns
 
     // Initialize white pieces
-    InitializePiece(&piece[16], 'R', texture[7], (Vector2){0, 7});  // Rook
-    InitializePiece(&piece[17], 'N', texture[8], (Vector2){1, 7});  // Knight
-    InitializePiece(&piece[18], 'B', texture[9], (Vector2){2, 7});  // Bishop
-    InitializePiece(&piece[19], 'Q', texture[10], (Vector2){3, 7}); // Queen
-    InitializePiece(&piece[20], 'K', texture[11], (Vector2){4, 7}); // King
-    InitializePiece(&piece[21], 'B', texture[9], (Vector2){5, 7});  // Bishop
-    InitializePiece(&piece[22], 'N', texture[8], (Vector2){6, 7});  // Knight
-    InitializePiece(&piece[23], 'R', texture[7], (Vector2){7, 7});  // Rook
+    InitializePiece(&piece[16], 'R', texture[7], 7,0);  // Rook
+    InitializePiece(&piece[17], 'N', texture[8], 7,1);  // Knight
+    InitializePiece(&piece[18], 'B', texture[9], 7,2);  // Bishop
+    InitializePiece(&piece[19], 'Q', texture[10], 7,3); // Queen
+    InitializePiece(&piece[20], 'K', texture[11], 7,4); // King
+    InitializePiece(&piece[21], 'B', texture[9], 7,5);  // Bishop
+    InitializePiece(&piece[22], 'N', texture[8], 7,6);  // Knight
+    InitializePiece(&piece[23], 'R', texture[7], 7,7);  // Rook
     for (int i = 0; i < 8; i++)
-        InitializePiece(&piece[24 + i], 'P', texture[6], (Vector2){i, 6}); // Pawns
+        InitializePiece(&piece[24 + i], 'P', texture[6], 6,i); // Pawns
 }
 
 void loadTextures()
@@ -78,51 +80,61 @@ void updateBoard()
     }
     for (int i{}; i < 32; i++)
     {
-        DrawTexture(piece[i].texture, piece[i].position.x * tileSize, piece[i].position.y * tileSize, WHITE);
+        DrawTexture(piece[i].texture, piece[i].col * tileSize, piece[i].row * tileSize, WHITE);
     }
-}
+} 
+
+int clickedOnRow = -1, clickedOnCol = -1;
+int releasedOnTileRow = -1, releasedOnTileCol = -1;
+bool pieceSelected = false;
+Piece* currPiece = nullptr;
 void mouseDragHandler()
 {
-    int pressedMousePosX = -1, pressedMousePosY = -1;
-    int releasedMousePosX = -1, releasedMousePosY = -1;
-    bool pieceSelected;
-    Piece currPiece;
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-    {
-        pressedMousePosX = GetMousePosition().x;
-        pressedMousePosY = GetMousePosition().y;
-        pressedMousePosX /= tileSize;
-        pressedMousePosY /= tileSize;
-
-        // draw an outline and highlight the square bieng clicked
-        Color temp = {255, 150, 84, 100};
-        DrawRectangle(pressedMousePosX * tileSize, pressedMousePosY * tileSize, tileSize, tileSize, temp);
-        Rectangle rec = {pressedMousePosX * tileSize, pressedMousePosY * tileSize, tileSize, tileSize};
-        DrawRectangleLinesEx(rec, 4, WHITE);
-
-        // if clicked on a piece a creat a copy of that piece so that we can update its position and all in future
+    // if a piece is bieng clicked copy it into the currPiece and change the cursor  
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+        clickedOnRow = (int)GetMousePosition().y/tileSize; // this will give the row of the tile clicked
+        clickedOnCol = (int)GetMousePosition().x/tileSize; // this will give the column of the tile clicked
+        // std::cout<<pressedMousePosX<<" "<<pressedMousePosY<<std::endl;
         for (int i{}; i < 32; i++)
         {
-            if ((piece[i].position.x == pressedMousePosX) && (piece[i].position.y == pressedMousePosY))
-            {
-                InitializePiece(&currPiece, piece[i].type, piece[i].texture, piece[i].position);
+            if ((piece[i].row == clickedOnRow) && (piece[i].col == clickedOnCol))
+            {   std::cout<<"true"<<std::endl; 
+                currPiece = &piece[i];
                 pieceSelected = true;
-                std::cout<<currPiece.type<<std::endl;
+                SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+                // draw an outline and highlight the square bieng clicked
+                Color temp = {255, 150, 84, 100};
+                DrawRectangle(clickedOnCol * tileSize, clickedOnRow * tileSize, tileSize, tileSize, temp);
+                std::cout<<currPiece->type<<std::endl;
                 break;
             }
         }
-        std::cout << pressedMousePosX << " " << pressedMousePosY << std::endl;
+    }
+    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
+    {
+        clickedOnRow = GetMousePosition().y/tileSize;
+        clickedOnCol = GetMousePosition().x/tileSize;
+        Rectangle rec = {clickedOnCol * tileSize, clickedOnRow * tileSize, tileSize, tileSize};
+        DrawRectangleLinesEx(rec, 4, WHITE);
+        std::cout <<currPiece->type<<" "<< clickedOnRow << " " << clickedOnCol << std::endl;
         // if piece is dragged redraw its textures
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
-        {
-            DrawTexture(currPiece.texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
-        }
+        DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
+
     }
     if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
     {
+        SetMouseCursor(MOUSE_CURSOR_ARROW);
+        bool isMouseInsideVertically = GetMousePosition().y >= 0 && GetMousePosition().y < GetScreenWidth(),
+             isMouseInsideHorizontally = GetMousePosition().x >= 0 && GetMousePosition().x < GetScreenHeight();
+        // if mouse is holding a piece and released inside the board update the position of the piece 
+        if(isMouseInsideHorizontally && isMouseInsideVertically && pieceSelected){
+            releasedOnTileCol = GetMousePosition().x/tileSize;
+            releasedOnTileRow = GetMousePosition().y/tileSize;
+            currPiece->row = releasedOnTileRow;
+            currPiece->col = releasedOnTileCol;
+        }     
+        currPiece = nullptr;
         pieceSelected = false;
-        releasedMousePosX = GetMousePosition().x;
-        releasedMousePosY = GetMousePosition().y;
     }
 }
 
@@ -131,9 +143,10 @@ int main()
     InitWindow(tileSize * 8, tileSize * 8, "Chess");
     SetTargetFPS(30);
     loadTextures();
-    // for (int i{}; i < 32; i++) print the intial position of every piece
+    //print the intial position of every piece
+    // for (int i{}; i < 32; i++) 
     // {
-    //     std::cout << piece[i].type << " " << piece[i].position.x << " " << piece[i].position.y << std::endl;
+    //     std::cout << piece[i].type << " " << piece[i].row << " " << piece[i].col << std::endl;
     // }
     while (!WindowShouldClose())
     {
