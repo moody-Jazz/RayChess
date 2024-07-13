@@ -127,17 +127,16 @@ void updateBoard()
         DrawTexture(piece[i].texture, piece[i].col * tileSize, piece[i].row * tileSize, WHITE);
     }
 } 
-
-int clickedOnRow = -1, clickedOnCol = -1;
-int releasedOnTileRow = -1, releasedOnTileCol = -1;
-bool pieceSelected = false;
-Piece* currPiece = nullptr;
-
 Piece* isThereA_Piece(int x, int y){
      for (int i{}; i < totalPiece; i++)
             if ((piece[i].row == x) && (piece[i].col == y)) return &piece[i]; 
     return nullptr;
 }
+
+int clickedOnRow = -1, clickedOnCol = -1;
+int releasedOnTileRow = -1, releasedOnTileCol = -1;
+bool pieceSelected = false;
+Piece* currPiece = nullptr;
 
 void mouseInputHandler()
 {
@@ -160,19 +159,20 @@ void mouseInputHandler()
     }
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
     {
-        clickedOnRow = (int)GetMousePosition().y / tileSize;
-        clickedOnCol = (int)GetMousePosition().x / tileSize;
         Rectangle rec = {
-            static_cast<float>(clickedOnCol) * tileSize,
-            static_cast<float>(clickedOnRow) * tileSize,
+            static_cast<float>((int)GetMousePosition().x / tileSize) * tileSize,
+            static_cast<float>((int)GetMousePosition().y / tileSize) * tileSize,
             tileSize,
             tileSize
         };
+
         DrawRectangleLinesEx(rec, 4, WHITE);
+        // draw an outline and highlight the square bieng clicked
+        Color temp = {255, 150, 84, 100};
+        DrawRectangle((float)clickedOnCol * tileSize, (float)clickedOnRow * tileSize, tileSize, tileSize, temp);
         // std::cout <<currPiece->type<<" "<< clickedOnRow << " " << clickedOnCol << std::endl;
         // if piece is dragged redraw its textures
         DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
-
     }
     if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && pieceSelected)
     {
@@ -206,7 +206,7 @@ void mouseInputHandler()
                 releasedOnPiece->texture = piece[totalPiece-1].texture;
                 totalPiece--;
             }
-        }
+        }        
         releasedOnPiece = nullptr;     
         currPiece = nullptr;
         pieceSelected = false;
