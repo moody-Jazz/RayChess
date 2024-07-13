@@ -2,7 +2,49 @@
 #include <string>
 #include <iostream>
 const unsigned int tileSize = 100;
+class GameSound
+{
+    private:
+        Sound defaultMove,
+            capture,
+            castle,
+            check,
+            gameEnd;
+          
+    public:
+        GameSound(){
+            InitAudioDevice();
+            defaultMove = LoadSound("../Assets/sounds/default.wav");
+            capture = LoadSound("../Assets/sounds/capture.wav");
+            castle = LoadSound("../Assets/sounds/castle.wav");
+            check = LoadSound("../Assets/sounds/check.wav");
+            gameEnd = LoadSound("../Assets/sounds/gameEnd.wav");
+        }
+        ~GameSound(){
+            // Unload the music streams when they're no longer needed
+            UnloadSound(defaultMove);
+            UnloadSound(capture);
+            UnloadSound(castle);
+            UnloadSound(check);
+            UnloadSound(gameEnd);
 
+            CloseAudioDevice(); // Close the audio device
+        }
+        void playCapture(){
+            PlaySound(capture);
+        }
+        void playDefault(){
+            PlaySound(defaultMove);
+        }
+        void playCastle(){
+            PlaySound(castle);
+        }
+        void playCheck(){
+            PlaySound(check);
+        }
+    
+};
+    GameSound sound;
 typedef struct Piece
 {
     char type;
@@ -53,8 +95,8 @@ void InitializePieces(Texture2D texture[])
 
 void loadTextures()
 {
-    std::string pieceDir[] = {"../Assets/blackRook.png", "../Assets/blackKnight.png", "../Assets/blackBishop.png", "../Assets/blackQueen.png", "../Assets/blackKing.png", "../Assets/blackPawn.png",
-                              "../Assets/whitePawn.png", "../Assets/whiteRook.png", "../Assets/whiteKnight.png", "../Assets/whiteBishop.png", "../Assets/whiteQueen.png", "../Assets/whiteKing.png"};
+    std::string pieceDir[] = {"../Assets/images/blackRook.png", "../Assets/images/blackKnight.png", "../Assets/images/blackBishop.png", "../Assets/images/blackQueen.png", "../Assets/images/blackKing.png", "../Assets/images/blackPawn.png",
+                              "../Assets/images/whitePawn.png", "../Assets/images/whiteRook.png", "../Assets/images/whiteKnight.png", "../Assets/images/whiteBishop.png", "../Assets/images/whiteQueen.png", "../Assets/images/whiteKing.png"};
     Texture2D pieceTexture[12]; //[br, bk, bb, bq, bking, bpawn, wpawn, wr, wk, wb, wq, wking]
 
     for (int i{}; i < 12; i++)
@@ -97,7 +139,7 @@ Piece* isThereA_Piece(int x, int y){
     return nullptr;
 }
 
-void mouseDragHandler()
+void mouseInputHandler()
 {
     // if a piece is bieng clicked copy it into the currPiece and change the cursor  
     if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
@@ -113,7 +155,7 @@ void mouseDragHandler()
             // draw an outline and highlight the square bieng clicked
             Color temp = {255, 150, 84, 100};
             DrawRectangle((float)clickedOnCol * tileSize, (float)clickedOnRow * tileSize, tileSize, tileSize, temp);
-            std::cout<<currPiece->type<<std::endl;
+            //std::cout<<currPiece->type<<std::endl;
         }
     }
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
@@ -127,12 +169,12 @@ void mouseDragHandler()
             tileSize
         };
         DrawRectangleLinesEx(rec, 4, WHITE);
-        std::cout <<currPiece->type<<" "<< clickedOnRow << " " << clickedOnCol << std::endl;
+        // std::cout <<currPiece->type<<" "<< clickedOnRow << " " << clickedOnCol << std::endl;
         // if piece is dragged redraw its textures
         DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
 
     }
-    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && pieceSelected)
     {
         SetMouseCursor(MOUSE_CURSOR_ARROW);
         releasedOnTileCol = GetMousePosition().x/tileSize;
@@ -148,19 +190,21 @@ void mouseDragHandler()
         if(isMouseInsideHorizontally && isMouseInsideVertically && pieceSelected){
 
             if(isPieceReleasedOnEmptyTile){    
+                sound.playDefault();
                 currPiece->row = releasedOnTileRow;
                 currPiece->col = releasedOnTileCol;
             }
 
             // if enemy piece is captured then put the captured piece at the end of the array and decrease the size till which updateBoard have acess 
             else if(isPieceReleasedOnEnemyTile){
+                sound.playCapture();
                 currPiece->row = releasedOnTileRow;
                 currPiece->col = releasedOnTileCol;
-                totalPiece--;
                 releasedOnPiece->row = piece[totalPiece-1].row;
                 releasedOnPiece->col = piece[totalPiece-1].col;
                 releasedOnPiece->type = piece[totalPiece-1].type;
                 releasedOnPiece->texture = piece[totalPiece-1].texture;
+                totalPiece--;
             }
         }
         releasedOnPiece = nullptr;     
@@ -174,16 +218,19 @@ int main()
     InitWindow(tileSize * 8, tileSize * 8, "Chess");
     SetTargetFPS(60);
     loadTextures();
+
     //print the intial position of every piece
     // for (int i{}; i < 32; i++) 
     // {
     //     std::cout << piece[i].type << " " << piece[i].row << " " << piece[i].col << std::endl;
     // }
+    
     while (!WindowShouldClose())
-    {
+    {      
         BeginDrawing();
-        updateBoard();
-        mouseDragHandler();
+        ClearBackground(RAYWHITE);
+        updateBoard();;
+        mouseInputHandler();
         EndDrawing();
     }
     CloseWindow();
