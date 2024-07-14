@@ -1,50 +1,10 @@
 #include "include/raylib.h"
+#include "gamesound.hpp"
 #include <string>
 #include <iostream>
 const unsigned int tileSize = 100;
-class GameSound
-{
-    private:
-        Sound defaultMove,
-            capture,
-            castle,
-            check,
-            gameEnd;
-          
-    public:
-        GameSound(){
-            InitAudioDevice();
-            defaultMove = LoadSound("../Assets/sounds/default.wav");
-            capture = LoadSound("../Assets/sounds/capture.wav");
-            castle = LoadSound("../Assets/sounds/castle.wav");
-            check = LoadSound("../Assets/sounds/check.wav");
-            gameEnd = LoadSound("../Assets/sounds/gameEnd.wav");
-        }
-        ~GameSound(){
-            // Unload the music streams when they're no longer needed
-            UnloadSound(defaultMove);
-            UnloadSound(capture);
-            UnloadSound(castle);
-            UnloadSound(check);
-            UnloadSound(gameEnd);
 
-            CloseAudioDevice(); // Close the audio device
-        }
-        void playCapture(){
-            PlaySound(capture);
-        }
-        void playDefault(){
-            PlaySound(defaultMove);
-        }
-        void playCastle(){
-            PlaySound(castle);
-        }
-        void playCheck(){
-            PlaySound(check);
-        }
-    
-};
-    GameSound sound;
+GameSound sound;
 typedef struct Piece
 {
     char type;
@@ -226,7 +186,7 @@ int main()
     // }
     
     while (!WindowShouldClose())
-    {      
+    {   if(IsKeyPressed(KEY_SPACE)){sound.playCapture();std::cout<<"space clicked"; }   
         BeginDrawing();
         ClearBackground(RAYWHITE);
         updateBoard();;
