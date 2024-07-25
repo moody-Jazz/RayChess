@@ -174,7 +174,28 @@ u64 king_attack_bitmask(int square){
     return attacks;
 }
 //generate bishop attacks
-u64 bishop_attack_bitmask(int square, u64 block){
+u64 bishop_attack_bitmask(int square){
+    u64 attacks = 0ULL;
+    int r, f;
+    int tr = square/8;
+    int tf = square % 8; 
+
+    for(r = tr +1, f = tf+1; r<=6 && f<=6; r++, f++){
+        attacks |= (1ULL << (r*8+f));
+    } 
+    for(r = tr -1, f = tf+1; r>=1 && f<=6; r--, f++){
+        attacks |= (1ULL << (r*8+f));
+    }
+    for(r = tr +1, f = tf-1; r<=6 && f>=1; r++, f--){
+        attacks |= (1ULL << (r*8+f));
+    }
+    for(r = tr -1, f = tf-1; r>=1 && f>=1; r--, f--){
+        attacks |= (1ULL << (r*8+f));
+    } 
+
+    return attacks;
+}
+u64 bishop_attack_onthefly(int square, u64 block){
     u64 attacks = 0ULL;
     int r, f;
     int tr = square/8;
@@ -200,7 +221,7 @@ u64 bishop_attack_bitmask(int square, u64 block){
     return attacks;
 }
 //generate rook attacks
-u64 rook_attack_bitmask(int square, u64 ){
+u64 rook_attack_bitmask(int square){
     u64 attacks = 0ULL;
 
     int r,f;
@@ -211,6 +232,32 @@ u64 rook_attack_bitmask(int square, u64 ){
     for(r = tr-1; r>= 1; r--) attacks |= (1ULL << (r*8 +tf));
     for(f = tf + 1; f<=6; f++) attacks |= (1ULL << (tr *8 +f));
     for(f = tf - 1; f>=1; f--) attacks |= (1ULL << (tr *8 +f));
+    return attacks;
+}
+u64 rook_attack_onthefly(int square, u64 block){
+    u64 attacks = 0ULL;
+
+    int r,f;
+    int tr = square / 8;
+    int tf = square % 8;
+
+    for(r = tr+1; r<= 7; r++) {
+        attacks |= (1ULL << (r*8 +tf));
+        if((1ULL << (r*8 +tf)) & block) break;
+
+    }
+    for(r = tr-1; r>= 0; r--) {
+        attacks |= (1ULL << (r*8 +tf));
+        if((1ULL << (r*8 +tf)) & block) break;
+    }
+    for(f = tf + 1; f<=7; f++) {
+        attacks |= (1ULL << (tr *8 +f));
+        if((1ULL << (tr *8 +f)) & block) break;
+    }
+    for(f = tf - 1; f>=0; f--) {
+        attacks |= (1ULL << (tr *8 +f));
+        if((1ULL << (tr *8 +f)) & block) break;
+    }
     return attacks;
 }
 
@@ -237,7 +284,15 @@ int main(){
     init_leapers_attacks();
     u64 block = 0ULL;
     set_bit(block, e5);
-    print_bb(bishop_attack_bitmask(a1,block));
+    print_bb(rook_attack_onthefly(e3, block));
+    // for(int rank{} ; rank<8; rank++){
+    //     for(int file{}; file<8; file++){
+    //         int square = file+rank*8;
+    //         cout<<couint_bits(bishop_attack_bitmask(square));
+    //     }
+    //     cout<<endl;
+    // }
+    // cout<<endl<<"   a b c d e f g h"<<endl<<endl;
     // for(int i = 8; i>=1; i--)
     //cout<<'a'<<i<<", "<<'b'<<i<<", "<<'c'<<i<<", "<<'d'<<i<<", "<<'e'<<i<<", "<<'f'<<i<<", "<<'g'<<i<<", "<<'h'<<i<<", " <<endl;
     
