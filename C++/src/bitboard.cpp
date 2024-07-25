@@ -279,12 +279,25 @@ void init_leapers_attacks(){
         // rook_attacks[square] = rook_attack_bitmask(square);
     }
 }
+//***********************************************************************************************************
+
+static int count_bits(u64 bitboard){
+    int count{};
+    // keep reseting least significatn 1st bit until bitboard is 0
+    while(bitboard){
+        bitboard = bitboard & bitboard -1;
+        count++;
+    }
+    return count;
+}
+
 //*******************************************main********************************************
 int main(){
     init_leapers_attacks();
     u64 block = 0ULL;
     set_bit(block, e5);
     print_bb(rook_attack_onthefly(e3, block));
+    cout<<count_bits(rook_attack_onthefly(e3, block));
     // for(int rank{} ; rank<8; rank++){
     //     for(int file{}; file<8; file++){
     //         int square = file+rank*8;
