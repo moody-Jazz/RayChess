@@ -23,7 +23,16 @@ enum{
     a2, b2, c2, d2, e2, f2, g2, h2,
     a1, b1, c1, d1, e1, f1, g1, h1
 };
-
+std::string coordinate[] = {
+    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+    "a7", "b7", "c7", "d7", "e7", "f7", "g7"," h7",
+    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
+};
 enum{white, black};
 
 //print the bit board***********************************************************************
@@ -281,7 +290,7 @@ void init_leapers_attacks(){
 }
 //***********************************************************************************************************
 
-static int count_bits(u64 bitboard){
+static inline int count_bits(u64 bitboard){
     int count{};
     // keep reseting least significatn 1st bit until bitboard is 0
     while(bitboard){
@@ -290,14 +299,17 @@ static int count_bits(u64 bitboard){
     }
     return count;
 }
+static inline int get_lsb_index(u64 bitboard){
+    return bitboard ? count_bits((bitboard & -bitboard) - 1) : -1;
+}
+// ***********************************************************************************************
 
 //*******************************************main********************************************
 int main(){
     init_leapers_attacks();
     u64 block = 0ULL;
-    set_bit(block, e5);
-    print_bb(rook_attack_onthefly(e3, block));
-    cout<<count_bits(rook_attack_onthefly(e3, block));
+    set_bit(block, d3);
+    cout<<coordinate[get_lsb_index(block)];
     // for(int rank{} ; rank<8; rank++){
     //     for(int file{}; file<8; file++){
     //         int square = file+rank*8;
@@ -306,7 +318,4 @@ int main(){
     //     cout<<endl;
     // }
     // cout<<endl<<"   a b c d e f g h"<<endl<<endl;
-    // for(int i = 8; i>=1; i--)
-    //cout<<'a'<<i<<", "<<'b'<<i<<", "<<'c'<<i<<", "<<'d'<<i<<", "<<'e'<<i<<", "<<'f'<<i<<", "<<'g'<<i<<", "<<'h'<<i<<", " <<endl;
-    
 }
