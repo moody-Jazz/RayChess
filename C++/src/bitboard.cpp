@@ -105,6 +105,37 @@ not_ab_file:
        a b c d e f g h
 */const u64 not_ab_file = 18229723555195321596ULL;
 
+////////////////////////////////////Random magic number////////////////////////////////////////////////////////
+// pseudo random number state
+unsigned int random_state = 1804289383;
+// generate 32-bit pseudo legal number
+unsigned int get_rand_u32_num(){
+    unsigned int num = random_state;
+    // xor shift algo
+    num ^= num << 13;
+    num ^= num >> 17;
+    num ^= num << 5;
+    // update random number state
+    random_state = num;
+    return num;
+}
+u64 get_rand_u64_num(){
+    u64 n1,n2,n3,n4;
+    n1 = (u64)(get_rand_u32_num() & 0xFFFF);// slicing upper 16 bits
+    n2 = (u64)(get_rand_u32_num() & 0xFFFF);
+    n3 = (u64)(get_rand_u32_num() & 0xFFFF);
+    n4 = (u64)(get_rand_u32_num() & 0xFFFF);
+
+    return n1 | (n2<<16) | (n3<<32) | (n4<<48);
+}
+u64 generate_magin_num(){
+    get_rand_u64_num()&get_rand_u64_num()&get_rand_u64_num();
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
 //*******************************************************************************************************
 
 // attack table
@@ -115,6 +146,27 @@ u64 rook_attacks[64];
 u64 bishop_attacks[64];
 u64 queen_attacks[64];
 
+// tables for all occupancy bit count on all possible square
+const int bishop_occupancy_table[64] = {
+    6, 5, 5, 5, 5, 5, 5, 6, 
+    5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5, 
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    6, 5, 5, 5, 5, 5, 5, 6
+};
+const int rook_occupancy_table[64] = {
+    12, 11, 11, 11, 11, 11, 11, 12, 
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    12, 11, 11, 11, 11, 11, 11, 12
+};
 // generate pawn attacks
 u64 pawn_attack_bitmask(int side, int square){
     
@@ -304,16 +356,27 @@ static inline int get_lsb_index(u64 bitboard){
 }
 // ***********************************************************************************************
 
+u64 set_occupency(int index, int mask_bitcount, u64 attack_mask){
+    // occupancy map
+    u64 occupancy = 0ULL;
+    for(int count{}; count<mask_bitcount; count++){
+        int square = get_lsb_index(attack_mask);
+
+        pop_bit(attack_mask, square); // reset first bit in attack map
+        if(index & (1<<count))  occupancy |= (1ULL << square);
+    }
+
+    return occupancy;
+}
 //*******************************************main********************************************
+
 int main(){
     init_leapers_attacks();
-    u64 block = 0ULL;
-    set_bit(block, d3);
-    cout<<coordinate[get_lsb_index(block)];
+    print_bb(generate_magin_num());
     // for(int rank{} ; rank<8; rank++){
     //     for(int file{}; file<8; file++){
     //         int square = file+rank*8;
-    //         cout<<couint_bits(bishop_attack_bitmask(square));
+    //         cout<<count_bits(rook_attack_bitmask(square))<<", ";
     //     }
     //     cout<<endl;
     // }
