@@ -1,4 +1,5 @@
-#include<iostream>
+#include<bits/stdc++.h>
+#include<stdio.h>
 using namespace std;
 
 
@@ -34,6 +35,7 @@ std::string coordinate[] = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
 };
 enum{white, black};
+enum{rook, bishop};
 
 //print the bit board***********************************************************************
 void print_bb(u64 bitboard){
@@ -105,36 +107,6 @@ not_ab_file:
        a b c d e f g h
 */const u64 not_ab_file = 18229723555195321596ULL;
 
-////////////////////////////////////Random magic number////////////////////////////////////////////////////////
-// pseudo random number state
-unsigned int random_state = 1804289383;
-// generate 32-bit pseudo legal number
-unsigned int get_rand_u32_num(){
-    unsigned int num = random_state;
-    // xor shift algo
-    num ^= num << 13;
-    num ^= num >> 17;
-    num ^= num << 5;
-    // update random number state
-    random_state = num;
-    return num;
-}
-u64 get_rand_u64_num(){
-    u64 n1,n2,n3,n4;
-    n1 = (u64)(get_rand_u32_num() & 0xFFFF);// slicing upper 16 bits
-    n2 = (u64)(get_rand_u32_num() & 0xFFFF);
-    n3 = (u64)(get_rand_u32_num() & 0xFFFF);
-    n4 = (u64)(get_rand_u32_num() & 0xFFFF);
-
-    return n1 | (n2<<16) | (n3<<32) | (n4<<48);
-}
-u64 generate_magin_num(){
-    get_rand_u64_num()&get_rand_u64_num()&get_rand_u64_num();
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
 
 //*******************************************************************************************************
 
@@ -146,27 +118,6 @@ u64 rook_attacks[64];
 u64 bishop_attacks[64];
 u64 queen_attacks[64];
 
-// tables for all occupancy bit count on all possible square
-const int bishop_occupancy_table[64] = {
-    6, 5, 5, 5, 5, 5, 5, 6, 
-    5, 5, 5, 5, 5, 5, 5, 5,
-    5, 5, 7, 7, 7, 7, 5, 5,
-    5, 5, 7, 9, 9, 7, 5, 5,
-    5, 5, 7, 9, 9, 7, 5, 5, 
-    5, 5, 7, 7, 7, 7, 5, 5,
-    5, 5, 5, 5, 5, 5, 5, 5,
-    6, 5, 5, 5, 5, 5, 5, 6
-};
-const int rook_occupancy_table[64] = {
-    12, 11, 11, 11, 11, 11, 11, 12, 
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    12, 11, 11, 11, 11, 11, 11, 12
-};
 // generate pawn attacks
 u64 pawn_attack_bitmask(int side, int square){
     
@@ -369,10 +320,137 @@ u64 set_occupency(int index, int mask_bitcount, u64 attack_mask){
     return occupancy;
 }
 //*******************************************main********************************************
+// tables for all occupancy bit count on all possible square
+const int bishop_occupancy_table[64] = {
+    6, 5, 5, 5, 5, 5, 5, 6, 
+    5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5, 
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    6, 5, 5, 5, 5, 5, 5, 6
+};
+const int rook_occupancy_table[64] = {
+    12, 11, 11, 11, 11, 11, 11, 12, 
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    12, 11, 11, 11, 11, 11, 11, 12
+};
 
+// rook magic numbars
+u64 rook_magic_numbers[64];
+
+// bishop magic numbers
+u64 bishop_magic_numbers[64];
+////////////////////////////////////Random magic number////////////////////////////////////////////////////////
+// pseudo random number state
+unsigned int random_state = 1804289383;
+// generate 32-bit pseudo legal number
+unsigned int get_rand_u32_num(){
+    unsigned int num = random_state;
+    // xor shift algo
+    num ^= num << 13;
+    num ^= num >> 17;
+    num ^= num << 5;
+    // update random number state
+    random_state = num;
+    return num;
+}
+u64 get_rand_u64_num(){
+    u64 n1,n2,n3,n4;
+    n1 = (u64)(get_rand_u32_num() & 0xFFFF);// slicing upper 16 bits
+    n2 = (u64)(get_rand_u32_num() & 0xFFFF);
+    n3 = (u64)(get_rand_u32_num() & 0xFFFF);
+    n4 = (u64)(get_rand_u32_num() & 0xFFFF);
+
+    return n1 | (n2<<16) | (n3<<32) | (n4<<48);
+}
+u64 generate_magic_num(){
+    return get_rand_u64_num() & get_rand_u64_num() & get_rand_u64_num();
+}
+
+
+///////////////////////////////////////Maigcs//////////////////////////////////////////////////////////
+
+// find appropriate magic number
+u64 find_magic_num(int square, int relevant_bits, int bishop){
+    // init occupancies
+    u64 occupancies[4096]; // array of size 4096 can fit number of occupancies for rook as well as bishop
+    // init attack tables
+    u64 attacks[4096];
+
+    // init used attacks
+    u64 used_attacks[4096];
+
+    // init attack mask for a current piece
+    u64 attack_mask = bishop? bishop_attack_bitmask(square): rook_attack_bitmask(square);
+    
+    // init occupancy indices
+    int occupancy_indicies = 1 << relevant_bits;
+
+    // loop over occupancy indicies
+    for(int ind{}; ind<occupancy_indicies; ind++){
+        // init occupancies
+        occupancies[ind] = set_occupency(ind, relevant_bits, attack_mask);
+        // init attacks
+        attacks[ind] = bishop? bishop_attack_onthefly(square, occupancies[ind]):
+                                rook_attack_onthefly(square, occupancies[ind]);
+    }
+    // test magic numbers loop
+    for(int random_count{}; random_count < 100000000; random_count++){
+        //generate magic number candidate
+        u64 magic_number = generate_magic_num();
+        // skip inappropriate magic numbers
+        if(count_bits((attack_mask* magic_number) & 0xFF00000000000000) < 6) continue;
+        //init used attacks
+        memset(used_attacks, 0ULL, sizeof(used_attacks));
+
+        // init index & fail flag
+        int index, fail;
+        // init index and fail flag
+        for(index = 0, fail = 0; !fail && index < occupancy_indicies; index++){
+            // init magic index
+            int magic_index = (int) ((occupancies[index] * magic_number) >> (64 - relevant_bits));
+            // if magic index works
+            if(used_attacks[magic_index] == 0ULL)
+                used_attacks[magic_index] = attacks[index]; // init used attacks
+            else if(used_attacks[magic_index] != attacks[index])
+                fail = 1;
+        }
+        if(!fail) return magic_number;
+    }
+    cout<<"magic number fails"<<endl;
+    return 0ULL;
+}   
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// init magic number
+void init_magic_num(){
+    // loop over 64 boards square print three magic numbers and then endline
+    int count{};
+    for(int square{}; square<64; square++){
+        count++;
+        printf(" 0x%llxULL, ",find_magic_num(square, rook_occupancy_table[square], rook));
+    if(count == 3){cout<<endl; count = 0;}
+    }
+    cout<<endl<<endl<<endl;
+    count = 0;
+    for(int square{}; square<64; square++){
+        count++;
+        printf(" 0x%llxULL, ",find_magic_num(square, bishop_occupancy_table[square], bishop));
+        if(count == 3){cout<<endl; count = 0;}
+    }
+}
 int main(){
     init_leapers_attacks();
-    print_bb(generate_magin_num());
+    print_bb(generate_magic_num());
+    init_magic_num();
     // for(int rank{} ; rank<8; rank++){
     //     for(int file{}; file<8; file++){
     //         int square = file+rank*8;
