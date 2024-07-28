@@ -9,9 +9,9 @@ using namespace std;
 
 
 // define macros***********************************************************************************
-#define get_bit(bitboard, square) (bitboard & (1ULL <<square))
-#define set_bit(bitboard,square) (bitboard |= (1ULL << square))
-#define pop_bit(bitboard, square) (get_bit(bitboard, square)? bitboard^=(1ULL<< square):0)
+#define get_bit(bitboard, square) ((bitboard) & (1ULL <<(square)))
+#define set_bit(bitboard,square) ((bitboard) |= (1ULL << (square)))
+#define pop_bit(bitboard, square) ((bitboard) &= -(1ULL << (square)))
 
 // enum definitions ***********************************************************************************************
 enum{
@@ -22,8 +22,11 @@ enum{
     a4, b4, c4, d4, e4, f4, g4, h4,
     a3, b3, c3, d3, e3, f3, g3, h3,
     a2, b2, c2, d2, e2, f2, g2, h2,
-    a1, b1, c1, d1, e1, f1, g1, h1
+    a1, b1, c1, d1, e1, f1, g1, h1, no_sq
 };
+// encode pieces
+enum{P,N,B,R,Q,K,p,n,b,r,q,k};
+
 std::string coordinate[] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
     "a7", "b7", "c7", "d7", "e7", "f7", "g7"," h7",
@@ -34,6 +37,45 @@ std::string coordinate[] = {
     "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
 };
+
+// ASCII pieces
+string ascii_pieces = "PNBRQKpnbrqk";
+// unicode pieces
+char unicode_pieces[12] = {'P','N','B','Q','K','p','n','b','r','q','k'};
+// convert ascii char pieces to encode constants
+// int char_pieces[] = {
+//     ['P'] = P,
+//     ['N'] = N,
+//     ['B'] = B,
+//     ['R'] = R,
+//     ['Q'] = Q,
+//     ['K'] = K,
+//     ['p'] = p,
+//     ['n'] = n,
+//     ['b'] = b,
+//     ['r'] = r,
+//     ['q'] = q,
+//     ['k'] = k,
+// };
+
+/*castleing bits binary representation
+0001 white king can castle to the king side
+0010 white king can castle to the queen side
+0100 black king can castle to the king side
+1000 black king can castle to the queen side
+*/
+enum{ wk = 1, wq =2, bk =4, bq = 8};
+
+//piece bitboard
+u64 bitboard[12];
+// occupancy bitboards
+
+// side to move
+int side = -1;
+//enpassant square
+int enpassant = no_sq;
+// castling
+
 enum{white, black};
 enum{rook, bishop};
 
@@ -55,7 +97,28 @@ void print_bb(u64 bitboard){
     cout<<"bitboard value: "<<bitboard<<endl;
    
 }
+void print_board(){
+    // loop over board ranks
+    for(int rank{} ; rank<8; rank++){
+        for(int file{}; file<8; file++){
+            int square = file+rank*8;
+            if(!file) cout<<" "<<8-rank<<" ";
+            int piece = -1;
+            // loop over all piece bitboards
+            for(int bb_piece = P; bb_piece <=k; bb_piece++){
+                // check if any piece is on current square by checking the square no. bit of that piece
+                if(get_bit(bitboard[bb_piece], square))
+                    piece = bb_piece; 
+            }
+            char p = (piece == -1)? '.':ascii_pieces[piece];
+            cout<<" "<<p;
+        }
+        cout<<endl;
+    }
+    cout<<endl<<"   a b c d e f g h"<<endl<<endl;
 
+    // print the side to move
+}
 // attack tables**********************************************************************************
 
 /*  
@@ -536,9 +599,9 @@ void init_all(){
 int main(){
     init_all();
     u64 occupancy = 0ULL; 
-    set_bit(occupancy, d6);
-    print_bb(occupancy);
-    print_bb(get_rook_attacks(d4, occupancy));
+    set_bit(bitboard[P], e2);
+    print_bb(bitboard[P]);
+    print_board();
     // for(int rank{} ; rank<8; rank++){
     //     for(int file{}; file<8; file++){
     //         int square = file+rank*8;
