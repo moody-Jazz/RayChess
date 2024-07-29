@@ -64,20 +64,24 @@ char unicode_pieces[12] = {'P','N','B','Q','K','p','n','b','r','q','k'};
 0100 black king can castle to the king side
 1000 black king can castle to the queen side
 */
+enum{white, black};
+enum{rook, bishop};
 enum{ wk = 1, wq =2, bk =4, bq = 8};
 
+// enum{P,N,B,R,Q,K,p,n,b,r,q,k};
 //piece bitboard
-u64 bitboard[12];
+u64 bitboard[12] = {
+    65280ULL, 66ULL, 36ULL, 129ULL, 16ULL, 8ULL,
+    71776119061217280ULL, 4755801206503243776ULL, 2594073385365405696, 9295429630892703744ULL, 1152921504606846976ULL, 576460752303423488ULL
+    };
 // occupancy bitboards
 
 // side to move
-int side = -1;
+int side = black;
 //enpassant square
 int enpassant = no_sq;
 // castling
-
-enum{white, black};
-enum{rook, bishop};
+int castle;
 
 //print the bit board***********************************************************************
 void print_bb(u64 bitboard){
@@ -116,8 +120,18 @@ void print_board(){
         cout<<endl;
     }
     cout<<endl<<"   a b c d e f g h"<<endl<<endl;
+        // print the side to move
+    printf("   side:  %s\n", !side?"white": "black");
 
-    // print the side to move
+    // print enpassant square
+    cout<<"   Enpass: ";
+    (enpassant != no_sq)? cout<<coordinate[enpassant] : cout<<"no";cout<<endl;
+    // print castling rights
+    printf("   casteling: %c%c%c%c\n\n",(castle & wk)?'K':'-',
+                                    (castle & wq)?'Q':'-',
+                                    (castle & bk)?'k':'-',
+                                    (castle & bq)?'q': '-');
+
 }
 // attack tables**********************************************************************************
 
@@ -599,9 +613,12 @@ void init_all(){
 int main(){
     init_all();
     u64 occupancy = 0ULL; 
-    set_bit(bitboard[P], e2);
-    print_bb(bitboard[P]);
+    enpassant = e3;
+    for(int i = P; i<k; i++)
+        print_bb(bitboard[i]);
     print_board();
+    
+
     // for(int rank{} ; rank<8; rank++){
     //     for(int file{}; file<8; file++){
     //         int square = file+rank*8;
