@@ -12,5 +12,7 @@ class BitBoard{
         inline void set_bit(int square);
         inline void pop_bit(int square);
         inline void set_val(uint64 bitboard);
+        inline int count_bits();
+        inline int get_lsb_index();
 };
 // enum definitions **********************************************************************************************
