@@ -4,20 +4,27 @@
 using std::cout;
 using std::endl;
 
+BitBoard::BitBoard(){
+
+}
+BitBoard::BitBoard(uint64 val){
+    this->val = val;
+}
+
 inline bool BitBoard::get_bit(int square){
-    uint64 bitboard = this->bitboard;
+    uint64 bitboard = this->val;
     return (bool)((bitboard) & (1ULL <<(square)));
 }
 inline void BitBoard::set_bit(int square){
-    uint64 bitboard = this->bitboard;
+    uint64 bitboard = this->val;
     (bitboard) |= (1ULL << (square));
 }
 inline void BitBoard::pop_bit(int square){
-    uint64 bitboard = this->bitboard;
+    uint64 bitboard = this->val;
     (bitboard) &= -(1ULL << (square));
 }
 inline void BitBoard::set_val(uint64 bitboard){
-    this->bitboard = bitboard;
+    this->val = bitboard;
 }
 
 void BitBoard::print_binary(){
@@ -31,11 +38,11 @@ for(int rank = 7 ; rank>=0; rank--){
     cout<<"\n";
 }
     //print bitboard as unsigned decimal number
-    cout<<"    bitboard value: "<<bitboard<<"\n";
+    cout<<"    bitboard value: "<<val<<"\n";
 }
 inline int BitBoard::count_bits(){
     int count{};
-    uint64 bitboard = this->bitboard;
+    uint64 bitboard = this->val;
     // keep reseting least significatn 1st bit until bitboard is 0
     while(bitboard){
         bitboard = bitboard & bitboard -1;
