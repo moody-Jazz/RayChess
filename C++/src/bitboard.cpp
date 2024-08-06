@@ -1,4 +1,4 @@
-#include <./include/bitboard.hpp>
+#include "../include/bitboard.hpp"
 #include <iostream>
 
 using std::cout;
@@ -11,19 +11,19 @@ BitBoard::BitBoard(uint64 val){
     this->val = val;
 }
 
-inline bool BitBoard::get_bit(int square){
+ bool BitBoard::get_bit(int square){
     uint64 bitboard = this->val;
     return (bool)((bitboard) & (1ULL <<(square)));
 }
-inline void BitBoard::set_bit(int square){
+ void BitBoard::set_bit(int square){
     uint64 bitboard = this->val;
     (bitboard) |= (1ULL << (square));
 }
-inline void BitBoard::pop_bit(int square){
+ void BitBoard::pop_bit(int square){
     uint64 bitboard = this->val;
     (bitboard) &= -(1ULL << (square));
 }
-inline void BitBoard::set_val(uint64 bitboard){
+ void BitBoard::set_val(uint64 bitboard){
     this->val = bitboard;
 }
 
@@ -40,17 +40,18 @@ for(int rank = 7 ; rank>=0; rank--){
     //print bitboard as unsigned decimal number
     cout<<"    bitboard value: "<<val<<"\n";
 }
-inline int BitBoard::count_bits(){
+ int BitBoard::count_bits(){
     int count{};
     uint64 bitboard = this->val;
     // keep reseting least significatn 1st bit until bitboard is 0
     while(bitboard){
-        bitboard = bitboard & bitboard -1;
+        bitboard = bitboard & (bitboard -1);
         count++;
     }
     return count;
 }
 inline int BitBoard::get_lsb_index(){
     // to do 
+    return 0;
 }
 
