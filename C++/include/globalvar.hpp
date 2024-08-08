@@ -1,22 +1,23 @@
 #pragma once
 #include "raylib.h"
 
+// this header file contains all the necessary stuff related to ui managment like piece textures
 extern int tileSize;
 
-typedef struct Piece
+typedef struct PieceUI
 {
     char type;
     Texture2D texture;
     int row;
     int col;
-} Piece;
+} PieceUI;
 
-extern Piece piece[32];
+extern PieceUI pieceTextures[32];
 
 extern int totalPiece;
 
-void InitializePiece(Piece *piece, char type, Texture2D texture, int row, int col);
+void InitializePiece(PieceUI *piece, char type, Texture2D texture, int row, int col);
 
 void InitializePieces(Texture2D texture[]);
 
-Piece* isThereA_Piece(int x, int y);
+PieceUI* isThereA_Piece(int x, int y);
