@@ -2,11 +2,11 @@
 
 GameSound::GameSound(){
     InitAudioDevice();
-    defaultMove = LoadSound("../Assets/sounds/default.wav");
-    capture = LoadSound("../Assets/sounds/capture.wav");
-    castle = LoadSound("../Assets/sounds/castle.wav");
-    check = LoadSound("../Assets/sounds/check.wav");
-    gameEnd = LoadSound("../Assets/sounds/gameEnd.wav");
+    defaultMove = LoadSound("../../Assets/sounds/default.wav");
+    capture = LoadSound("../../Assets/sounds/capture.wav");
+    castle = LoadSound("../../Assets/sounds/castle.wav");
+    check = LoadSound("../../Assets/sounds/check.wav");
+    gameEnd = LoadSound("../../Assets/sounds/gameEnd.wav");
 }
 GameSound::~GameSound(){
     // Unload the music streams when they're no longer needed

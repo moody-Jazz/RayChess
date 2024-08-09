@@ -1,6 +1,6 @@
 #pragma once
 #include<string>
-#include<./include/bitboard.hpp>
+#include "../include/bitboard.hpp"
 #include<unordered_map>
 
 #define uint64 unsigned long long

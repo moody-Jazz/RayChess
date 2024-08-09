@@ -6,8 +6,9 @@
 
 void loadTextures()
 {
-    std::string pieceDir[] = {"../Assets/images/blackRook.png", "../Assets/images/blackKnight.png", "../Assets/images/blackBishop.png", "../Assets/images/blackQueen.png", "../Assets/images/blackKing.png", "../Assets/images/blackPawn.png",
-                              "../Assets/images/whitePawn.png", "../Assets/images/whiteRook.png", "../Assets/images/whiteKnight.png", "../Assets/images/whiteBishop.png", "../Assets/images/whiteQueen.png", "../Assets/images/whiteKing.png"};
+    std::string pieceDir[] = {"../../Assets/images/blackRook.png", "../../Assets/images/blackKnight.png", "../../Assets/images/blackBishop.png", "../../Assets/images/blackQueen.png", 
+                              "../../Assets/images/blackKing.png", "../../Assets/images/blackPawn.png", "../../Assets/images/whitePawn.png", "../../Assets/images/whiteRook.png", 
+                              "../../Assets/images/whiteKnight.png", "../../Assets/images/whiteBishop.png", "../../Assets/images/whiteQueen.png", "../../Assets/images/whiteKing.png"};
     Texture2D pieceTexture[12]; //[br, bk, bb, bq, bking, bpawn, wpawn, wr, wk, wb, wq, wking]
 
     for (int i{}; i < 12; i++)
@@ -35,11 +36,12 @@ void updateBoard()
     }
     for (int i{}; i < totalPiece; i++)
     {
-        DrawTexture(piece[i].texture, piece[i].col * tileSize, piece[i].row * tileSize, WHITE);
+        DrawTexture(pieceTextures[i].texture, pieceTextures[i].col * tileSize, pieceTextures[i].row * tileSize, WHITE);
     }
-} 
+}
 int main()
 {
+    std::cout<<"Success"<<std::endl;
     InitWindow(tileSize * 8, tileSize * 8, "Chess");
     SetTargetFPS(60);
     loadTextures();
@@ -60,4 +62,6 @@ int main()
         EndDrawing();
     }
     CloseWindow();
+
+    ///////////////////////////////////// testing /////////////////////////////////////
 }
