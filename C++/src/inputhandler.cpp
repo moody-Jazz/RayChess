@@ -1,14 +1,18 @@
+#include <iostream>
 #include "../include/inputhandler.hpp"
 #include "../include/raylib.h"
 #include "../include/gamesound.hpp"
 #include "../include/globalvar.hpp"
+#include "../include/bitboard.hpp"
+#include "../include/piece.hpp"
+#include <unordered_map>
 
 InputHandler::InputHandler(){
     clickedOnRow = -1;
     clickedOnCol = -1;
     int releasedOnTileRow = -1, releasedOnTileCol = -1;
     bool pieceSelected = false;
-    Piece* currPiece = nullptr;
+    currPiece = nullptr;
 }
 
 void InputHandler::mouseInputHandler()
@@ -52,7 +56,7 @@ void InputHandler::mouseInputHandler()
         SetMouseCursor(MOUSE_CURSOR_ARROW);
         releasedOnTileCol = GetMousePosition().x/tileSize;
         releasedOnTileRow = GetMousePosition().y/tileSize;
-        Piece *releasedOnPiece = isThereA_Piece(releasedOnTileRow,releasedOnTileCol); 
+        PieceUI *releasedOnPiece = isThereA_Piece(releasedOnTileRow,releasedOnTileCol); 
 
         bool isMouseInsideVertically = GetMousePosition().y >= 0 && GetMousePosition().y <= GetScreenWidth(),
              isMouseInsideHorizontally = GetMousePosition().x >= 0 && GetMousePosition().x <= GetScreenHeight(),
@@ -61,6 +65,22 @@ void InputHandler::mouseInputHandler()
 
         // if mouse is holding a piece and released inside the board update the position of the piece 
         if(isMouseInsideHorizontally && isMouseInsideVertically && pieceSelected){
+            
+            /*  
+            The source tile is the ith bit from which the piece moved to the destination bit.
+            We are subtrating this from 63 becuase in binary we count from right to left whereas in the 
+            visual board matrix we are counting from left to right hence the left top most square is at 
+            0th position in visualization matrix, but for binary it is the last bit .i.e 63rd bit
+            */
+
+            unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
+                         destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
+            
+            std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
+            
+            piece.piece_set[piece.char_pieces.at(currPiece->type)].pop_bit(source_tile);
+            piece.piece_set[piece.char_pieces.at(currPiece->type)].set_bit(destination_tile);
+            piece.piece_set[piece.char_pieces.at(currPiece->type)].print_binary();
 
             if(isPieceReleasedOnEmptyTile){    
                 sound.playDefault();
@@ -73,10 +93,12 @@ void InputHandler::mouseInputHandler()
                 sound.playCapture();
                 currPiece->row = releasedOnTileRow;
                 currPiece->col = releasedOnTileCol;
-                releasedOnPiece->row = piece[totalPiece-1].row;
-                releasedOnPiece->col = piece[totalPiece-1].col;
-                releasedOnPiece->type = piece[totalPiece-1].type;
-                releasedOnPiece->texture = piece[totalPiece-1].texture;
+                // swap the captured piece from the last piece in the array and reduce the size basically 
+                // like deleting the piece texture
+                releasedOnPiece->row = pieceTextures[totalPiece-1].row;
+                releasedOnPiece->col = pieceTextures[totalPiece-1].col;
+                releasedOnPiece->type = pieceTextures[totalPiece-1].type;
+                releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
                 totalPiece--;
             }
         }        
