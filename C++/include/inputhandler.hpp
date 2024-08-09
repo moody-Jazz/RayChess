@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "gamesound.hpp" 
 #include "globalvar.hpp"
+#include "../include/piece.hpp"
 
 class InputHandler
 {
@@ -10,7 +11,11 @@ private:
     int releasedOnTileRow;
     int releasedOnTileCol;
     bool pieceSelected;
-    Piece* currPiece;
+    // pieceUi is for the visual images fo thier pieces and piece is for the bitobards
+    PieceUI* currPiece;
+    // piece is for updating the bitboard of every piece and board
+    Piece piece;
+
     GameSound sound;
 public:
     InputHandler();
