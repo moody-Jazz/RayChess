@@ -20,6 +20,8 @@ private:
 public:
     InputHandler();
     void mouseInputHandler();
+    void mouseButtonDown();
+    void mouseButtonReleased();
 };
 
 
