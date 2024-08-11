@@ -1,5 +1,7 @@
 #pragma once
 #include<string>
+#include "../include/bitboard.hpp"
+#include "../include/piece.hpp"
 
 #define uint64 unsigned long long
 enum{
@@ -34,7 +36,7 @@ not file a :
     2  0 1 1 1 1 1 1 1
     1  0 1 1 1 1 1 1 1
        a b c d e f g h
-*/const uint64 not_a_file = 18374403900871474942ULL;
+*/static const uint64 not_a_file = 18374403900871474942ULL;
 /*  
 not_h_file: 
     8  1 1 1 1 1 1 1 0
@@ -46,7 +48,7 @@ not_h_file:
     2  1 1 1 1 1 1 1 0
     1  1 1 1 1 1 1 1 0
        a b c d e f g h
-*/const uint64 not_h_file = 9187201950435737471ULL;
+*/static const uint64 not_h_file = 9187201950435737471ULL;
 /*  
 not_hg_file:
     8  1 1 1 1 1 1 0 0
@@ -58,7 +60,7 @@ not_hg_file:
     2  1 1 1 1 1 1 0 0
     1  1 1 1 1 1 1 0 0
        a b c d e f g h
-*/const uint64 not_hg_file = 4557430888798830399ULL;
+*/static const uint64 not_hg_file = 4557430888798830399ULL;
 /*  
 not_ab_file:
     8  0 0 1 1 1 1 1 1
@@ -70,4 +72,18 @@ not_ab_file:
     2  0 0 1 1 1 1 1 1
     1  0 0 1 1 1 1 1 1
        a b c d e f g h
-*/const uint64 not_ab_file = 18229723555195321596ULL;
+*/static const uint64 not_ab_file = 18229723555195321596ULL;
+
+class Board{
+    public:
+        int turn;
+        unsigned int castle;
+        BitBoard white_board, black_board, board;
+
+        Board();
+        void print();
+        void sync_bitboards(BitBoard *piece_set);
+        void flip_turn();
+};
+
+

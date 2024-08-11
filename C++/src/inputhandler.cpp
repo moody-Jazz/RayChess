@@ -13,6 +13,7 @@ InputHandler::InputHandler(){
     int releasedOnTileRow = -1, releasedOnTileCol = -1;
     bool pieceSelected = false;
     currPiece = nullptr;
+    board.sync_bitboards(piece.piece_set);
 }
 
 void InputHandler::mouseInputHandler()
@@ -35,14 +36,14 @@ void InputHandler::mouseInputHandler()
         }
     }
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
-        mouseButtonDown();
+        draggingPiece();
 
     if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && pieceSelected)
-        mouseButtonReleased();
+        movedPiece();
 }
 
-void InputHandler::mouseButtonDown(){
-    
+void InputHandler::draggingPiece(){
+   
     Rectangle rec = {
         static_cast<float>((int)GetMousePosition().x / tileSize) * tileSize,
         static_cast<float>((int)GetMousePosition().y / tileSize) * tileSize,
@@ -59,10 +60,11 @@ void InputHandler::mouseButtonDown(){
     DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
 
     // highlight all the legal moves
+
     
 }
 
-void InputHandler::mouseButtonReleased(){
+void InputHandler::movedPiece(){
     SetMouseCursor(MOUSE_CURSOR_ARROW);
     releasedOnTileCol = GetMousePosition().x/tileSize;
     releasedOnTileRow = GetMousePosition().y/tileSize;
@@ -70,11 +72,12 @@ void InputHandler::mouseButtonReleased(){
 
     bool isMouseInsideVertically = GetMousePosition().y >= 0 && GetMousePosition().y <= GetScreenWidth(),
             isMouseInsideHorizontally = GetMousePosition().x >= 0 && GetMousePosition().x <= GetScreenHeight(),
-            isPieceReleasedOnEmptyTile = (releasedOnPiece)? false : true,
+            isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false,
             isPieceReleasedOnEnemyTile = (!isPieceReleasedOnEmptyTile && ((releasedOnPiece->type >= 'a' && currPiece->type <= 'Z') || (releasedOnPiece->type <= 'Z' && currPiece->type >= 'a')));
 
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
     if((isMouseInsideHorizontally && isMouseInsideVertically && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
+       
         /*  
         The source tile is the ith bit from which the piece moved to the destination bit.
         We are subtrating this from 63 becuase in binary we count from right to left whereas in the 
@@ -88,18 +91,18 @@ void InputHandler::mouseButtonReleased(){
         
         std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
         
-        piece.piece_set[piece.char_pieces.at(currPiece->type)].pop_bit(source_tile);
-        piece.piece_set[piece.char_pieces.at(currPiece->type)].set_bit(destination_tile);
-        piece.piece_set[piece.char_pieces.at(currPiece->type)].print_binary();
+        piece.piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
+        piece.piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
+        piece.piece_set[char_pieces.at(currPiece->type)].print_binary();
+        board.sync_bitboards(piece.piece_set);
+        board.board.print_binary();
 
         currPiece->row = releasedOnTileRow;
         currPiece->col = releasedOnTileCol;
         
 
-        if(isPieceReleasedOnEmptyTile){    
+        if(isPieceReleasedOnEmptyTile)
             sound.playDefault();  
-            // update the PieceUI cordinates
-        }
 
         // if enemy piece is captured then put the captured piece at the end of the array and decrease the size till which updateBoard have acess 
         else if(isPieceReleasedOnEnemyTile){
@@ -107,8 +110,8 @@ void InputHandler::mouseButtonReleased(){
 
             // if piece is release on enemy tile pop that enemy piece from the bitboards
             std::cout<<releasedOnPiece->type<<std::endl;
-            piece.piece_set[piece.char_pieces.at(releasedOnPiece->type)].pop_bit(destination_tile);
-            piece.piece_set[piece.char_pieces.at(releasedOnPiece->type)].print_binary();
+            piece.piece_set[char_pieces.at(releasedOnPiece->type)].pop_bit(destination_tile);
+            piece.piece_set[char_pieces.at(releasedOnPiece->type)].print_binary();
 
             // swap the captured piece from the last piece in the pieceui array and reduce the size basically 
             // like deleting the captured piece textures
@@ -118,6 +121,9 @@ void InputHandler::mouseButtonReleased(){
             releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
             totalPiece--;
         }
+        // flip the turn
+        board.flip_turn();
+        std::cout<<board.turn<<"\n";
     }        
     releasedOnPiece = nullptr;     
     currPiece = nullptr;

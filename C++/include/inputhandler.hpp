@@ -2,6 +2,7 @@
 #include "gamesound.hpp" 
 #include "globalvar.hpp"
 #include "../include/piece.hpp"
+#include "../include/chessboard.hpp"
 
 class InputHandler
 {
@@ -16,12 +17,14 @@ private:
     // piece is for updating the bitboard of every piece and board
     Piece piece;
 
+    Board board;
+
     GameSound sound;
 public:
     InputHandler();
     void mouseInputHandler();
-    void mouseButtonDown();
-    void mouseButtonReleased();
+    void draggingPiece();
+    void movedPiece();
 };
 
 
