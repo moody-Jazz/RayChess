@@ -1,5 +1,6 @@
 #include "../include/piece.hpp"
 #include "../include/chessboard.hpp"
+#include "../include/globalvar.hpp"
 
 Piece::Piece(){
     piece_set[P].set_val(65280ULL);

@@ -1,8 +1,28 @@
 #include "../include/globalvar.hpp"
+#include <string>
 
 int tileSize = 110;
 int totalPiece = 32;
 
+// ASCII pieces
+const std::string ascii_pieces = "PNBRQKpnbrqk";
+
+const char unicode_pieces[12] = {'P','N','B','Q','K','p','n','b','r','q','k'};
+
+const std::unordered_map<char, int>char_pieces = {
+    {'P', P},
+    {'N', N},
+    {'B', B},
+    {'R', R},
+    {'Q', Q},
+    {'K', K},
+    {'p', p},
+    {'n', n},
+    {'b', b},
+    {'r', r},
+    {'q', q},
+    {'k', k}
+};
 PieceUI pieceTextures[32];
 
 void InitializePiece(PieceUI *piece, char type, Texture2D texture, int row, int col)
