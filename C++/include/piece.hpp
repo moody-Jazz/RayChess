@@ -5,6 +5,54 @@
 
 #define uint64 unsigned long long
 
+
+/*
+Below are the absolute values of bitmask that is required to find the pseudo legal move of a piece 
+for example a white pawn that is on b2 will have attack bitmask as 
+
+        8  0 0 0 0 0 0 0 0 
+        7  0 0 0 0 0 0 0 0 
+        6  0 0 0 0 0 0 0 0 
+        5  0 0 0 0 0 0 0 0 
+        4  0 0 0 0 0 0 0 0 
+        3  1 0 1 0 0 0 0 0
+        2  0 P 0 0 0 0 0 0
+        1  0 0 0 0 0 0 0 0
+           a b c d e f g h
+
+this bitmask can be used to perform some bitmanipulation with the enmy piece bitboard and the friendly piece bitboard to find
+the pseudo legal move. 
+i have used some algorithms which do bitmanipulation to geenrate all this numbers for example to find knight moves i have used:
+    u64 knight_attack_bitmask(int square){
+        u64 attacks = 0ULL;
+
+        u64 bitboard = 0ULL;
+
+        // set piece position
+        set_bit(bitboard, square);
+
+        //generate knight attacks
+        if((bitboard >> 17) & not_h_file) attacks |= (bitboard >> 17);
+        if((bitboard >> 15) & not_a_file) attacks |= (bitboard >> 15);
+        if((bitboard >> 10) & not_hg_file) attacks |= (bitboard >> 10);
+        if((bitboard >> 6) & not_ab_file) attacks |= (bitboard >> 6);    
+
+        if((bitboard << 17) & not_a_file) attacks |= (bitboard << 17);
+        if((bitboard << 15) & not_h_file) attacks |= (bitboard << 15);
+        if((bitboard << 10) & not_ab_file) attacks |= (bitboard << 10);
+        if((bitboard << 6) & not_hg_file) attacks |= (bitboard << 6); 
+        return attacks;
+    }
+    this algorithm takes the position of the knight and returns a number (attacks) which have the attacking squares set as 1 bit
+    then i printed the binary form and decimal value of attacks using the print_binary() method defined in bitboard.cpp
+
+    the process mentioned above have been used for generating all the attack bitmask and then storing them so that we dont have 
+    to generate them on the fly at the expense of loosing speed
+
+*/
+
+// the pawn attack bitmask is only of size 56 and not 64 is because we dont need the last 8 bits as the black pawns start from 
+// the 9th bit from left and white pawns promote after reaching the last rank
 static const uint64 pawn_attack_bitmask[2][56] = {
     {512, 1280, 2560, 5120, 10240, 20480, 40960, 16384, 131072, 327680, 655360, 1310720,
      2621440, 5242880, 10485760, 4194304, 33554432, 83886080, 167772160, 335544320,
