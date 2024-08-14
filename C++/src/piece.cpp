@@ -34,7 +34,7 @@ Piece::Piece(){
     piece_set[k].set_val(576460752303423488ULL);
 }
 
-BitBoard pawn_attack_bitmask(int side, int square){
+BitBoard pawn_attack_bitmask_init(int side, int square){
     
     // result attacks bitboard
     BitBoard attacks(0ULL);
@@ -45,12 +45,12 @@ BitBoard pawn_attack_bitmask(int side, int square){
     //the current position of piece
     bitboard.set_bit(square);
 
-    //white pawns
-    if(!side){
+    //black pawns
+    if(side){
         if((bitboard.val >> 7) & not_a_file) attacks.val |= (bitboard.val >> 7);
         if((bitboard.val >> 9) & not_h_file) attacks.val |= (bitboard.val >> 9);
     }
-    //black pawns
+    //white pawns
     else{
         if((bitboard.val << 7) & not_h_file) attacks.val |= (bitboard.val << 7);
         if((bitboard.val << 9) & not_a_file) attacks.val |= (bitboard.val << 9);
@@ -58,7 +58,7 @@ BitBoard pawn_attack_bitmask(int side, int square){
     // return attack bitboard
     return attacks;
 }
-BitBoard pawn_push_bitmask(int side, int square){
+BitBoard pawn_push_bitmask_init(int side, int square){
     BitBoard attacks(0ULL);
 
     // piece bitboard
@@ -91,8 +91,8 @@ BitBoard pawn_push_bitmask(int side, int square){
     // return attack bitboard
     return attacks;
 }
-//generate knight attacks
-BitBoard Piece::knight_attack_bitmask(int square){
+
+BitBoard Piece::knight_attack_bitmask_init(int square){
     BitBoard attacks(0ULL);
 
     BitBoard bitboard(0ULL);
@@ -112,8 +112,8 @@ BitBoard Piece::knight_attack_bitmask(int square){
     if((bitboard.val << 6) & not_hg_file) attacks.val |= (bitboard.val << 6); 
     return attacks;
 }
-//generate king attacks
-BitBoard Piece::king_attack_bitmask(int square){
+
+BitBoard Piece::king_attack_bitmask_init(int square){
     BitBoard attacks(0ULL);
 
     BitBoard bitboard(0ULL); 
@@ -129,8 +129,10 @@ BitBoard Piece::king_attack_bitmask(int square){
     if((bitboard.val << 9) & not_a_file) attacks.val |= (bitboard.val << 9);
     if((bitboard.val << 7) & not_h_file) attacks.val |= (bitboard.val << 7);
     if((bitboard.val << 1) & not_a_file)attacks.val |= (bitboard.val << 1);  
+    
     return attacks;
 }
+
 BitBoard Piece::get_bishop_attacks(int square, uint64 block){
     BitBoard attacks(0ULL);
     int r, f;
