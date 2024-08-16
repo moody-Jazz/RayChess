@@ -1,5 +1,6 @@
 #include "../include/bitboard.hpp"
 #include <iostream>
+#include <math.h>
 
 using std::cout;
 using std::endl;
@@ -56,7 +57,24 @@ void BitBoard::print_binary(){
     return count;
 }
 inline int BitBoard::get_lsb_index(){
-    // to do 
-    return 0;
+    return this->val ? log2(this->val & -this->val) : -1;
 }
+
+std::vector<int> BitBoard::get_set_bit_index(){
+
+    // insert the index of all the set bit into vec
+    std::vector<int> vec;
+    BitBoard temp(this->val);
+    while(temp.val){
+        int lsb_index = temp.get_lsb_index();
+        vec.push_back(lsb_index);
+        // erase the bit at least significant index
+        temp.pop_bit(lsb_index);
+    }
+    // print all the content of array
+    // for(auto x: vec) std::cout<<x<<" ";
+    // std::cout<<std::endl;
+    return vec;
+}
+
 
