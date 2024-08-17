@@ -1,6 +1,8 @@
 #include "../include/piece.hpp"
 #include "../include/chessboard.hpp"
 #include "../include/globalvar.hpp"
+#include <vector>
+#include <iostream>
 
 Piece::Piece(){
     /* 
@@ -189,4 +191,24 @@ BitBoard Piece::get_queen_attacks(int square, uint64 block){
     attacks.val |= get_bishop_attacks(square, block).val;
     attacks.val |= get_rook_attacks(square, block).val;
     return attacks;
+}
+std::vector<int> Piece::get_legal_move(Board board, char type, int square){
+    int turn = (type < 'Z')?0:1;
+    BitBoard res(0ULL);
+    switch (type)
+    {
+        case 'P':
+        case 'p': {
+            uint64 pawn_attack = pawn_attack_bitmask[turn][square] & board.bitboards[!turn].val,
+                pawn_push = pawn_push_bitmask[turn][square] & ~(board.bitboards[both].val);
+            res.val = pawn_attack | pawn_push;
+            std::cout<<"Pawn detected \n";
+            break;
+        }
+    
+    default:{
+        break;
+    }
+    }
+    return res.get_set_bit_index();
 }

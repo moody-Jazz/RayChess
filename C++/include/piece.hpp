@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
 #include "../include/bitboard.hpp"
+#include "../include/chessboard.hpp"
 #include <unordered_map>
+#include <vector>
 
 #define uint64 unsigned long long
 
@@ -134,5 +136,5 @@ public:
     BitBoard get_bishop_attacks(int square, uint64 block);
     BitBoard get_rook_attacks(int square, uint64 block);
     BitBoard get_queen_attacks(int square, uint64 block);
-    BitBoard get_legal_move();
+    std::vector<int> get_legal_move(Board board, char type, int square);
 };

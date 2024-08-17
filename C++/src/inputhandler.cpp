@@ -6,6 +6,7 @@
 #include "../include/bitboard.hpp"
 #include "../include/piece.hpp"
 #include <unordered_map>
+#include <vector>
 
 InputHandler::InputHandler(){
     clickedOnRow = -1;
@@ -14,6 +15,16 @@ InputHandler::InputHandler(){
     bool pieceSelected = false;
     currPiece = nullptr;
     board.sync_bitboards(piece.piece_set);
+}
+
+std::vector<int> legal_moves;
+
+void highlightLegalMoves(){
+    for(auto &x :legal_moves){
+        int row = (((63 - x) % 8) * tileSize);
+        int col = (((63 - x) / 8) * tileSize);
+        DrawRectangle((float)row, (float)col, tileSize, tileSize, RED);
+    }
 }
 
 void InputHandler::mouseInputHandler()
@@ -33,6 +44,10 @@ void InputHandler::mouseInputHandler()
             Color temp = {255, 150, 84, 100};
             DrawRectangle((float)clickedOnCol * tileSize, (float)clickedOnRow * tileSize, tileSize, tileSize, temp);
             //std::cout<<currPiece->type<<std::endl;
+
+            unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col);
+            legal_moves = piece.get_legal_move(board, currPiece->type, source_tile);
+            std::cout<<legal_moves.size()<<" size of legal move\n";
         }
     }
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
@@ -59,9 +74,7 @@ void InputHandler::draggingPiece(){
     // if piece is dragged redraw its textures
     DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
 
-    // highlight all the legal moves
-
-    
+    highlightLegalMoves();
 }
 
 void InputHandler::movedPiece(){
@@ -93,9 +106,7 @@ void InputHandler::movedPiece(){
         
         piece.piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
         piece.piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
-        piece.piece_set[char_pieces.at(currPiece->type)].print_binary();
         board.sync_bitboards(piece.piece_set);
-        board.board.print_binary();
 
         currPiece->row = releasedOnTileRow;
         currPiece->col = releasedOnTileCol;
@@ -109,9 +120,9 @@ void InputHandler::movedPiece(){
             sound.playCapture();
 
             // if piece is release on enemy tile pop that enemy piece from the bitboards
-            std::cout<<releasedOnPiece->type<<std::endl;
+            std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
+
             piece.piece_set[char_pieces.at(releasedOnPiece->type)].pop_bit(destination_tile);
-            piece.piece_set[char_pieces.at(releasedOnPiece->type)].print_binary();
 
             // swap the captured piece from the last piece in the pieceui array and reduce the size basically 
             // like deleting the captured piece textures
@@ -123,7 +134,7 @@ void InputHandler::movedPiece(){
         }
         // flip the turn
         board.flip_turn();
-        std::cout<<board.turn<<"\n";
+        printf((board.turn)?"black's turn\n": "white's turn\n");
     }        
     releasedOnPiece = nullptr;     
     currPiece = nullptr;

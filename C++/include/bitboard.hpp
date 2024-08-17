@@ -15,6 +15,6 @@ class BitBoard{
         void set_val(uint64 val);
         int count_bits();
         int get_lsb_index();
-        std::vector<int> BitBoard::get_set_bit_index();
+        std::vector<int> get_set_bit_index();
 };
 // enum definitions **********************************************************************************************

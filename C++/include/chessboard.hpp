@@ -1,7 +1,6 @@
 #pragma once
 #include<string>
 #include "../include/bitboard.hpp"
-#include "../include/piece.hpp"
 
 #define uint64 unsigned long long
 enum{
@@ -78,7 +77,7 @@ class Board{
     public:
         int turn;
         unsigned int castle;
-        BitBoard white_board, black_board, board;
+        BitBoard bitboards[3]; // {white, black, both}
 
         Board();
         void print();
