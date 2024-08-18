@@ -20,10 +20,20 @@ InputHandler::InputHandler(){
 std::vector<int> legal_moves;
 
 void highlightLegalMoves(){
-    for(auto &x :legal_moves){
-        int row = (((63 - x) % 8) * tileSize);
-        int col = (((63 - x) / 8) * tileSize);
-        DrawRectangle((float)row, (float)col, tileSize, tileSize, RED);
+        for(auto &x :legal_moves){
+            int row = (63 - x) % 8;
+            int col = (63 - x) / 8;
+            bool occupied_tile = isThereA_Piece(col, row);
+            row *= tileSize;
+            col *= tileSize;
+            row += tileSize/2;
+            col += tileSize/2;
+            Color temp = {70, 70, 70, 100};
+            
+            if(occupied_tile) DrawRing({(float)row, (float)col}, 
+                    tileSize/2-7, tileSize/2, 0, 360, 1000, temp);
+
+            else DrawCircle(row, col, tileSize/2-32, temp);
     }
 }
 
@@ -58,6 +68,8 @@ void InputHandler::mouseInputHandler()
 }
 
 void InputHandler::draggingPiece(){
+
+    highlightLegalMoves();
    
     Rectangle rec = {
         static_cast<float>((int)GetMousePosition().x / tileSize) * tileSize,
@@ -66,15 +78,15 @@ void InputHandler::draggingPiece(){
         tileSize
     };
 
-    DrawRectangleLinesEx(rec, 4, WHITE);
     // draw an outline and highlight the square bieng clicked
+    DrawRectangleLinesEx(rec, 4, WHITE);
     Color temp = {255, 150, 84, 100};
     DrawRectangle((float)clickedOnCol * tileSize, (float)clickedOnRow * tileSize, tileSize, tileSize, temp);
     // std::cout <<currPiece->type<<" "<< clickedOnRow << " " << clickedOnCol << std::endl;
     // if piece is dragged redraw its textures
     DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
 
-    highlightLegalMoves();
+
 }
 
 void InputHandler::movedPiece(){
