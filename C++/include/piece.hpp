@@ -133,8 +133,8 @@ public:
     BitBoard king_attack_bitmask_init(int square);
 
     // slider piece attack bitmask
-    BitBoard get_bishop_attacks(int square, uint64 block);
-    BitBoard get_rook_attacks(int square, uint64 block);
-    BitBoard get_queen_attacks(int square, uint64 block);
+    uint64 get_bishop_attacks(int square, uint64 block);
+    uint64 get_rook_attacks(int square, uint64 block);
+    uint64 get_queen_attacks(int square, uint64 block);
     std::vector<int> get_legal_move(Board board, char type, int square);
 };

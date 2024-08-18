@@ -135,77 +135,99 @@ BitBoard Piece::king_attack_bitmask_init(int square){
     return attacks;
 }
 
-BitBoard Piece::get_bishop_attacks(int square, uint64 block){
-    BitBoard attacks(0ULL);
+uint64 Piece::get_bishop_attacks(int square, uint64 block){
+    uint64 attacks(0ULL);
     int r, f;
     int tr = square/8;
     int tf = square % 8; 
 
     for(r = tr +1, f = tf+1; r<=7 && f<=7; r++, f++){
-        attacks.val |= (1ULL << (r*8+f));
+        attacks |= (1ULL << (r*8+f));
         if(block & (1ULL << (r*8+f))) break;
     } 
     for(r = tr -1, f = tf+1; r>=0 && f<=7; r--, f++){
-        attacks.val |= (1ULL << (r*8+f));
+        attacks |= (1ULL << (r*8+f));
         if(block & (1ULL << (r*8+f))) break;
     }
     for(r = tr +1, f = tf-1; r<=7 && f>=0; r++, f--){
-        attacks.val |= (1ULL << (r*8+f));
+        attacks |= (1ULL << (r*8+f));
         if(block & (1ULL << (r*8+f))) break;
     }
     for(r = tr -1, f = tf-1; r>=0 && f>=0; r--, f--){
-        attacks.val |= (1ULL << (r*8+f));
+        attacks |= (1ULL << (r*8+f));
         if(block & (1ULL << (r*8+f))) break;
     } 
 
     return attacks;
 }
-BitBoard Piece::get_rook_attacks(int square, uint64 block){
-    BitBoard attacks(0ULL);
+uint64 Piece::get_rook_attacks(int square, uint64 block){
+    uint64 attacks(0ULL);
 
     int r,f;
     int tr = square / 8;
     int tf = square % 8;
 
     for(r = tr+1; r<= 7; r++) {
-        attacks.val |= (1ULL << (r*8 +tf));
+        attacks |= (1ULL << (r*8 +tf));
         if((1ULL << (r*8 +tf)) & block) break;
 
     }
     for(r = tr-1; r>= 0; r--) {
-        attacks.val |= (1ULL << (r*8 +tf));
+        attacks |= (1ULL << (r*8 +tf));
         if((1ULL << (r*8 +tf)) & block) break;
     }
     for(f = tf + 1; f<=7; f++) {
-        attacks.val |= (1ULL << (tr *8 +f));
+        attacks |= (1ULL << (tr *8 +f));
         if((1ULL << (tr *8 +f)) & block) break;
     }
     for(f = tf - 1; f>=0; f--) {
-        attacks.val |= (1ULL << (tr *8 +f));
+        attacks |= (1ULL << (tr *8 +f));
         if((1ULL << (tr *8 +f)) & block) break;
     }
-    return attacks.val;
+    return attacks;
 }
-BitBoard Piece::get_queen_attacks(int square, uint64 block){
-    BitBoard attacks(0ULL);
-    attacks.val |= get_bishop_attacks(square, block).val;
-    attacks.val |= get_rook_attacks(square, block).val;
+uint64 Piece::get_queen_attacks(int square, uint64 block){
+    uint64 attacks(0ULL);
+    attacks |= get_bishop_attacks(square, block);
+    attacks |= get_rook_attacks(square, block);
     return attacks;
 }
 std::vector<int> Piece::get_legal_move(Board board, char type, int square){
+    char piece = toupper(type);
     int turn = (type < 'Z')?0:1;
     BitBoard res(0ULL);
-    switch (type)
+    switch (piece)
     {
-        case 'P':
-        case 'p': {
+        case 'P': {
             uint64 pawn_attack = pawn_attack_bitmask[turn][square] & board.bitboards[!turn].val,
                 pawn_push = pawn_push_bitmask[turn][square] & ~(board.bitboards[both].val);
             res.val = pawn_attack | pawn_push;
             std::cout<<"Pawn detected \n";
             break;
         }
-    
+        case 'N': {
+            res.val = knight_attack_bitmask[square] & ~(board.bitboards[turn].val);
+            break;
+        }
+        case 'K': {
+            res.val = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
+            break;
+        }
+        case 'R': {
+            res.val = get_rook_attacks(square, board.bitboards[both].val) &
+                        ~(board.bitboards[turn].val);
+            break;
+        }
+        case 'B': {
+            res.val = get_bishop_attacks(square, board.bitboards[both].val) &
+                        ~(board.bitboards[turn].val);
+            break;
+        }
+        case 'Q': {
+            res.val = get_queen_attacks(square, board.bitboards[both].val) &
+                        ~(board.bitboards[turn].val);
+            break;
+        }
     default:{
         break;
     }
