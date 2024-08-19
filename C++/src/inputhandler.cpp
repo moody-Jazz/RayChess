@@ -33,7 +33,7 @@ void highlightLegalMoves(){
             if(occupied_tile) DrawRing({(float)row, (float)col}, 
                     tileSize/2-7, tileSize/2, 0, 360, 1000, temp);
 
-            else DrawCircle(row, col, tileSize/2-32, temp);
+            else DrawCircle(row, col, tileSize/2-35, temp);
     }
 }
 
@@ -57,7 +57,7 @@ void InputHandler::mouseInputHandler()
 
             unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col);
             legal_moves = piece.get_legal_move(board, currPiece->type, source_tile);
-            std::cout<<legal_moves.size()<<" size of legal move\n";
+            std::cout<<legal_moves.size()<<" is total legal moves\n";
         }
     }
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
@@ -114,11 +114,10 @@ void InputHandler::movedPiece(){
         unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
                         destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
         
-        std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
-        
         piece.piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
         piece.piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
-        board.sync_bitboards(piece.piece_set);
+        std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
+
 
         currPiece->row = releasedOnTileRow;
         currPiece->col = releasedOnTileCol;
@@ -132,9 +131,9 @@ void InputHandler::movedPiece(){
             sound.playCapture();
 
             // if piece is release on enemy tile pop that enemy piece from the bitboards
-            std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
-
             piece.piece_set[char_pieces.at(releasedOnPiece->type)].pop_bit(destination_tile);
+
+            std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
 
             // swap the captured piece from the last piece in the pieceui array and reduce the size basically 
             // like deleting the captured piece textures
@@ -144,10 +143,16 @@ void InputHandler::movedPiece(){
             releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
             totalPiece--;
         }
+
+        // sync the board to ensure that all the 3 bitboard in the chessboard are also updated
+        board.sync_bitboards(piece.piece_set);
+
         // flip the turn
         board.flip_turn();
+        
         printf((board.turn)?"black's turn\n": "white's turn\n");
     }        
+    
     releasedOnPiece = nullptr;     
     currPiece = nullptr;
     pieceSelected = false;

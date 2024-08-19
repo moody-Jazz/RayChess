@@ -199,6 +199,29 @@ std::vector<int> Piece::get_legal_move(Board board, char type, int square){
     switch (piece)
     {
         case 'P': {
+            /*
+            check if there is a piece directly infront of pawn if so then return zero legal moves
+            this if condition is necessary because on thier initial squares pawn can move two tiles 
+            if the condition below doen't exist then the pawn will have one legal move which is 
+            behind the blocker piece even when a piece is directly in front of it 
+
+            legal moves if the below if() condition is not there
+
+                5   - - - - - - - -
+                4   1 - R - 1 - - 1
+                3   1 - 1 - B - - r
+                2   P - P - P - - P
+                1   - - - - - - - -
+            */ 
+            // find legal moves when pawns are on thier initial squares
+            if((!turn && 1ULL<<(square+8) & board.bitboards[both].val) ||
+                (turn && 1ULL<<(square-8) & board.bitboards[both].val)) {
+
+                res.val = 0ULL; 
+                break;
+            }
+            
+            // find legal moves when pawns are on its initial square
             uint64 pawn_attack = pawn_attack_bitmask[turn][square] & board.bitboards[!turn].val,
                 pawn_push = pawn_push_bitmask[turn][square] & ~(board.bitboards[both].val);
             res.val = pawn_attack | pawn_push;
