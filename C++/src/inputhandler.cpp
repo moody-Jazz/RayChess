@@ -68,9 +68,15 @@ void InputHandler::mouseInputHandler()
 }
 
 void InputHandler::draggingPiece(){
-
+    
     highlightLegalMoves();
    
+   if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
+        SetMouseCursor(MOUSE_CURSOR_ARROW);
+        pieceSelected = false;
+        return;
+   } 
+
     Rectangle rec = {
         static_cast<float>((int)GetMousePosition().x / tileSize) * tileSize,
         static_cast<float>((int)GetMousePosition().y / tileSize) * tileSize,
@@ -95,25 +101,31 @@ void InputHandler::movedPiece(){
     releasedOnTileRow = GetMousePosition().y/tileSize;
     PieceUI *releasedOnPiece = isThereA_Piece(releasedOnTileRow,releasedOnTileCol); 
 
-    bool isMouseInsideVertically = GetMousePosition().y >= 0 && GetMousePosition().y <= GetScreenWidth(),
-            isMouseInsideHorizontally = GetMousePosition().x >= 0 && GetMousePosition().x <= GetScreenHeight(),
+    bool isMouseInsideWindow = (GetMousePosition().y >= 0 && GetMousePosition().y <= GetScreenWidth()) && (GetMousePosition().x >= 0 && GetMousePosition().x <= GetScreenHeight()),
             isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false,
             isPieceReleasedOnEnemyTile = (!isPieceReleasedOnEmptyTile && ((releasedOnPiece->type >= 'a' && currPiece->type <= 'Z') || (releasedOnPiece->type <= 'Z' && currPiece->type >= 'a')));
 
+    /*  
+    The source tile is the ith bit from which the piece moved to the destination bit.
+    We are subtrating this from 63 becuase in binary we count from right to left whereas in the 
+    visual board matrix we are counting from left to right hence the left top most square is at 
+    0th position in visualization matrix, but for binary it is the last bit .i.e 63rd bit.
+    the bitboards will be updated mimic the visual board
+    */
+    // pop the source tile bit and set the destinatio tile bit to update the bitboard
+    unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
+                    destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
+
+    bool isMoveLegal = false;
+    for(auto &x: legal_moves){
+        if(destination_tile == x){
+            isMoveLegal = true;
+            break;
+        }
+    }
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
-    if((isMouseInsideHorizontally && isMouseInsideVertically && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
-       
-        /*  
-        The source tile is the ith bit from which the piece moved to the destination bit.
-        We are subtrating this from 63 becuase in binary we count from right to left whereas in the 
-        visual board matrix we are counting from left to right hence the left top most square is at 
-        0th position in visualization matrix, but for binary it is the last bit .i.e 63rd bit.
-        the bitboards will be updated mimic the visual board
-        */
-        // pop the source tile bit and set the destinatio tile bit to update the bitboard
-        unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
-                        destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
-        
+    if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
+
         piece.piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
         piece.piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
         std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
