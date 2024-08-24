@@ -78,6 +78,7 @@ class Board{
         int turn;
         unsigned int castle;
         BitBoard bitboards[3]; // {white, black, both}
+        uint64 not_safe_tiles[2];
 
         Board();
         void print();

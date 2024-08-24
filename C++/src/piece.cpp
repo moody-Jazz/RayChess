@@ -34,6 +34,8 @@ Piece::Piece(){
     piece_set[r].set_val(9295429630892703744ULL);
     piece_set[q].set_val(1152921504606846976ULL);
     piece_set[k].set_val(576460752303423488ULL);
+
+    check[white] = check[black] = false;
 }
 
 BitBoard pawn_attack_bitmask_init(int side, int square){
@@ -192,10 +194,14 @@ uint64 Piece::get_queen_attacks(int square, uint64 block){
     attacks |= get_rook_attacks(square, block);
     return attacks;
 }
-std::vector<int> Piece::get_legal_move(Board board, char type, int square){
+BitBoard Piece::get_legal_move(Board board, char type, int square){
+
+    if(!((board.turn && type > 'a') || (!board.turn && type <'Z'))) return 0ULL;
+
     char piece = toupper(type);
     int turn = (type < 'Z')?0:1;
     BitBoard res(0ULL);
+    
     switch (piece)
     {
         case 'P': {
@@ -224,7 +230,6 @@ std::vector<int> Piece::get_legal_move(Board board, char type, int square){
                     pawn_push = 0ULL; 
             }
             res.val = pawn_attack | pawn_push;
-            std::cout<<"Pawn detected \n";
             break;
         }
         case 'N': {
@@ -254,5 +259,5 @@ std::vector<int> Piece::get_legal_move(Board board, char type, int square){
         break;
     }
     }
-    return res.get_set_bit_index();
+    return res;
 }

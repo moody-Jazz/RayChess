@@ -72,8 +72,8 @@ std::vector<int> BitBoard::get_set_bit_index(){
         temp.pop_bit(lsb_index);
     }
     // print all the content of array
-    for(auto x: vec) std::cout<<x<<" ";
-    std::cout<<std::endl;
+    // for(auto x: vec) std::cout<<x<<" ";
+    // std::cout<<std::endl;
     return vec;
 }
 

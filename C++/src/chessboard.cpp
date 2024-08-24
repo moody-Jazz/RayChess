@@ -6,6 +6,7 @@ Board::Board(){
     turn = white;
     castle = 15; // 1111 in binary
     bitboards[white].val = bitboards[black].val = bitboards[both].val = 0ULL;
+    not_safe_tiles[white] = not_safe_tiles[black] = 0ULL; // every tile is safe for king to move in starting
 }
 
 void Board::print(){
@@ -34,7 +35,7 @@ void Board::sync_bitboards(BitBoard *piece_set){
         if(i<6) bitboards[white].val |= piece_set[i].val;
         else  bitboards[black].val |= piece_set[i].val;
     }
-     bitboards[both].val =  bitboards[white].val |  bitboards[black].val;
+    bitboards[both].val =  bitboards[white].val |  bitboards[black].val;
 }
 
 void Board::flip_turn(){

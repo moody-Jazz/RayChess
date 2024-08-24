@@ -56,8 +56,8 @@ void InputHandler::mouseInputHandler()
             //std::cout<<currPiece->type<<std::endl;
 
             unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col);
-            legal_moves = piece.get_legal_move(board, currPiece->type, source_tile);
-            std::cout<<legal_moves.size()<<" is total legal moves\n";
+            legal_moves = piece.get_legal_move(board, currPiece->type, source_tile).get_set_bit_index();
+            //std::cout<<legal_moves.size()<<" is total legal moves\n";
         }
     }
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
@@ -133,13 +133,10 @@ void InputHandler::movedPiece(){
 
         currPiece->row = releasedOnTileRow;
         currPiece->col = releasedOnTileCol;
-        
 
-        if(isPieceReleasedOnEmptyTile)
-            sound.playDefault();  
 
         // if enemy piece is captured then put the captured piece at the end of the array and decrease the size till which updateBoard have acess 
-        else if(isPieceReleasedOnEnemyTile){
+        if(isPieceReleasedOnEnemyTile){
             sound.playCapture();
 
             // if piece is release on enemy tile pop that enemy piece from the bitboards
@@ -155,14 +152,25 @@ void InputHandler::movedPiece(){
             releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
             totalPiece--;
         }
+ 
+ // 
+        uint64 temp = piece.get_legal_move(board, currPiece->type, destination_tile).val;
+        int king = board.turn?K:k;
+        std::cout<<king<<" "<<std::endl;
 
+        if(temp & piece.piece_set[king].val){
+            sound.playCheck();
+            piece.check[!board.turn] = true;
+
+        }
+        else sound.playDefault();
         // sync the board to ensure that all the 3 bitboard in the chessboard are also updated
         board.sync_bitboards(piece.piece_set);
 
         // flip the turn
         board.flip_turn();
         
-        printf((board.turn)?"black's turn\n": "white's turn\n");
+        //printf((board.turn)?"black's turn\n": "white's turn\n");
     }        
     
     releasedOnPiece = nullptr;     

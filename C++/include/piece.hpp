@@ -124,6 +124,7 @@ class Piece
 {
 public:
     Piece();
+    bool check[2];
     BitBoard piece_set[12];
 
     // leaper piece attack bitmasks
@@ -136,5 +137,5 @@ public:
     uint64 get_bishop_attacks(int square, uint64 block);
     uint64 get_rook_attacks(int square, uint64 block);
     uint64 get_queen_attacks(int square, uint64 block);
-    std::vector<int> get_legal_move(Board board, char type, int square);
+    BitBoard get_legal_move(Board board, char type, int square);
 };
