@@ -4,9 +4,8 @@
 
 Board::Board(){
     turn = white;
-    castle = 15; // 1111 in binary
+    castle[wk] = castle[wq] = castle[bk] = castle[bq] = true;
     bitboards[white].val = bitboards[black].val = bitboards[both].val = 0ULL;
-    not_safe_tiles[white] = not_safe_tiles[black] = 0ULL; // every tile is safe for king to move in starting
 }
 
 void Board::print(){

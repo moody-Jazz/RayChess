@@ -238,6 +238,16 @@ BitBoard Piece::get_legal_move(Board board, char type, int square){
         }
         case 'K': {
             res.val = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
+            if(!board.turn && (board.castle[wk] || board.castle[wq])){
+                if(board.castle[wk]){
+
+                }
+                if(board.castle[wq]){
+                    
+                }
+            }
+            else if(board.turn &&  (board.castle[bk] || board.castle[bq])){
+            }
             break;
         }
         case 'R': {

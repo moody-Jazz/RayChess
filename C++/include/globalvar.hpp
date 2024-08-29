@@ -8,6 +8,7 @@ extern int tileSize;
 
 enum{white, black, both};
 enum{P,N,B,R,Q,K,p,n,b,r,q,k};
+enum{ wk, wq, bk, bq};
 // ASCII pieces
 extern const std::string ascii_pieces;
 // unicode pieces

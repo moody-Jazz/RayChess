@@ -126,6 +126,38 @@ void InputHandler::movedPiece(){
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
     if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
 
+        // below if else conditions are for checking if the king or rooks have moved to update the casteling state ont he board
+        if((board.castle[wk] || board.castle[wq]) && currPiece->type == 'K'){
+            board.castle[wk] = false;
+            board.castle[wq] = false;
+            std::cout<<"White king can't castle now\n";
+        }
+        else if((board.castle[bk] || board.castle[bq]) && currPiece->type == 'k'){
+            board.castle[bk] = false;
+            board.castle[bq] = false;
+            std::cout<<"Black king can't castle now\n";
+        }
+        if((board.castle[wk] || board.castle[wq]) && currPiece->type == 'R'){
+            if(currPiece->row == 7 && currPiece->col == 7){
+                board.castle[wk] = false;
+                std::cout<<"White king can't castle king side now\n";
+            }
+            else if (currPiece->row == 7 && currPiece->col == 0){
+                board.castle[wq] = false;
+                std::cout<<"White king can't castle queen side now\n";
+            }
+        }
+        else if((board.castle[bk] || board.castle[bq]) && currPiece->type == 'r'){
+            if(currPiece->row == 0 && currPiece->col == 7){
+                board.castle[bk] = false;
+                std::cout<<"black king can't castle king side now\n";
+            }
+            else if (currPiece->row == 0 && currPiece->col == 0){
+                board.castle[bq] = false;
+                std::cout<<"black king can't castle queen side now\n";
+            }
+        }
+
         piece.piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
         piece.piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
         std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
@@ -145,7 +177,30 @@ void InputHandler::movedPiece(){
             std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
 
             // swap the captured piece from the last piece in the pieceui array and reduce the size basically 
-            // like deleting the captured piece textures
+            // like deleting the captured piece textures updating the casteling state
+
+            // below if else conditions are for checking if the rooks have been captured to update the casteling state ont he board
+            if((board.castle[wk] || board.castle[wq]) && releasedOnPiece->type == 'R'){
+                if(releasedOnPiece->row == 7 && releasedOnPiece->col == 7){
+                    board.castle[wk] = false;
+                    std::cout<<"White king can't castle king side now\n";
+                } 
+                else if (releasedOnPiece->row == 7 && releasedOnPiece->col == 0){  
+                    board.castle[wq] = false;
+                    std::cout<<"White king can't castle queen side now\n";
+                }
+            }
+            else if((board.castle[bk] || board.castle[bq]) && releasedOnPiece->type == 'r'){
+                if(releasedOnPiece->row == 0 && releasedOnPiece->col == 7)  {
+                    board.castle[bk] = false;
+                    std::cout<<"black king can't castle king side now\n";
+                }
+                else if (releasedOnPiece->row == 0 && releasedOnPiece->col == 0)  {
+                    board.castle[bq] = false;
+                    std::cout<<"black king can't castle queen side now\n";
+                }
+            }
+
             releasedOnPiece->row = pieceTextures[totalPiece-1].row;
             releasedOnPiece->col = pieceTextures[totalPiece-1].col;
             releasedOnPiece->type = pieceTextures[totalPiece-1].type;
@@ -153,17 +208,16 @@ void InputHandler::movedPiece(){
             totalPiece--;
         }
  
- // 
+        // check if king is in check
         uint64 temp = piece.get_legal_move(board, currPiece->type, destination_tile).val;
         int king = board.turn?K:k;
-        std::cout<<king<<" "<<std::endl;
-
         if(temp & piece.piece_set[king].val){
             sound.playCheck();
             piece.check[!board.turn] = true;
 
         }
         else sound.playDefault();
+
         // sync the board to ensure that all the 3 bitboard in the chessboard are also updated
         board.sync_bitboards(piece.piece_set);
 
