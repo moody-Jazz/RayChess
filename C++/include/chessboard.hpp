@@ -80,6 +80,7 @@ class Board{
         BitBoard bitboards[3]; // {white, black, both}
 
         Board();
+        Board::Board(const Board& board);
         void print();
         void sync_bitboards(BitBoard *piece_set);
         void flip_turn();

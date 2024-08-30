@@ -126,6 +126,7 @@ public:
     Piece();
     bool check[2];
     BitBoard piece_set[12];
+    int kingPosition[2];
 
     // leaper piece attack bitmasks
     BitBoard pawn_attack_bitmask_init(int side, int square);
@@ -138,4 +139,5 @@ public:
     uint64 get_rook_attacks(int square, uint64 block);
     uint64 get_queen_attacks(int square, uint64 block);
     BitBoard get_legal_move(Board board, char type, int square);
+    bool is_king_safe(Board board, bool white);
 };

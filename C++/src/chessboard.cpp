@@ -8,6 +8,18 @@ Board::Board(){
     bitboards[white].val = bitboards[black].val = bitboards[both].val = 0ULL;
 }
 
+Board::Board(const Board& board){
+    this->turn = board.turn;
+    this->castle[0] = board.castle[0];
+    this->castle[1] = board.castle[1];
+    this->castle[2] = board.castle[2];
+    this->castle[3] = board.castle[3];
+    this->bitboards[0] = board.bitboards[0];
+    this->bitboards[1] = board.bitboards[1];
+    this->bitboards[2] = board.bitboards[2];
+}
+
+
 void Board::print(){
     int count{};
     for(int i=63; i>=0; i--){

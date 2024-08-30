@@ -37,6 +37,12 @@ void highlightLegalMoves(){
     }
 }
 
+/*
+=======================================================================================================================================================================================================
+                    Function to handle all the actions to be performed while a piece is held and bieng dragged accross the board
+=======================================================================================================================================================================================================
+*/
+
 void InputHandler::mouseInputHandler()
 {
     // if a piece is bieng clicked copy it into the currPiece and change the cursor  
@@ -67,6 +73,12 @@ void InputHandler::mouseInputHandler()
         movedPiece();
 }
 
+/*
+=======================================================================================================================================================================================================
+                    Function to handle all the actions to be performed while a piece is held and bieng dragged accross the board
+=======================================================================================================================================================================================================
+*/
+
 void InputHandler::draggingPiece(){
     
     highlightLegalMoves();
@@ -76,6 +88,7 @@ void InputHandler::draggingPiece(){
         pieceSelected = false;
         return;
    } 
+
 
     Rectangle rec = {
         static_cast<float>((int)GetMousePosition().x / tileSize) * tileSize,
@@ -95,6 +108,11 @@ void InputHandler::draggingPiece(){
 
 }
 
+/*
+=======================================================================================================================================================================================================
+                    Function to handle all the actions to be performed when a piece is dragged across the board and released 
+=======================================================================================================================================================================================================
+*/
 void InputHandler::movedPiece(){
     SetMouseCursor(MOUSE_CURSOR_ARROW);
     releasedOnTileCol = GetMousePosition().x/tileSize;
@@ -127,15 +145,25 @@ void InputHandler::movedPiece(){
     if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
 
         // below if else conditions are for checking if the king or rooks have moved to update the casteling state ont he board
-        if((board.castle[wk] || board.castle[wq]) && currPiece->type == 'K'){
-            board.castle[wk] = false;
-            board.castle[wq] = false;
-            std::cout<<"White king can't castle now\n";
+        if(currPiece->type == 'K'){
+
+            piece.kingPosition[white] = 63 - (releasedOnTileRow*8+releasedOnTileCol); //update the global white king position
+            
+            if(board.castle[wk] || board.castle[wq]){
+                board.castle[wk] = false;
+                board.castle[wq] = false;
+                std::cout<<"White king can't castle now\n";
+            }
         }
-        else if((board.castle[bk] || board.castle[bq]) && currPiece->type == 'k'){
-            board.castle[bk] = false;
-            board.castle[bq] = false;
-            std::cout<<"Black king can't castle now\n";
+        else if(currPiece->type == 'k'){
+
+            piece.kingPosition[black] =  63 - (releasedOnTileRow*8+releasedOnTileCol); //update the global black king positions
+
+            if(board.castle[bk] || board.castle[bq]){
+                board.castle[bk] = false;
+                board.castle[bq] = false;
+                std::cout<<"Black king can't castle now\n";
+            }
         }
         if((board.castle[wk] || board.castle[wq]) && currPiece->type == 'R'){
             if(currPiece->row == 7 && currPiece->col == 7){
@@ -174,7 +202,7 @@ void InputHandler::movedPiece(){
             // if piece is release on enemy tile pop that enemy piece from the bitboards
             piece.piece_set[char_pieces.at(releasedOnPiece->type)].pop_bit(destination_tile);
 
-            std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
+            //std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
 
             // swap the captured piece from the last piece in the pieceui array and reduce the size basically 
             // like deleting the captured piece textures updating the casteling state
@@ -207,6 +235,7 @@ void InputHandler::movedPiece(){
             releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
             totalPiece--;
         }
+        else if(isPieceReleasedOnEmptyTile) sound.playDefault();
  
         // check if king is in check
         uint64 temp = piece.get_legal_move(board, currPiece->type, destination_tile).val;
@@ -216,11 +245,11 @@ void InputHandler::movedPiece(){
             piece.check[!board.turn] = true;
 
         }
-        else sound.playDefault();
 
+        std::cout<<"curr king is safe: "<<piece.is_king_safe(board, board.turn)<<std::endl;
         // sync the board to ensure that all the 3 bitboard in the chessboard are also updated
         board.sync_bitboards(piece.piece_set);
-
+ 
         // flip the turn
         board.flip_turn();
         
