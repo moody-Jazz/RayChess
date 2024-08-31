@@ -1,6 +1,7 @@
 #pragma once
 #include<string>
 #include "../include/bitboard.hpp"
+#include <vector>
 
 #define uint64 unsigned long long
 enum{
@@ -84,6 +85,7 @@ class Board{
         void print();
         void sync_bitboards(BitBoard *piece_set);
         void flip_turn();
+        void highlight_tiles(std::vector<int> arr);
 };
 
 

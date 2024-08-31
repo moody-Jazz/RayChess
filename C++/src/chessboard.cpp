@@ -1,6 +1,7 @@
 #include "../include/chessboard.hpp"
 #include "../include/globalvar.hpp"
 #include <iostream>
+#include <vector>
 
 Board::Board(){
     turn = white;
@@ -51,4 +52,13 @@ void Board::sync_bitboards(BitBoard *piece_set){
 
 void Board::flip_turn(){
     (turn == white)?turn = black: turn = white;
+}
+
+void Board::highlight_tiles(std::vector<int> arr){
+    Color color = {70, 70, 70, 100};
+    for(auto& x: arr){
+        float row = (63 - x) % 8;
+        float col = (63 - x) / 8;
+        DrawRectangle(row*tileSize, col*tileSize, tileSize, tileSize, color);
+    }
 }
