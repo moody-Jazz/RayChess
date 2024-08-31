@@ -39,6 +39,8 @@ Piece::Piece(){
 
     kingPosition[white] = 3;
     kingPosition[black] = 59;
+
+    unsafe_tiles[white] = unsafe_tiles[black] = 0ULL;
 }
 
 BitBoard pawn_attack_bitmask_init(int side, int square){
@@ -240,15 +242,25 @@ BitBoard Piece::get_legal_move(Board board, char type, int square){
         }
         case 'K': {
             res.val = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
-            if(!board.turn && (board.castle[wk] || board.castle[wq])){
-                if(board.castle[wk]){
+            res.val &= ~unsafe_tiles[turn].val;
 
-                }
-                if(board.castle[wq]){
-                    
-                }
+            if(!turn && (board.castle[wk] || board.castle[wq])){ //for white castle
+                uint64 castle_bitmask = 118ULL;
+                castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
+
+                if((castle_bitmask & 6ULL) == 6ULL && board.castle[wk]) 
+                    res.val |= 6ULL;
+                if((castle_bitmask & 112ULL) == 112ULL && board.castle[wq])
+                    res.val |= 48ULL;
             }
-            else if(board.turn &&  (board.castle[bk] || board.castle[bq])){
+            else if(turn && (board.castle[bk] || board.castle[bq])){ // for black castle
+                uint64 castle_bitmask = 8502796096475496448ULL;
+                castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
+
+                if((castle_bitmask & 432345564227567616ULL) == 432345564227567616ULL && board.castle[bk])
+                    res.val |= 432345564227567616ULL;
+                if((castle_bitmask & 8070450532247928832ULL) == 8070450532247928832ULL && board.castle[bq]) 
+                    res.val |= 3458764513820540928ULL;
             }
             break;
         }
@@ -274,31 +286,28 @@ BitBoard Piece::get_legal_move(Board board, char type, int square){
     return res;
 }
 
+void Piece::update_unsafe_tiles(Board board){
+    BitBoard black_attacks(0ULL), white_attacks(0ULL);
+
+    for(int i{}; i<totalPiece; i++){
+        PieceUI *curr = &pieceTextures[i];
+        int square = 63 - (curr->row*8 + curr->col);
+
+        if(curr->type == 'p' || curr->type == 'P'){    // if current piece is pawn then only take its attacking squares
+            if(curr->type == 'p') black_attacks.val |= pawn_attack_bitmask[black][square];
+            else white_attacks.val |= pawn_attack_bitmask[white][square];
+        }
+
+        else if(curr->type > 'a') black_attacks.val |= get_legal_move(board, curr->type, square).val;
+
+        else white_attacks.val |= get_legal_move(board, curr->type, square).val;
+    }
+    unsafe_tiles[white] = black_attacks.val;
+    unsafe_tiles[black] = white_attacks.val;
+}
+
 bool Piece::is_king_safe(Board board, bool white){
-    std::vector<int> attacks;
-    if(!white){ // if we want to know if the white king is safe
-        BitBoard black_attacks(0ULL);
-        for(int i{}; i<totalPiece; i++){
-            PieceUI *curr = &pieceTextures[i];
-            if(curr->type > 'a'){
-                int square = 63 - (curr->row*8 + curr->col);
-                black_attacks.val |= get_legal_move(board, curr->type, square).val;
-            }
-        }
-        attacks = black_attacks.get_set_bit_index();
-    }
-    else{ // if we want to know if the black king is safe
-        BitBoard white_attacks(0ULL);
-        for(int i{}; i<totalPiece; i++){
-            PieceUI *curr = &pieceTextures[i];
-            if(curr->type < 'Z'){
-                int square = 63 - (curr->row*8 + curr->col);
-                white_attacks.val |= get_legal_move(board, curr->type, square).val;
-            }
-        }
-        attacks = white_attacks.get_set_bit_index();
-    }
-    
+    std::vector<int> attacks = unsafe_tiles[board.turn].get_set_bit_index();
     for(auto& x:attacks)
         if(kingPosition[white] == x) return false;
     return true;
