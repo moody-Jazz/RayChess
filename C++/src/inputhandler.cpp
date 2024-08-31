@@ -80,7 +80,7 @@ void InputHandler::mouseInputHandler()
 */
 
 void InputHandler::draggingPiece(){
-    
+    board.highlight_tiles(piece.unsafe_tiles[board.turn].get_set_bit_index());
     highlightLegalMoves();
    
    if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
@@ -104,8 +104,6 @@ void InputHandler::draggingPiece(){
     // std::cout <<currPiece->type<<" "<< clickedOnRow << " " << clickedOnCol << std::endl;
     // if piece is dragged redraw its textures
     DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
-
-
 }
 
 /*
@@ -145,19 +143,51 @@ void InputHandler::movedPiece(){
     if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
 
         // below if else conditions are for checking if the king or rooks have moved to update the casteling state ont he board
+        // if white king is moved
         if(currPiece->type == 'K'){
-
-            piece.kingPosition[white] = 63 - (releasedOnTileRow*8+releasedOnTileCol); //update the global white king position
             
+            piece.kingPosition[white] = destination_tile; //update the global white king position
+            if(source_tile == 3 && destination_tile == 1){
+                PieceUI* rook = isThereA_Piece(7,7);
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                rook->col = 5;
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                sound.playCastle();
+            }
+            else if(source_tile == 3 && destination_tile == 5){
+                PieceUI* rook = isThereA_Piece(7,0);
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                rook->col = 3;
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                sound.playCastle();
+            }
+
             if(board.castle[wk] || board.castle[wq]){
                 board.castle[wk] = false;
                 board.castle[wq] = false;
                 std::cout<<"White king can't castle now\n";
             }
         }
+
+        // if black king is moved
         else if(currPiece->type == 'k'){
 
-            piece.kingPosition[black] =  63 - (releasedOnTileRow*8+releasedOnTileCol); //update the global black king positions
+            piece.kingPosition[black] =  destination_tile; //update the global black king positions
+
+            if(source_tile == 59 && destination_tile == 57){
+                PieceUI* rook = isThereA_Piece(0,7);
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                rook->col = 5;
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                sound.playCastle();
+            }
+            else if(source_tile == 59 && destination_tile == 61){
+                PieceUI* rook = isThereA_Piece(0,0);
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                rook->col = 3;
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                sound.playCastle();
+            }
 
             if(board.castle[bk] || board.castle[bq]){
                 board.castle[bk] = false;
@@ -236,20 +266,16 @@ void InputHandler::movedPiece(){
             totalPiece--;
         }
         else if(isPieceReleasedOnEmptyTile) sound.playDefault();
- 
+        else if(!piece.is_king_safe(board, board.turn)) sound.playCheck();
         // check if king is in check
-        uint64 temp = piece.get_legal_move(board, currPiece->type, destination_tile).val;
-        int king = board.turn?K:k;
-        if(temp & piece.piece_set[king].val){
-            sound.playCheck();
-            piece.check[!board.turn] = true;
-
-        }
+   
 
         std::cout<<"curr king is safe: "<<piece.is_king_safe(board, board.turn)<<std::endl;
         // sync the board to ensure that all the 3 bitboard in the chessboard are also updated
         board.sync_bitboards(piece.piece_set);
- 
+
+        piece.update_unsafe_tiles(board);
+
         // flip the turn
         board.flip_turn();
         
