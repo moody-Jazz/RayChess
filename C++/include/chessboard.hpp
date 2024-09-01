@@ -86,7 +86,7 @@ class Board{
         void print(BitBoard *piece_set);
         void sync_bitboards(BitBoard *piece_set);
         void flip_turn();
-        void highlight_tiles(std::vector<int> arr);
+        void highlight_tiles(const std::vector<int> &arr);
 };
 
 

@@ -66,11 +66,20 @@ void Board::flip_turn(){
     (turn == white)?turn = black: turn = white;
 }
 
-void Board::highlight_tiles(std::vector<int> arr){
-    Color color = {237, 114, 114, 50};
-    for(auto& x: arr){
-        float row = (63 - x) % 8;
-        float col = (63 - x) / 8;
-        DrawRectangle(row*tileSize, col*tileSize, tileSize, tileSize, color);
+void Board::highlight_tiles(const std::vector<int> &arr){
+    for(auto &x :arr){
+            int row = (63 - x) % 8;
+            int col = (63 - x) / 8;
+            bool occupied_tile = isThereA_Piece(col, row);
+            row *= tileSize;
+            col *= tileSize;
+            row += tileSize/2;
+            col += tileSize/2;
+            Color temp = {70, 70, 70, 100};
+            
+            if(occupied_tile) DrawRing({(float)row, (float)col}, 
+                    tileSize/2-7, tileSize/2, 0, 360, 1000, temp);
+
+            else DrawCircle(row, col, tileSize/2-35, temp);
     }
 }

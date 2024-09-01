@@ -20,24 +20,6 @@ InputHandler::InputHandler(Board &board, Piece &piece):
 
 std::vector<int> legal_moves; // legal moves array contains the legal moves for the piece currently held by the player
 
-void highlightLegalMoves(){
-        for(auto &x :legal_moves){
-            int row = (63 - x) % 8;
-            int col = (63 - x) / 8;
-            bool occupied_tile = isThereA_Piece(col, row);
-            row *= tileSize;
-            col *= tileSize;
-            row += tileSize/2;
-            col += tileSize/2;
-            Color temp = {70, 70, 70, 100};
-            
-            if(occupied_tile) DrawRing({(float)row, (float)col}, 
-                    tileSize/2-7, tileSize/2, 0, 360, 1000, temp);
-
-            else DrawCircle(row, col, tileSize/2-35, temp);
-    }
-}
-
 /*
 =======================================================================================================================================================================================================
                     Function to handle all the actions to be performed while a piece is held and bieng dragged accross the board
@@ -82,7 +64,7 @@ void InputHandler::mouseInputHandler()
 
 void InputHandler::draggingPiece(){
 
-    highlightLegalMoves();
+    board.highlight_tiles(legal_moves);
    
    if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
         SetMouseCursor(MOUSE_CURSOR_ARROW);
