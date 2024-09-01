@@ -1,6 +1,8 @@
 #include "../include/raylib.h"
 #include "../include/InputHandler.hpp"
 #include "../include/globalvar.hpp"
+#include "../include/chessboard.hpp"
+#include "../include/piece.hpp"
 #include <string>
 #include <iostream>
 
@@ -20,32 +22,16 @@ void loadTextures()
     }
     InitializePieces(pieceTexture);
 }
-void updateBoard()
-{
-    Color light{218, 217, 233, 255},
-        dark{161, 123, 185, 255},
-        tileColor;
-    // coloring the board
-    for (int row{}; row < 8; row++)
-    {
-        for (int col{}; col < 8; col++)
-        {
-            tileColor = ((row + col) % 2 == 0) ? light : dark; // white tiles will always be on (row + col == even) position
-            DrawRectangle(tileSize * col, tileSize * row, tileSize, tileSize, tileColor);
-        }
-    }
-    for (int i{}; i < totalPiece; i++)
-    {
-        DrawTexture(pieceTextures[i].texture, pieceTextures[i].col * tileSize, pieceTextures[i].row * tileSize, WHITE);
-    }
-}
+    
 int main()
 {
     std::cout<<"Success"<<std::endl;
     InitWindow(tileSize * 8, tileSize * 8, "Chess");
     SetTargetFPS(60);
     loadTextures();
-    InputHandler inputHandler;
+    Board board;
+    Piece piece;
+    InputHandler inputHandler(board, piece);
 
     //print the intial position of every piece
     // for (int i{}; i < 32; i++) 
@@ -57,7 +43,7 @@ int main()
     {  
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        updateBoard();;
+        board.draw();;
         inputHandler.mouseInputHandler();
         EndDrawing();
     }

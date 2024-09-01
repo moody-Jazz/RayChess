@@ -8,16 +8,17 @@
 #include <unordered_map>
 #include <vector>
 
-InputHandler::InputHandler(){
+InputHandler::InputHandler(Board &board, Piece &piece):
+    board(board), piece(piece){ // Initialize references using an initializer list
     clickedOnRow = -1;
     clickedOnCol = -1;
     int releasedOnTileRow = -1, releasedOnTileCol = -1;
     bool pieceSelected = false;
     currPiece = nullptr;
-    board.sync_bitboards(piece.piece_set);
+    this->board.sync_bitboards(this->piece.piece_set);
 }
 
-std::vector<int> legal_moves;
+std::vector<int> legal_moves; // legal moves array contains the legal moves for the piece currently held by the player
 
 void highlightLegalMoves(){
         for(auto &x :legal_moves){
@@ -80,7 +81,7 @@ void InputHandler::mouseInputHandler()
 */
 
 void InputHandler::draggingPiece(){
-    board.highlight_tiles(piece.unsafe_tiles[board.turn].get_set_bit_index());
+
     highlightLegalMoves();
    
    if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
@@ -117,9 +118,11 @@ void InputHandler::movedPiece(){
     releasedOnTileRow = GetMousePosition().y/tileSize;
     PieceUI *releasedOnPiece = isThereA_Piece(releasedOnTileRow,releasedOnTileCol); 
 
-    bool isMouseInsideWindow = (GetMousePosition().y >= 0 && GetMousePosition().y <= GetScreenWidth()) && (GetMousePosition().x >= 0 && GetMousePosition().x <= GetScreenHeight()),
+    bool isMouseInsideWindow = (GetMousePosition().y >= 0 && GetMousePosition().y <= GetScreenWidth()) && 
+                                    (GetMousePosition().x >= 0 && GetMousePosition().x <= GetScreenHeight()),
             isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false,
-            isPieceReleasedOnEnemyTile = (!isPieceReleasedOnEmptyTile && ((releasedOnPiece->type >= 'a' && currPiece->type <= 'Z') || (releasedOnPiece->type <= 'Z' && currPiece->type >= 'a')));
+            isPieceReleasedOnEnemyTile = (!isPieceReleasedOnEmptyTile && 
+            ((releasedOnPiece->type >= 'a' && currPiece->type <= 'Z') || (releasedOnPiece->type <= 'Z' && currPiece->type >= 'a')));
 
     /*  
     The source tile is the ith bit from which the piece moved to the destination bit.
@@ -145,20 +148,20 @@ void InputHandler::movedPiece(){
         // below if else conditions are for checking if the king or rooks have moved to update the casteling state ont he board
         // if white king is moved
         if(currPiece->type == 'K'){
-            
+
             piece.kingPosition[white] = destination_tile; //update the global white king position
             if(source_tile == 3 && destination_tile == 1){
                 PieceUI* rook = isThereA_Piece(7,7);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 5;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
                 sound.playCastle();
             }
             else if(source_tile == 3 && destination_tile == 5){
                 PieceUI* rook = isThereA_Piece(7,0);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 3;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
                 sound.playCastle();
             }
 
@@ -176,16 +179,16 @@ void InputHandler::movedPiece(){
 
             if(source_tile == 59 && destination_tile == 57){
                 PieceUI* rook = isThereA_Piece(0,7);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 5;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
                 sound.playCastle();
             }
             else if(source_tile == 59 && destination_tile == 61){
                 PieceUI* rook = isThereA_Piece(0,0);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 3;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col));
+                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
                 sound.playCastle();
             }
 
@@ -266,9 +269,14 @@ void InputHandler::movedPiece(){
             totalPiece--;
         }
         else if(isPieceReleasedOnEmptyTile) sound.playDefault();
-        else if(!piece.is_king_safe(board, board.turn)) sound.playCheck();
         // check if king is in check
-   
+        uint64 temp = piece.get_legal_move(board, currPiece->type, destination_tile).val;
+        int king = board.turn?K:k;
+        if(temp & piece.piece_set[king].val){
+            sound.playCheck();
+            piece.check[!board.turn] = true;
+
+        }
 
         std::cout<<"curr king is safe: "<<piece.is_king_safe(board, board.turn)<<std::endl;
         // sync the board to ensure that all the 3 bitboard in the chessboard are also updated

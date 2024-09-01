@@ -15,13 +15,13 @@ private:
     // pieceUi is for the visual images fo thier pieces and piece is for the bitobards
     PieceUI* currPiece;
     // piece is for updating the bitboard of every piece and board
-    Piece piece;
+    Piece &piece;
 
-    Board board;
+    Board &board;
 
     GameSound sound;
 public:
-    InputHandler();
+    InputHandler(Board &board, Piece &piece);
     void mouseInputHandler();
     void draggingPiece();
     void movedPiece();

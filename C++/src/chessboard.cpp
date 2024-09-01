@@ -20,24 +20,36 @@ Board::Board(const Board& board){
     this->bitboards[2] = board.bitboards[2];
 }
 
+void Board::draw()
+{
+    Color light{218, 217, 233, 255},
+        dark{161, 123, 185, 255},
+        tileColor;
+    // coloring the board
+    for (int row{}; row < 8; row++)
+    {
+        for (int col{}; col < 8; col++)
+        {
+            tileColor = ((row + col) % 2 == 0) ? light : dark; // white tiles will always be on (row + col == even) position
+            DrawRectangle(tileSize * col, tileSize * row, tileSize, tileSize, tileColor);
+        }
+    }
+    for (int i{}; i < totalPiece; i++)
+        DrawTexture(pieceTextures[i].texture, pieceTextures[i].col * tileSize, pieceTextures[i].row * tileSize, WHITE);
+}
 
-void Board::print(){
-    int count{};
-    for(int i=63; i>=0; i--){
-        if(bitboards[both].get_bit(63)){
-            for(int j{}; j<totalPiece; j++){
-                if(pieceTextures[j].row * 8 + pieceTextures[j].col == i){
-                    std::cout<<pieceTextures[j].type<<" ";
-                    break;
-                }
+void Board::print(BitBoard *piece_set){
+    bool empty;
+    for(int tile = 63; tile>=0; tile--){ 
+        empty = true;  
+        for(int i = P; i<=k; i++){
+            if(piece_set[i].get_bit(tile)){
+                std::cout<<ascii_pieces[i]<<" ";
+                empty = false;
             }
         }
-        else std::cout<<".";
-        count++;
-        if(count == 8){
-            std::cout<<std::endl;
-            count = 0;
-        }
+        if(empty) std::cout<<". ";
+        if(tile % 8 == 0) std::cout<<"\n";
     }
 }
 
@@ -55,7 +67,7 @@ void Board::flip_turn(){
 }
 
 void Board::highlight_tiles(std::vector<int> arr){
-    Color color = {70, 70, 70, 100};
+    Color color = {237, 114, 114, 50};
     for(auto& x: arr){
         float row = (63 - x) % 8;
         float col = (63 - x) / 8;

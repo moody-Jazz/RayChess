@@ -7,8 +7,6 @@ int totalPiece = 32;
 // ASCII pieces
 const std::string ascii_pieces = "PNBRQKpnbrqk";
 
-const char unicode_pieces[12] = {'P','N','B','Q','K','p','n','b','r','q','k'};
-
 const std::unordered_map<char, int>char_pieces = {
     {'P', P},
     {'N', N},

@@ -4,6 +4,12 @@
 #include <vector>
 #include <iostream>
 
+/*
+=======================================================================================================================================================================================================
+                    Constructor to setup the pieces on thier initial squares
+=======================================================================================================================================================================================================
+*/
+
 Piece::Piece(){
     /* 
     all the pieces will be initialised with a decimal value which in is similar to initial chess pieces position
@@ -42,6 +48,12 @@ Piece::Piece(){
 
     unsafe_tiles[white] = unsafe_tiles[black] = 0ULL;
 }
+
+/*
+=======================================================================================================================================================================================================
+                    Below are all the functions which are used to generate possible moves for every type of piece
+=======================================================================================================================================================================================================
+*/
 
 BitBoard pawn_attack_bitmask_init(int side, int square){
     
@@ -200,6 +212,12 @@ uint64 Piece::get_queen_attacks(int square, uint64 block){
     return attacks;
 }
 
+/*
+=======================================================================================================================================================================================================
+                    Get legal move function doesn't generate purely legal moves it doesn't conttains the logic to restrain the movement of pinned pieces
+=======================================================================================================================================================================================================
+*/
+
 BitBoard Piece::get_legal_move(Board board, char type, int square){
 
     char piece = toupper(type);
@@ -285,6 +303,14 @@ BitBoard Piece::get_legal_move(Board board, char type, int square){
     }
     return res;
 }
+
+/*
+=======================================================================================================================================================================================================
+                Update unsafe tile function is used to update two bitboards which contains info about all the tiles which are bieng attacked by the enemy
+
+                this method is used to maintain the unsafe tiles bitboards which are used to generate legal king moves as king can't move to a tile which is bieng attacked by enemy
+=======================================================================================================================================================================================================
+*/
 
 void Piece::update_unsafe_tiles(Board board){
     BitBoard black_attacks(0ULL), white_attacks(0ULL);
