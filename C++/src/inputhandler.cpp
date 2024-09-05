@@ -45,7 +45,7 @@ void InputHandler::mouseInputHandler()
             //std::cout<<currPiece->type<<std::endl;
 
             unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col);
-            legal_moves = piece.get_legal_move(board, currPiece->type, source_tile).get_set_bit_index();
+            legal_moves = piece.get_legal_moves(board, currPiece->type, source_tile);
             //std::cout<<legal_moves.size()<<" is total legal moves\n";
         }
     }
@@ -252,13 +252,7 @@ void InputHandler::movedPiece(){
         }
         else if(isPieceReleasedOnEmptyTile) sound.playDefault();
         // check if king is in check
-        uint64 temp = piece.get_legal_move(board, currPiece->type, destination_tile).val;
-        int king = board.turn?K:k;
-        if(temp & piece.piece_set[king].val){
-            sound.playCheck();
-            piece.check[!board.turn] = true;
-
-        }
+        
 
         std::cout<<"curr king is safe: "<<piece.is_king_safe(board, board.turn)<<std::endl;
         // sync the board to ensure that all the 3 bitboard in the chessboard are also updated

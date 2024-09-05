@@ -218,7 +218,7 @@ uint64 Piece::get_queen_attacks(int square, uint64 block){
 =======================================================================================================================================================================================================
 */
 
-BitBoard Piece::get_legal_move(Board board, char type, int square){
+BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
 
     char piece = toupper(type);
     int turn = (type < 'Z')?0:1;
@@ -260,7 +260,6 @@ BitBoard Piece::get_legal_move(Board board, char type, int square){
         }
         case 'K': {
             res.val = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
-            res.val &= ~unsafe_tiles[turn].val;
 
             if(!turn && (board.castle[wk] || board.castle[wq])){ //for white castle
                 uint64 castle_bitmask = 118ULL;
@@ -324,9 +323,9 @@ void Piece::update_unsafe_tiles(Board board){
             else white_attacks.val |= pawn_attack_bitmask[white][square];
         }
 
-        else if(curr->type > 'a') black_attacks.val |= get_legal_move(board, curr->type, square).val;
+        else if(curr->type > 'a') black_attacks.val |= get_pseudo_legal_move(board, curr->type, square).val;
 
-        else white_attacks.val |= get_legal_move(board, curr->type, square).val;
+        else white_attacks.val |= get_pseudo_legal_move(board, curr->type, square).val;
     }
     unsafe_tiles[white] = black_attacks.val;
     unsafe_tiles[black] = white_attacks.val;
@@ -337,4 +336,23 @@ bool Piece::is_king_safe(Board board, bool white){
     for(auto& x:attacks)
         if(kingPosition[white] == x) return false;
     return true;
+}
+
+std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
+    int turn = (type < 'Z')?0:1;
+    // find the possible moves
+    std::vector<int> possible_moves = get_pseudo_legal_move(board, type, source).get_set_bit_index();
+
+    // for(auto&x:possible_moves)std::cout<<x<<" ";
+    // std::cout<<std::endl;
+    // return possible_moves;
+
+    std::vector<int> valid_moves;
+
+    // to do 
+    // temporary move to the possible move square and check if king is safe after moving the piece if the king is safe then the move is valid else the move is invalid
+    // valid moves will be pushed inside the validMoves array
+    // after doing all these operation reset all the moves, board state and all the bitboards
+    
+    return valid_moves;
 }

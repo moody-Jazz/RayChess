@@ -139,7 +139,8 @@ public:
     uint64 get_bishop_attacks(int square, uint64 block);
     uint64 get_rook_attacks(int square, uint64 block);
     uint64 get_queen_attacks(int square, uint64 block);
-    BitBoard get_legal_move(Board board, char type, int square);
+    BitBoard get_pseudo_legal_move(Board board, char type, int square);
     void update_unsafe_tiles(Board board);
     bool is_king_safe(Board board, bool white);
+    std::vector<int> get_legal_moves(Board board, char type, int source);
 };
