@@ -251,10 +251,7 @@ void InputHandler::movedPiece(){
             totalPiece--;
         }
         else if(isPieceReleasedOnEmptyTile) sound.playDefault();
-        // check if king is in check
         
-
-        std::cout<<"curr king is safe: "<<piece.is_king_safe(board, board.turn)<<std::endl;
         // sync the board to ensure that all the 3 bitboard in the chessboard are also updated
         board.sync_bitboards(piece.piece_set);
 

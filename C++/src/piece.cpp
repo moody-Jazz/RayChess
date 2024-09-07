@@ -212,6 +212,11 @@ uint64 Piece::get_queen_attacks(int square, uint64 block){
     return attacks;
 }
 
+void Piece::update_piece_bitboard(char type, int src, int dest){
+    this->piece_set[char_pieces.at(type)].set_bit(dest);
+    this->piece_set[char_pieces.at(type)].pop_bit(src);
+}
+
 /*
 =======================================================================================================================================================================================================
                     Get legal move function doesn't generate purely legal moves it doesn't conttains the logic to restrain the movement of pinned pieces
@@ -314,45 +319,88 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
 void Piece::update_unsafe_tiles(Board board){
     BitBoard black_attacks(0ULL), white_attacks(0ULL);
 
-    for(int i{}; i<totalPiece; i++){
-        PieceUI *curr = &pieceTextures[i];
-        int square = 63 - (curr->row*8 + curr->col);
-
-        if(curr->type == 'p' || curr->type == 'P'){    // if current piece is pawn then only take its attacking squares
-            if(curr->type == 'p') black_attacks.val |= pawn_attack_bitmask[black][square];
-            else white_attacks.val |= pawn_attack_bitmask[white][square];
+    for(int i = P; i<=k; i++){
+        if(i<=K){
+            std::vector<int> possible_moves = this->piece_set[i].get_set_bit_index();
+            for(auto &x: possible_moves)
+                white_attacks.val |= get_pseudo_legal_move(board, ascii_pieces[i], x).val;
         }
-
-        else if(curr->type > 'a') black_attacks.val |= get_pseudo_legal_move(board, curr->type, square).val;
-
-        else white_attacks.val |= get_pseudo_legal_move(board, curr->type, square).val;
+        else{
+            std::vector<int> possible_moves = this->piece_set[i].get_set_bit_index();
+            for(auto &x: possible_moves)
+                black_attacks.val |= get_pseudo_legal_move(board, ascii_pieces[i], x).val;
+        }
     }
     unsafe_tiles[white] = black_attacks.val;
     unsafe_tiles[black] = white_attacks.val;
 }
 
-bool Piece::is_king_safe(Board board, bool white){
-    std::vector<int> attacks = unsafe_tiles[board.turn].get_set_bit_index();
+bool Piece::is_king_safe(bool white){
+
+    std::vector<int> attacks = unsafe_tiles[white].get_set_bit_index();
     for(auto& x:attacks)
         if(kingPosition[white] == x) return false;
     return true;
 }
 
-std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
+std::vector<int> Piece::get_legal_moves(Board &board, char type, int source){
     int turn = (type < 'Z')?0:1;
+    int piece = char_pieces.at(type);
+    BitBoard temp_unsafe[2];
+    temp_unsafe[white] = unsafe_tiles[white];
+    temp_unsafe[black] = unsafe_tiles[black];
+
+    BitBoard bitboards[3];
+    bitboards[white] = board.bitboards[white];
+    bitboards[black] = board.bitboards[black];
+    bitboards[both] = board.bitboards[both];
+
+    BitBoard piece_bitboard(this->piece_set[piece].val);
+
+    int temp_king_position[2];
+    temp_king_position[white] = kingPosition[white];
+    temp_king_position[black] = kingPosition[black];
+
     // find the possible moves
     std::vector<int> possible_moves = get_pseudo_legal_move(board, type, source).get_set_bit_index();
 
-    // for(auto&x:possible_moves)std::cout<<x<<" ";
-    // std::cout<<std::endl;
-    // return possible_moves;
-
     std::vector<int> valid_moves;
 
-    // to do 
-    // temporary move to the possible move square and check if king is safe after moving the piece if the king is safe then the move is valid else the move is invalid
-    // valid moves will be pushed inside the validMoves array
-    // after doing all these operation reset all the moves, board state and all the bitboards
+    for(auto &x: possible_moves){
+        int row = (63-x)/8, col = (63-x)%8;
+        PieceUI *captured = isThereA_Piece(row, col);
+        uint64 captured_bitboard;
+
+        if(captured){ // if the possible move is capture of enemy piece
+            captured_bitboard = piece_set[char_pieces.at(captured->type)].val;
+            update_piece_bitboard(captured->type, x, x);
+        }
+
+        // if king is bieng moved then update the king position as well
+        if(type == 'k' || type == 'K') (type == 'K')? kingPosition[white] = x: kingPosition[black] = x;
+
+        // update all the variables representing the state of board and pieceSet according to move
+        update_piece_bitboard(type, source, x);
+        board.sync_bitboards(this->piece_set);
+        update_unsafe_tiles(board);
+
+        if(is_king_safe(turn)) valid_moves.push_back(x); //if king is safe after executing the current possible move then consider this as a valid move
+
+        // reset everything;
+        if(captured) piece_set[char_pieces.at(captured->type)].val = captured_bitboard;
+
+        unsafe_tiles[white] = temp_unsafe[white];
+        unsafe_tiles[black] = temp_unsafe[black];
+
+        board.bitboards[white] = bitboards[white];
+        board.bitboards[black] = bitboards[black];
+        board.bitboards[both] = bitboards[both];
+
+        this->piece_set[piece].val = piece_bitboard.val;
+
+        kingPosition[white] = temp_king_position[white];
+        kingPosition[black] = temp_king_position[black];
+    }
     
     return valid_moves;
 }
