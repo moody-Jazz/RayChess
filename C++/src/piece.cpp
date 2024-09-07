@@ -343,7 +343,7 @@ bool Piece::is_king_safe(bool white){
     return true;
 }
 
-std::vector<int> Piece::get_legal_moves(Board &board, char type, int source){
+std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
     int turn = (type < 'Z')?0:1;
     int piece = char_pieces.at(type);
     BitBoard temp_unsafe[2];
@@ -369,7 +369,7 @@ std::vector<int> Piece::get_legal_moves(Board &board, char type, int source){
     for(auto &x: possible_moves){
         int row = (63-x)/8, col = (63-x)%8;
         PieceUI *captured = isThereA_Piece(row, col);
-        uint64 captured_bitboard;
+        uint64 captured_bitboard = 0ULL;
 
         if(captured){ // if the possible move is capture of enemy piece
             captured_bitboard = piece_set[char_pieces.at(captured->type)].val;

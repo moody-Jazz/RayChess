@@ -143,5 +143,5 @@ public:
     BitBoard get_pseudo_legal_move(Board board, char type, int square);
     void update_unsafe_tiles(Board board);
     bool is_king_safe(bool white);
-    std::vector<int> get_legal_moves(Board &board, char type, int source);
+    std::vector<int> get_legal_moves(Board board, char type, int source);
 };

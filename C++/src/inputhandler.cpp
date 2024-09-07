@@ -10,10 +10,13 @@
 
 InputHandler::InputHandler(Board &board, Piece &piece):
     board(board), piece(piece){ // Initialize references using an initializer list
+    
     clickedOnRow = -1;
     clickedOnCol = -1;
-    int releasedOnTileRow = -1, releasedOnTileCol = -1;
-    bool pieceSelected = false;
+    releasedOnTileRow = -1;
+    releasedOnTileCol = -1;
+
+    pieceSelected = false;
     currPiece = nullptr;
     this->board.sync_bitboards(this->piece.piece_set);
 }
@@ -74,10 +77,8 @@ void InputHandler::draggingPiece(){
 
 
     Rectangle rec = {
-        static_cast<float>((int)GetMousePosition().x / tileSize) * tileSize,
-        static_cast<float>((int)GetMousePosition().y / tileSize) * tileSize,
-        tileSize,
-        tileSize
+        float((int)GetMousePosition().x / tileSize) * tileSize,
+        float((int)GetMousePosition().y / tileSize) * tileSize, (float)tileSize, (float)tileSize
     };
 
     // draw an outline and highlight the square bieng clicked
@@ -119,7 +120,7 @@ void InputHandler::movedPiece(){
 
     bool isMoveLegal = false;
     for(auto &x: legal_moves){
-        if(destination_tile == x){
+        if((int)destination_tile == x){
             isMoveLegal = true;
             break;
         }
