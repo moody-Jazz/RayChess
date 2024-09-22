@@ -265,8 +265,8 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
         }
         case 'K': {
             res.val = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
-
-            if(!turn && (board.castle[wk] || board.castle[wq])){ //for white castle
+            bool kingSafety = is_king_safe(turn);
+            if(!turn && kingSafety && (board.castle[wk] || board.castle[wq])){ //for white castle
                 uint64 castle_bitmask = 118ULL;
                 castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
 
@@ -275,7 +275,7 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
                 if((castle_bitmask & 112ULL) == 112ULL && board.castle[wq])
                     res.val |= 48ULL;
             }
-            else if(turn && (board.castle[bk] || board.castle[bq])){ // for black castle
+            else if(turn && kingSafety && (board.castle[bk] || board.castle[bq])){ // for black castle
                 uint64 castle_bitmask = 8502796096475496448ULL;
                 castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
 
