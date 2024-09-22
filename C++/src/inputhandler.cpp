@@ -1,7 +1,6 @@
 #include <iostream>
 #include "../include/inputhandler.hpp"
 #include "../include/raylib.h"
-#include "../include/gamesound.hpp"
 #include "../include/globalvar.hpp"
 #include "../include/bitboard.hpp"
 #include "../include/piece.hpp"
@@ -115,8 +114,7 @@ void InputHandler::movedPiece(){
     the bitboards will be updated mimic the visual board
     */
     // pop the source tile bit and set the destinatio tile bit to update the bitboard
-    unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
-                    destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
+    unsigned int destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
 
     bool isMoveLegal = false;
     for(auto &x: legal_moves){
@@ -128,133 +126,7 @@ void InputHandler::movedPiece(){
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
     if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
 
-        // below if else conditions are for checking if the king or rooks have moved to update the casteling state ont he board
-        // if white king is moved
-        if(currPiece->type == 'K'){
-
-            piece.kingPosition[white] = destination_tile; //update the global white king position
-            if(source_tile == 3 && destination_tile == 1){
-                PieceUI* rook = isThereA_Piece(7,7);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
-                rook->col = 5;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
-            }
-            else if(source_tile == 3 && destination_tile == 5){
-                PieceUI* rook = isThereA_Piece(7,0);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
-                rook->col = 3;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
-            }
-
-            if(board.castle[wk] || board.castle[wq]){
-                board.castle[wk] = false;
-                board.castle[wq] = false;
-                std::cout<<"White king can't castle now\n";
-            }
-        }
-
-        // if black king is moved
-        else if(currPiece->type == 'k'){
-
-            piece.kingPosition[black] =  destination_tile; //update the global black king positions
-
-            if(source_tile == 59 && destination_tile == 57){
-                PieceUI* rook = isThereA_Piece(0,7);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
-                rook->col = 5;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
-            }
-            else if(source_tile == 59 && destination_tile == 61){
-                PieceUI* rook = isThereA_Piece(0,0);
-                piece.piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
-                rook->col = 3;
-                piece.piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
-            }
-
-            if(board.castle[bk] || board.castle[bq]){
-                board.castle[bk] = false;
-                board.castle[bq] = false;
-                std::cout<<"Black king can't castle now\n";
-            }
-        }
-        if((board.castle[wk] || board.castle[wq]) && currPiece->type == 'R'){
-            if(currPiece->row == 7 && currPiece->col == 7){
-                board.castle[wk] = false;
-                std::cout<<"White king can't castle king side now\n";
-            }
-            else if (currPiece->row == 7 && currPiece->col == 0){
-                board.castle[wq] = false;
-                std::cout<<"White king can't castle queen side now\n";
-            }
-        }
-        else if((board.castle[bk] || board.castle[bq]) && currPiece->type == 'r'){
-            if(currPiece->row == 0 && currPiece->col == 7){
-                board.castle[bk] = false;
-                std::cout<<"black king can't castle king side now\n";
-            }
-            else if (currPiece->row == 0 && currPiece->col == 0){
-                board.castle[bq] = false;
-                std::cout<<"black king can't castle queen side now\n";
-            }
-        }
-
-        piece.piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
-        piece.piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
-        std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
-
-
-        currPiece->row = releasedOnTileRow;
-        currPiece->col = releasedOnTileCol;
-
-
-        // if enemy piece is captured then put the captured piece at the end of the array and decrease the size till which updateBoard have acess 
-        if(isPieceReleasedOnEnemyTile){
-            sound.playCapture();
-
-            // if piece is release on enemy tile pop that enemy piece from the bitboards
-            piece.piece_set[char_pieces.at(releasedOnPiece->type)].pop_bit(destination_tile);
-
-            //std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
-
-            // swap the captured piece from the last piece in the pieceui array and reduce the size basically 
-            // like deleting the captured piece textures updating the casteling state
-
-            // below if else conditions are for checking if the rooks have been captured to update the casteling state ont he board
-            if((board.castle[wk] || board.castle[wq]) && releasedOnPiece->type == 'R'){
-                if(releasedOnPiece->row == 7 && releasedOnPiece->col == 7){
-                    board.castle[wk] = false;
-                    std::cout<<"White king can't castle king side now\n";
-                } 
-                else if (releasedOnPiece->row == 7 && releasedOnPiece->col == 0){  
-                    board.castle[wq] = false;
-                    std::cout<<"White king can't castle queen side now\n";
-                }
-            }
-            else if((board.castle[bk] || board.castle[bq]) && releasedOnPiece->type == 'r'){
-                if(releasedOnPiece->row == 0 && releasedOnPiece->col == 7)  {
-                    board.castle[bk] = false;
-                    std::cout<<"black king can't castle king side now\n";
-                }
-                else if (releasedOnPiece->row == 0 && releasedOnPiece->col == 0)  {
-                    board.castle[bq] = false;
-                    std::cout<<"black king can't castle queen side now\n";
-                }
-            }
-
-            releasedOnPiece->row = pieceTextures[totalPiece-1].row;
-            releasedOnPiece->col = pieceTextures[totalPiece-1].col;
-            releasedOnPiece->type = pieceTextures[totalPiece-1].type;
-            releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
-            totalPiece--;
-        }
-        else if(isPieceReleasedOnEmptyTile) sound.playDefault();
-        
-        // sync the board to ensure that all the 3 bitboard in the chessboard are also updated
-        board.sync_bitboards(piece.piece_set);
+        board.make_move(currPiece, releasedOnTileRow, releasedOnTileCol, piece.piece_set, piece.kingPosition);
 
         piece.update_unsafe_tiles(board);
 

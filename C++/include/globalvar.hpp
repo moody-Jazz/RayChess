@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include <unordered_map>
 #include <string>
+#include "../include/gamesound.hpp"
 
 // this header file contains all the necessary stuff related to ui managment like piece textures
 extern int tileSize;
@@ -14,6 +15,7 @@ extern const std::string ascii_pieces;
 // convert ascii char pieces to encode constants
 extern const std::unordered_map<char, int>char_pieces;
 
+extern GameSound sound;
 typedef struct PieceUI
 {
     char type;

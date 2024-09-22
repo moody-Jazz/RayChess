@@ -2,6 +2,7 @@
 #include<string>
 #include "../include/bitboard.hpp"
 #include <vector>
+#include "../include/globalvar.hpp"
 
 #define uint64 unsigned long long
 enum{
@@ -87,6 +88,7 @@ class Board{
         void sync_bitboards(BitBoard *piece_set);
         void flip_turn();
         void highlight_tiles(const std::vector<int> &arr);
+        void make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTileCol, BitBoard *piece_set, int *kingPosition);
 };
 
 

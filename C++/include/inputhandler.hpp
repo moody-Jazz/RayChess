@@ -1,6 +1,5 @@
 #include "raylib.h"
-#include "gamesound.hpp" 
-#include "globalvar.hpp"
+#include "../include/globalvar.hpp"
 #include "../include/piece.hpp"
 #include "../include/chessboard.hpp"
 
@@ -17,8 +16,6 @@ private:
     Board &board;
     // piece is for updating the bitboard of every piece and board
     Piece &piece;
-
-    GameSound sound;
 public:
     InputHandler(Board &board, Piece &piece);
     void mouseInputHandler();

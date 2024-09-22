@@ -3,7 +3,7 @@
 
 int tileSize = 110;
 int totalPiece = 32;
-
+GameSound sound;
 // ASCII pieces
 const std::string ascii_pieces = "PNBRQKpnbrqk";
 
