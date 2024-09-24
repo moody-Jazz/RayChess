@@ -80,11 +80,13 @@ class Board{
         int turn;
         bool castle[4]; 
         BitBoard bitboards[3]; // {white, black, both}
+        char matrix_board[8][8];
 
         Board();
         Board(const Board& board);
         void draw();
-        void print(BitBoard *piece_set);
+        void update_matrix_board();
+        void print();
         void sync_bitboards(BitBoard *piece_set);
         void flip_turn();
         void highlight_tiles(const std::vector<int> &arr);

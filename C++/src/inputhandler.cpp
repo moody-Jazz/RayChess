@@ -135,7 +135,7 @@ void InputHandler::movedPiece(){
         
         //printf((board.turn)?"black's turn\n": "white's turn\n");
     }        
-    
+    board.print();
     releasedOnPiece = nullptr;     
     currPiece = nullptr;
     pieceSelected = false;

@@ -7,6 +7,7 @@ Board::Board(){
     turn = white;
     castle[wk] = castle[wq] = castle[bk] = castle[bq] = true;
     bitboards[white].val = bitboards[black].val = bitboards[both].val = 0ULL;
+    this->update_matrix_board();
 }
 
 Board::Board(const Board& board){
@@ -38,7 +39,23 @@ void Board::draw()
         DrawTexture(pieceTextures[i].texture, pieceTextures[i].col * tileSize, pieceTextures[i].row * tileSize, WHITE);
 }
 
-void Board::print(BitBoard *piece_set){
+void Board::update_matrix_board(){
+    for(int i{}; i<8; i++){
+        for(int j{}; j<8; j++){
+            PieceUI *currPiece = isThereA_Piece(i, j);
+            if(currPiece)
+                matrix_board[i][j] = currPiece->type;
+            else matrix_board[i][j] = '.';
+        }
+    }
+}
+void Board::print(){
+    for(int i{}; i<8; i++){
+        for(int j{}; j<8; j++){
+            std::cout<<matrix_board[i][j];
+        }
+        std::cout<<"\n";
+    }/*
     bool empty;
     for(int tile = 63; tile>=0; tile--){ 
         empty = true;  
@@ -51,6 +68,7 @@ void Board::print(BitBoard *piece_set){
         if(empty) std::cout<<". ";
         if(tile % 8 == 0) std::cout<<"\n";
     }
+    */
 }
 
 void Board::sync_bitboards(BitBoard *piece_set){
@@ -218,5 +236,6 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
         }
         else if(isPieceReleasedOnEmptyTile) sound.playDefault();
 
-        sync_bitboards(piece_set);      
+        sync_bitboards(piece_set);  
+        update_matrix_board();    
 }
