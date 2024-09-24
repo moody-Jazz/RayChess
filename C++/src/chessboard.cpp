@@ -7,7 +7,10 @@ Board::Board(){
     turn = white;
     castle[wk] = castle[wq] = castle[bk] = castle[bq] = true;
     bitboards[white].val = bitboards[black].val = bitboards[both].val = 0ULL;
+    FEN_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     this->update_matrix_board();
+    en_passant = -1;
+    empty_moves = 0;
 }
 
 Board::Board(const Board& board){
@@ -55,7 +58,9 @@ void Board::print(){
             std::cout<<matrix_board[i][j];
         }
         std::cout<<"\n";
-    }/*
+    }
+    std::cout<<FEN_string<<"\n";
+    /*
     bool empty;
     for(int tile = 63; tile>=0; tile--){ 
         empty = true;  
@@ -84,6 +89,45 @@ void Board::flip_turn(){
     (turn == white)?turn = black: turn = white;
 }
 
+void Board::matrix_to_FEN(){
+    std::string str;
+    for(int i{}; i<8; i++){
+        int emptyCol{};
+        for(int j{}; j<8; j++){
+            if(matrix_board[i][j] != '.'){
+                if(emptyCol){
+                    str += std::to_string(emptyCol);
+                    emptyCol = 0;
+                }
+                str += matrix_board[i][j];
+            }
+            else{
+                emptyCol++;
+            }
+        }
+        if(emptyCol){
+            str += std::to_string(emptyCol);
+            emptyCol = 0;
+        }
+        if(i<7)str+='/';
+    }
+    str += (turn)?" w":" b"; // Add turn
+    str+=" ";
+    if(castle[wk] || castle[wq] || castle[bk] || castle[bq]){
+        if(castle[wk]) str += "K";
+        if(castle[wq]) str += "Q";
+        if(castle[bk]) str += "k";
+        if(castle[bq]) str += "q";
+    }
+    else str += "-";
+    str+=" ";
+    if(en_passant != -1) str += coordinate[en_passant];
+    else str += "-";
+    str+=" ";
+    str+=empty_moves;
+    
+    FEN_string = str;
+}
 void Board::highlight_tiles(const std::vector<int> &arr){
     for(auto &x :arr){
             int row = (63 - x) % 8;
@@ -233,9 +277,16 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             releasedOnPiece->type = pieceTextures[totalPiece-1].type;
             releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
             totalPiece--;
+            empty_moves = 0;
         }
-        else if(isPieceReleasedOnEmptyTile) sound.playDefault();
+        else if(isPieceReleasedOnEmptyTile){
+            sound.playDefault();
+            empty_moves++;
+        }
+
+        if(std::toupper(currPiece->type) != 'P' || !isPieceReleasedOnEmptyTile) empty_moves = 0; // if pawn is moved or piece is captured reset empty moves
 
         sync_bitboards(piece_set);  
-        update_matrix_board();    
+        update_matrix_board();
+        matrix_to_FEN();
 }

@@ -38,6 +38,7 @@ void InputHandler::mouseInputHandler()
 
         //if clicked on a tile with a piece; 
         currPiece = isThereA_Piece(clickedOnRow, clickedOnCol);
+    
         if(currPiece != nullptr){
             pieceSelected = true;
             SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
@@ -47,7 +48,10 @@ void InputHandler::mouseInputHandler()
             //std::cout<<currPiece->type<<std::endl;
 
             unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col);
-            legal_moves = piece.get_legal_moves(board, currPiece->type, source_tile);
+
+            int currTurn = (currPiece->type >= 'a')?black : white; 
+
+            if(currTurn == board.turn) legal_moves = piece.get_legal_moves(board, currPiece->type, source_tile);
             //std::cout<<legal_moves.size()<<" is total legal moves\n";
         }
     }
@@ -132,11 +136,13 @@ void InputHandler::movedPiece(){
 
         // flip the turn
         board.flip_turn();
+        board.print();
         
         //printf((board.turn)?"black's turn\n": "white's turn\n");
     }        
-    board.print();
+    
     releasedOnPiece = nullptr;     
     currPiece = nullptr;
     pieceSelected = false;
+    legal_moves = {};
 }

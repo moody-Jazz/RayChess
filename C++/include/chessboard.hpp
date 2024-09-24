@@ -81,6 +81,9 @@ class Board{
         bool castle[4]; 
         BitBoard bitboards[3]; // {white, black, both}
         char matrix_board[8][8];
+        std::string FEN_string;
+        int en_passant;
+        int empty_moves;
 
         Board();
         Board(const Board& board);
@@ -89,8 +92,12 @@ class Board{
         void print();
         void sync_bitboards(BitBoard *piece_set);
         void flip_turn();
+        void matrix_to_FEN();
         void highlight_tiles(const std::vector<int> &arr);
         void make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTileCol, BitBoard *piece_set, int *kingPosition);
 };
 
+/*
+     0 0 0 0 0 0 0 0 
 
+*/
