@@ -13,17 +13,6 @@ Board::Board(){
     empty_moves = 0;
 }
 
-Board::Board(const Board& board){
-    this->turn = board.turn;
-    this->castle[0] = board.castle[0];
-    this->castle[1] = board.castle[1];
-    this->castle[2] = board.castle[2];
-    this->castle[3] = board.castle[3];
-    this->bitboards[0] = board.bitboards[0];
-    this->bitboards[1] = board.bitboards[1];
-    this->bitboards[2] = board.bitboards[2];
-}
-
 void Board::draw()
 {
     Color light{218, 217, 233, 255},
@@ -124,7 +113,7 @@ void Board::matrix_to_FEN(){
     if(en_passant != -1) str += coordinate[en_passant];
     else str += "-";
     str+=" ";
-    str+=empty_moves;
+    str+= std::to_string(empty_moves);
     
     FEN_string = str;
 }
@@ -154,6 +143,11 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
     
     bool isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false;
 
+    // check if this moves activates an enpassant on the board
+    if((currPiece->type == 'P' || currPiece->type == 'p') && abs(source_tile - destination_tile) == 16){
+        (currPiece->type == 'P')? en_passant = 63 - (destination_tile-8): en_passant = 63 - (destination_tile + 8);
+    }
+    
 
     // below if else conditions are for checking if the king or rooks have moved to update the casteling state ont he board
     // if white king is moved
@@ -255,7 +249,7 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
                 if(releasedOnPiece->row == 7 && releasedOnPiece->col == 7){
                     castle[wk] = false;
                     std::cout<<"White king can't castle king side now\n";
-                } 
+                }
                 else if (releasedOnPiece->row == 7 && releasedOnPiece->col == 0){  
                     castle[wq] = false;
                     std::cout<<"White king can't castle queen side now\n";
@@ -281,10 +275,10 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
         }
         else if(isPieceReleasedOnEmptyTile){
             sound.playDefault();
-            empty_moves++;
+            if(std::toupper(currPiece->type) != 'P')empty_moves++;
         }
 
-        if(std::toupper(currPiece->type) != 'P' || !isPieceReleasedOnEmptyTile) empty_moves = 0; // if pawn is moved or piece is captured reset empty moves
+        if(std::toupper(currPiece->type) == 'P' || !isPieceReleasedOnEmptyTile) empty_moves = 0; // if pawn is moved or piece is captured reset empty moves
 
         sync_bitboards(piece_set);  
         update_matrix_board();

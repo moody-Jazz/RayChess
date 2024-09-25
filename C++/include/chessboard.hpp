@@ -86,7 +86,6 @@ class Board{
         int empty_moves;
 
         Board();
-        Board(const Board& board);
         void draw();
         void update_matrix_board();
         void print();

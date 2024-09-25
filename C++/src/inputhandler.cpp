@@ -75,6 +75,7 @@ void InputHandler::draggingPiece(){
    if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
         SetMouseCursor(MOUSE_CURSOR_ARROW);
         pieceSelected = false;
+        legal_moves = {};
         return;
    } 
 
@@ -127,9 +128,10 @@ void InputHandler::movedPiece(){
             break;
         }
     }
+    legal_moves = {};
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
     if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
-
+        
         board.make_move(currPiece, releasedOnTileRow, releasedOnTileCol, piece.piece_set, piece.kingPosition);
 
         piece.update_unsafe_tiles(board);
@@ -144,5 +146,4 @@ void InputHandler::movedPiece(){
     releasedOnPiece = nullptr;     
     currPiece = nullptr;
     pieceSelected = false;
-    legal_moves = {};
 }

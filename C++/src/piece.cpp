@@ -158,12 +158,12 @@ uint64 Piece::get_bishop_attacks(int square, uint64 block){
     uint64 attacks(0ULL);
     int r, f;
     int tr = square/8;
-    int tf = square % 8; 
+    int tf = square % 8;
 
     for(r = tr +1, f = tf+1; r<=7 && f<=7; r++, f++){
         attacks |= (1ULL << (r*8+f));
         if(block & (1ULL << (r*8+f))) break;
-    } 
+    }
     for(r = tr -1, f = tf+1; r>=0 && f<=7; r--, f++){
         attacks |= (1ULL << (r*8+f));
         if(block & (1ULL << (r*8+f))) break;
@@ -234,7 +234,10 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
         case 'P': {
            // find legal attack moves
             uint64 pawn_attack = pawn_attack_bitmask[turn][square] & board.bitboards[!turn].val;
-
+            // if there is an enpassant available a pawn can catpure it add it to pawn attack
+            if(board.en_passant != -1)
+                pawn_attack |= (pawn_attack_bitmask[turn][square] & (1ULL << (63 - board.en_passant)));
+            
             // find legal push moves
             uint64 pawn_push = pawn_push_bitmask[turn][square] & ~(board.bitboards[both].val);
 
