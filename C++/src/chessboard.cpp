@@ -15,9 +15,7 @@ Board::Board(){
 
 void Board::draw()
 {
-    Color light{218, 217, 233, 255},
-        dark{161, 123, 185, 255},
-        tileColor;
+    Color tileColor;
     // coloring the board
     for (int row{}; row < 8; row++)
     {
@@ -78,6 +76,12 @@ void Board::flip_turn(){
     (turn == white)?turn = black: turn = white;
 }
 
+/*
+=======================================================================================================================================================================================================
+                    Function Uses the matrix board representation and convert it into a FEN notation string
+=======================================================================================================================================================================================================
+*/
+
 void Board::matrix_to_FEN(){
     std::string str;
     for(int i{}; i<8; i++){
@@ -117,6 +121,12 @@ void Board::matrix_to_FEN(){
     
     FEN_string = str;
 }
+
+/*
+=======================================================================================================================================================================================================
+                    This function takes array of tiles and highlights them 
+=======================================================================================================================================================================================================
+*/
 void Board::highlight_tiles(const std::vector<int> &arr){
     for(auto &x :arr){
             int row = (63 - x) % 8;
@@ -135,6 +145,11 @@ void Board::highlight_tiles(const std::vector<int> &arr){
     }
 }
 
+/*
+=======================================================================================================================================================================================================
+                    Function to Make move: this function updates all the logical bitboards and also the visual board
+=======================================================================================================================================================================================================
+*/
 void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTileCol, BitBoard *piece_set, int *kingPosition){
     unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
                   destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
@@ -143,9 +158,53 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
     
     bool isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false;
 
-    // check if this moves activates an enpassant on the board
-    if((currPiece->type == 'P' || currPiece->type == 'p') && abs(source_tile - destination_tile) == 16){
-        (currPiece->type == 'P')? en_passant = 63 - (destination_tile-8): en_passant = 63 - (destination_tile + 8);
+    // If condtion to handle en passant related conditions
+    if(currPiece->type == 'P' || currPiece->type == 'p'){
+
+        // check if current move activates any enpassant on the board
+        if(abs(source_tile - destination_tile) == 16)
+            (currPiece->type == 'P')? en_passant = 63 - (destination_tile-8): en_passant = 63 - (destination_tile + 8);
+
+        // check if this is an enpassant capture
+        else if((abs(source_tile - destination_tile) == 7 || abs(source_tile - destination_tile) == 9) && isPieceReleasedOnEmptyTile){
+            PieceUI *captured_pawn = nullptr;
+
+            if(currPiece->type == 'P') {
+                captured_pawn = isThereA_Piece(((63-destination_tile)+8)/8, ((63-destination_tile)+8)%8);
+                piece_set[char_pieces.at(captured_pawn->type)].pop_bit(destination_tile-8);
+            }
+            else {
+                captured_pawn = isThereA_Piece(((63-destination_tile)-8)/8, ((63-destination_tile)-8)%8);
+                piece_set[char_pieces.at(captured_pawn->type)].pop_bit(destination_tile+8);
+            }
+
+            sound.playCapture();
+            
+            // remove the pawn capture via enpassant
+            deletePiece(captured_pawn);
+        }
+
+        //conditions to handle pawn promotion
+        if(destination_tile <= 7 || destination_tile >= 56){
+            PieceUI *promoted_pawn = isThereA_Piece((63-source_tile)/8, (63-source_tile)%8);
+            piece_set[char_pieces.at(promoted_pawn->type)].pop_bit(source_tile);
+            if(promoted_pawn->type >= 'a'){
+                piece_set['q'].set_bit(destination_tile);
+                promoted_pawn->type = 'q';
+                Image image = LoadImage("../../Assets/images/blackQueen.png");
+                ImageResize(&image, tileSize, tileSize);
+                promoted_pawn->texture = LoadTextureFromImage(image); // Load texture in graphics VRAM
+                UnloadImage(image);
+            } 
+            else{
+                piece_set['Q'].set_bit(destination_tile);
+                promoted_pawn->type = 'Q';
+                Image image = LoadImage("../../Assets/images/whiteQueen.png");
+                ImageResize(&image, tileSize, tileSize);
+                promoted_pawn->texture = LoadTextureFromImage(image); // Load texture in graphics VRAM
+                UnloadImage(image);
+            }   
+        }
     }
     
 
@@ -225,8 +284,6 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
 
         piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
         piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
-        std::cout<<source_tile<<" "<<destination_tile<<" " <<currPiece->type<<std::endl;
-
 
         currPiece->row = releasedOnTileRow;
         currPiece->col = releasedOnTileCol;
@@ -266,11 +323,7 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
                 }
             }
 
-            releasedOnPiece->row = pieceTextures[totalPiece-1].row;
-            releasedOnPiece->col = pieceTextures[totalPiece-1].col;
-            releasedOnPiece->type = pieceTextures[totalPiece-1].type;
-            releasedOnPiece->texture = pieceTextures[totalPiece-1].texture;
-            totalPiece--;
+            deletePiece(releasedOnPiece);
             empty_moves = 0;
         }
         else if(isPieceReleasedOnEmptyTile){
@@ -280,7 +333,7 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
 
         if(std::toupper(currPiece->type) == 'P' || !isPieceReleasedOnEmptyTile) empty_moves = 0; // if pawn is moved or piece is captured reset empty moves
 
-        sync_bitboards(piece_set);  
+        sync_bitboards(piece_set);
         update_matrix_board();
         matrix_to_FEN();
 }

@@ -6,7 +6,7 @@
 
 /*
 =======================================================================================================================================================================================================
-                    Constructor to setup the pieces on thier initial squares
+                    Constructor to setup the pieces on thier initial squares, all the decimal numbers represent their piece bitboard when converted into binary
 =======================================================================================================================================================================================================
 */
 
@@ -219,7 +219,7 @@ void Piece::update_piece_bitboard(char type, int src, int dest){
 
 /*
 =======================================================================================================================================================================================================
-                    Get legal move function doesn't generate purely legal moves it doesn't conttains the logic to restrain the movement of pinned pieces
+                    This function generates all the pseudo legal moves: meaning it doesn't check if a move put the king in danger it still consider them legal
 =======================================================================================================================================================================================================
 */
 
@@ -345,6 +345,13 @@ bool Piece::is_king_safe(bool white){
         if(kingPosition[white] == x) return false;
     return true;
 }
+
+/*
+=======================================================================================================================================================================================================
+                    This function takes all the pseudo legal moves, make those moves on logical board and check if king is safe afther that move
+                    if king is safe then that move is considered legal
+=======================================================================================================================================================================================================
+*/
 
 std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
     int turn = (type < 'Z')?0:1;

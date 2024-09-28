@@ -131,6 +131,7 @@ void InputHandler::movedPiece(){
     legal_moves = {};
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
     if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
+        board.en_passant = -1;
         
         board.make_move(currPiece, releasedOnTileRow, releasedOnTileCol, piece.piece_set, piece.kingPosition);
 
@@ -138,7 +139,6 @@ void InputHandler::movedPiece(){
 
         // flip the turn
         board.flip_turn();
-        board.print();
         
         //printf((board.turn)?"black's turn\n": "white's turn\n");
     }        

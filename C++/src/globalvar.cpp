@@ -2,8 +2,14 @@
 #include <string>
 
 int tileSize = 110;
+
 int totalPiece = 32;
+
 GameSound sound;
+
+Color light = {218, 217, 233, 255};
+Color dark = {161, 123, 185, 255};
+
 // ASCII pieces
 const std::string ascii_pieces = "PNBRQKpnbrqk";
 
@@ -57,6 +63,14 @@ void InitializePieces(Texture2D texture[])
     InitializePiece(&pieceTextures[23], 'R', texture[7], 7,7);  // Rook
     for (int i = 0; i < 8; i++)
         InitializePiece(&pieceTextures[24 + i], 'P', texture[6], 6,i); // Pawns
+}
+
+void deletePiece(PieceUI* piece){
+    piece->row = pieceTextures[totalPiece-1].row;
+    piece->col = pieceTextures[totalPiece-1].col;
+    piece->type = pieceTextures[totalPiece-1].type;
+    piece->texture = pieceTextures[totalPiece-1].texture;
+    totalPiece--;
 }
 
 PieceUI* isThereA_Piece(int x, int y){

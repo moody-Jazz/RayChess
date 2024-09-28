@@ -6,6 +6,7 @@
 
 // this header file contains all the necessary stuff related to ui managment like piece textures
 extern int tileSize;
+extern Color light, dark;
 
 enum{white, black, both};
 enum{P,N,B,R,Q,K,p,n,b,r,q,k};
@@ -31,5 +32,7 @@ extern int totalPiece;
 void InitializePiece(PieceUI *piece, char type, Texture2D texture, int row, int col);
 
 void InitializePieces(Texture2D texture[]);
+
+void deletePiece(PieceUI *piece);
 
 PieceUI* isThereA_Piece(int x, int y);
