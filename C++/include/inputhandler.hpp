@@ -1,5 +1,5 @@
 #include "raylib.h"
-#include "../include/globalvar.hpp"
+#include "../include/helper.hpp"
 #include "../include/piece.hpp"
 #include "../include/chessboard.hpp"
 

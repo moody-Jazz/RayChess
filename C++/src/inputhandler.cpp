@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../include/inputhandler.hpp"
 #include "../include/raylib.h"
-#include "../include/globalvar.hpp"
+#include "../include/helper.hpp"
 #include "../include/bitboard.hpp"
 #include "../include/piece.hpp"
 #include <unordered_map>

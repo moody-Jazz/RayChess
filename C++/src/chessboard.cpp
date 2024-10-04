@@ -1,5 +1,5 @@
 #include "../include/chessboard.hpp"
-#include "../include/globalvar.hpp"
+#include "../include/helper.hpp"
 #include <iostream>
 #include <vector>
 
@@ -11,6 +11,7 @@ Board::Board(){
     this->update_matrix_board();
     en_passant = -1;
     empty_moves = 0;
+    total_moves = 0;
 }
 
 void Board::draw()
@@ -81,7 +82,6 @@ void Board::flip_turn(){
                     Function Uses the matrix board representation and convert it into a FEN notation string
 =======================================================================================================================================================================================================
 */
-
 void Board::matrix_to_FEN(){
     std::string str;
     for(int i{}; i<8; i++){

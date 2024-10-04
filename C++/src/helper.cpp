@@ -1,4 +1,4 @@
-#include "../include/globalvar.hpp"
+#include "../include/helper.hpp"
 #include <string>
 
 int tileSize = 110;

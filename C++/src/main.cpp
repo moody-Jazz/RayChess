@@ -1,6 +1,6 @@
 #include "../include/raylib.h"
 #include "../include/InputHandler.hpp"
-#include "../include/globalvar.hpp"
+#include "../include/helper.hpp"
 #include "../include/chessboard.hpp"
 #include "../include/piece.hpp"
 #include <string>

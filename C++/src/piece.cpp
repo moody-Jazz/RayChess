@@ -1,6 +1,6 @@
 #include "../include/piece.hpp"
 #include "../include/chessboard.hpp"
-#include "../include/globalvar.hpp"
+#include "../include/helper.hpp"
 #include <vector>
 #include <iostream>
 
@@ -54,7 +54,6 @@ Piece::Piece(){
                     Below are all the functions which are used to generate possible moves for every type of piece
 =======================================================================================================================================================================================================
 */
-
 BitBoard pawn_attack_bitmask_init(int side, int square){
     
     // result attacks bitboard
@@ -222,7 +221,6 @@ void Piece::update_piece_bitboard(char type, int src, int dest){
                     This function generates all the pseudo legal moves: meaning it doesn't check if a move put the king in danger it still consider them legal
 =======================================================================================================================================================================================================
 */
-
 BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
 
     char piece = toupper(type);
@@ -318,7 +316,6 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
                 this method is used to maintain the unsafe tiles bitboards which are used to generate legal king moves as king can't move to a tile which is bieng attacked by enemy
 =======================================================================================================================================================================================================
 */
-
 void Piece::update_unsafe_tiles(Board board){
     BitBoard black_attacks(0ULL), white_attacks(0ULL);
 
@@ -352,7 +349,6 @@ bool Piece::is_king_safe(bool white){
                     if king is safe then that move is considered legal
 =======================================================================================================================================================================================================
 */
-
 std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
     int turn = (type < 'Z')?0:1;
     int piece = char_pieces.at(type);

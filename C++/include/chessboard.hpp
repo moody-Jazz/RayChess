@@ -2,7 +2,7 @@
 #include<string>
 #include "../include/bitboard.hpp"
 #include <vector>
-#include "../include/globalvar.hpp"
+#include "../include/helper.hpp"
 
 #define uint64 unsigned long long
 enum{
@@ -84,6 +84,7 @@ class Board{
         std::string FEN_string;
         int en_passant;
         int empty_moves;
+        int total_moves;
 
         Board();
         void draw();
