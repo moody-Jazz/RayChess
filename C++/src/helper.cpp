@@ -1,8 +1,9 @@
 #include "../include/helper.hpp"
 #include <string>
 
-int tileSize = 110;
-
+int tileSize = 120;
+int leftPadding = 50;
+int topPadding = 50;
 int totalPiece = 32;
 
 GameSound sound;

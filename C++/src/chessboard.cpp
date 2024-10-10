@@ -12,22 +12,69 @@ Board::Board(){
     en_passant = -1;
     empty_moves = 0;
     total_moves = 0;
+    bounds[left] = leftPadding;
+    bounds[right] = tileSize * 8 + leftPadding;
+    bounds[top] = topPadding;
+    bounds[bottom] = tileSize * 8 + topPadding;
 }
 
 void Board::draw()
 {
+    DrawRectangle(0, topPadding, leftPadding, tileSize*8 ,BROWN);
+    DrawRectangle(leftPadding+tileSize*8, topPadding, leftPadding, tileSize*8 ,BROWN);
+    DrawRectangle(0, 0, tileSize*8+leftPadding*2, topPadding,BROWN);
+    DrawRectangle(0, topPadding+tileSize*8, tileSize*8+leftPadding*2, topPadding,BROWN);
+
     Color tileColor;
-    // coloring the board
+    int itr{};
+    int rank, flag, offset;
+    char file;
+
+    if(black){
+        rank = -8;
+        flag = 0;
+        offset = 1;
+        file = 'a';
+    }
+    else{
+        rank = 1;
+        flag = 9;
+        offset = -1;
+        file = 'h';
+    }
+    
+    int posX = leftPadding/2;
+    int posY = topPadding + tileSize/2;
+    // draw the rank number strip
+    for(; rank != flag; rank++){
+        std::string str = std::to_string(abs(rank));
+        DrawText(str.c_str(), posX, posY,20, WHITE);
+        posY += tileSize;
+    }
+
+    // draw the file number strip like a, b, c etc
+    posY = tileSize * 8 + topPadding + 8;
+    posX = leftPadding + tileSize/2;
+    for(itr = 0; itr<8; itr++){
+     
+        std::string str = std::string(1, file);
+        DrawText(str.c_str(), posX, posY,20, WHITE);
+        DrawText(str.c_str(), posX, 0 + topPadding/2,20, WHITE);
+        posX += tileSize;
+        file += offset;
+    }
+
+    // draw all the tiles
     for (int row{}; row < 8; row++)
     {
         for (int col{}; col < 8; col++)
         {
             tileColor = ((row + col) % 2 == 0) ? light : dark; // white tiles will always be on (row + col == even) position
-            DrawRectangle(tileSize * col, tileSize * row, tileSize, tileSize, tileColor);
+            DrawRectangle((tileSize * col)+leftPadding,( tileSize * row)+topPadding, tileSize, tileSize, tileColor);
         }
     }
     for (int i{}; i < totalPiece; i++)
-        DrawTexture(pieceTextures[i].texture, pieceTextures[i].col * tileSize, pieceTextures[i].row * tileSize, WHITE);
+        DrawTexture(pieceTextures[i].texture, (pieceTextures[i].col * tileSize)+leftPadding, (pieceTextures[i].row * tileSize)+topPadding, WHITE);
 }
 
 void Board::update_matrix_board(){
@@ -118,7 +165,8 @@ void Board::matrix_to_FEN(){
     else str += "-";
     str+=" ";
     str+= std::to_string(empty_moves);
-    
+    str += " ";
+    str += std::to_string(total_moves);
     FEN_string = str;
 }
 
@@ -134,6 +182,8 @@ void Board::highlight_tiles(const std::vector<int> &arr){
             bool occupied_tile = isThereA_Piece(col, row);
             row *= tileSize;
             col *= tileSize;
+            row += leftPadding;
+            col += topPadding;
             row += tileSize/2;
             col += tileSize/2;
             Color temp = {70, 70, 70, 100};
@@ -330,10 +380,11 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             sound.playDefault();
             if(std::toupper(currPiece->type) != 'P')empty_moves++;
         }
-
+        total_moves++;
         if(std::toupper(currPiece->type) == 'P' || !isPieceReleasedOnEmptyTile) empty_moves = 0; // if pawn is moved or piece is captured reset empty moves
 
         sync_bitboards(piece_set);
         update_matrix_board();
         matrix_to_FEN();
+        std::cout<<FEN_string<<"\n";
 }

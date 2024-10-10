@@ -85,6 +85,7 @@ class Board{
         int en_passant;
         int empty_moves;
         int total_moves;
+        float bounds[4];
 
         Board();
         void draw();

@@ -26,7 +26,8 @@ void loadTextures()
 int main()
 {
     std::cout<<"Success"<<std::endl;
-    InitWindow(tileSize * 8, tileSize * 8, "Chess");
+
+    InitWindow(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()), "Chess");
     SetTargetFPS(60);
     loadTextures();
     Board board;

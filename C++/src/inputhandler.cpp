@@ -14,7 +14,6 @@ InputHandler::InputHandler(Board &board, Piece &piece):
     clickedOnCol = -1;
     releasedOnTileRow = -1;
     releasedOnTileCol = -1;
-
     pieceSelected = false;
     currPiece = nullptr;
     this->board.sync_bitboards(this->piece.piece_set);
@@ -30,10 +29,12 @@ std::vector<int> legal_moves; // legal moves array contains the legal moves for 
 
 void InputHandler::mouseInputHandler()
 {
+    bool isMouseInsideBoard = GetMousePosition().x > board.bounds[left] && GetMousePosition().x < board.bounds[right] && 
+                        GetMousePosition().y > board.bounds[top] && GetMousePosition().y < board.bounds[bottom];
     // if a piece is bieng clicked copy it into the currPiece and change the cursor  
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-        clickedOnRow = (int)GetMousePosition().y/tileSize; // this will give the row of the tile clicked
-        clickedOnCol = (int)GetMousePosition().x/tileSize; // this will give the column of the tile clicked
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && isMouseInsideBoard){
+        clickedOnRow = ((int)GetMousePosition().y-topPadding)/tileSize; // this will give the row of the tile clicked
+        clickedOnCol = ((int)GetMousePosition().x-leftPadding)/tileSize; // this will give the column of the tile clicked
         // std::cout<<pressedMousePosX<<" "<<pressedMousePosY<<std::endl;
 
         //if clicked on a tile with a piece; 
@@ -42,9 +43,6 @@ void InputHandler::mouseInputHandler()
         if(currPiece != nullptr){
             pieceSelected = true;
             SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
-            // draw an outline and highlight the square bieng clicked
-            Color temp = {255, 150, 84, 100};
-            DrawRectangle((float)clickedOnCol * tileSize, (float)clickedOnRow * tileSize, tileSize, tileSize, temp);
             //std::cout<<currPiece->type<<std::endl;
 
             unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col);
@@ -79,18 +77,21 @@ void InputHandler::draggingPiece(){
         return;
    } 
 
+    bool isMouseInsideBoard = GetMousePosition().x > board.bounds[left] && GetMousePosition().x < board.bounds[right] && 
+                        GetMousePosition().y > board.bounds[top] && GetMousePosition().y < board.bounds[bottom];
+    if(isMouseInsideBoard){    
+        Rectangle rec = {
+            float(((int)(GetMousePosition().x-leftPadding) / tileSize) * tileSize + leftPadding),
+            float(((int)(GetMousePosition().y-topPadding) / tileSize) * tileSize + topPadding), (float)tileSize, (float)tileSize
+        };
 
-    Rectangle rec = {
-        float((int)GetMousePosition().x / tileSize) * tileSize,
-        float((int)GetMousePosition().y / tileSize) * tileSize, (float)tileSize, (float)tileSize
-    };
-
-    // draw an outline and highlight the square bieng clicked
-    DrawRectangleLinesEx(rec, 4, WHITE);
+        // draw an outline and highlight the square bieng clicked
+        DrawRectangleLinesEx(rec, 4, WHITE);
+    }
     Color temp = {255, 150, 84, 100};
-    DrawRectangle((float)clickedOnCol * tileSize, (float)clickedOnRow * tileSize, tileSize, tileSize, temp);
+    DrawRectangle(((float)clickedOnCol * tileSize)+topPadding, ((float)clickedOnRow * tileSize)+leftPadding, tileSize, tileSize, temp);
     // std::cout <<currPiece->type<<" "<< clickedOnRow << " " << clickedOnCol << std::endl;
-    // if piece is dragged redraw its textures
+    // if piece is dragged keep redrawing its textures
     DrawTexture(currPiece->texture, GetMousePosition().x - 45, GetMousePosition().y - 45, WHITE);
 }
 
@@ -101,12 +102,12 @@ void InputHandler::draggingPiece(){
 */
 void InputHandler::movedPiece(){
     SetMouseCursor(MOUSE_CURSOR_ARROW);
-    releasedOnTileCol = GetMousePosition().x/tileSize;
-    releasedOnTileRow = GetMousePosition().y/tileSize;
+    releasedOnTileCol = (GetMousePosition().x-leftPadding)/tileSize;
+    releasedOnTileRow =( GetMousePosition().y-topPadding)/tileSize;
     PieceUI *releasedOnPiece = isThereA_Piece(releasedOnTileRow,releasedOnTileCol); 
 
-    bool isMouseInsideWindow = (GetMousePosition().y >= 0 && GetMousePosition().y <= GetScreenWidth()) && 
-                                    (GetMousePosition().x >= 0 && GetMousePosition().x <= GetScreenHeight()),
+    bool isMouseInsideBoard = GetMousePosition().y > board.bounds[top] && GetMousePosition().y <= board.bounds[bottom] && 
+                                    GetMousePosition().x > board.bounds[left] && GetMousePosition().x < board.bounds[right],
             isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false,
             isPieceReleasedOnEnemyTile = (!isPieceReleasedOnEmptyTile && 
             ((releasedOnPiece->type >= 'a' && currPiece->type <= 'Z') || (releasedOnPiece->type <= 'Z' && currPiece->type >= 'a')));
@@ -130,7 +131,7 @@ void InputHandler::movedPiece(){
     }
     legal_moves = {};
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
-    if((isMouseInsideWindow && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
+    if((isMouseInsideBoard && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
         board.en_passant = -1;
         
         board.make_move(currPiece, releasedOnTileRow, releasedOnTileCol, piece.piece_set, piece.kingPosition);

@@ -7,10 +7,12 @@
 // this header file contains all the necessary stuff related to ui managment like piece textures
 extern int tileSize;
 extern Color light, dark;
+extern int topPadding, leftPadding;
 
 enum{white, black, both};
 enum{P,N,B,R,Q,K,p,n,b,r,q,k};
 enum{ wk, wq, bk, bq};
+enum{ left, top, right, bottom};
 // ASCII pieces
 extern const std::string ascii_pieces;
 // convert ascii char pieces to encode constants
