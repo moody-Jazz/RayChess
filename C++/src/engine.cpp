@@ -1,6 +1,7 @@
 #include "../include/engine.hpp"
 #include "../include/helper.hpp"
 #include "../include/bitboard.hpp"
+#include <vector>
 
 /*
 ♙ =   100   = ♙
@@ -108,6 +109,33 @@ const int mirror_score[128] =
 
 int Engine::evaluate(BitBoard* piece){
     int score{};
+    for(int i = P; i<=k; i++){
+        BitBoard piececpy;
+        piececpy.set_val(piece[i].val);
 
+        score += (piececpy.count_bits() * material_score[i]);
+
+        std::vector<int> piece_position = piececpy.get_set_bit_index();
+
+        for(auto& square: piece_position){
+            square = 63 - square;
+            switch (i)
+            {
+                // evaluate white pieces
+                case P: score += pawn_score[square]; break;
+                case N: score += knight_score[square]; break;
+                case B: score += bishop_score[square]; break;
+                case R: score += rook_score[square]; break;
+                case K: score += king_score[square]; break;
+
+                // evaluate black pieces
+                case p: score -= pawn_score[mirror_score[square]]; break;
+                case n: score -= knight_score[mirror_score[square]]; break;
+                case b: score -= bishop_score[mirror_score[square]]; break;
+                case r: score -= rook_score[mirror_score[square]]; break;
+                case k: score -= king_score[mirror_score[square]]; break;
+            }
+        }
+    }
     return score;
 }
