@@ -80,7 +80,7 @@ void Board::draw()
 void Board::update_matrix_board(){
     for(int i{}; i<8; i++){
         for(int j{}; j<8; j++){
-            PieceUI *currPiece = isThereA_Piece(i, j);
+            PieceUI *currPiece = isThereA_PieceUI(i, j);
             if(currPiece)
                 matrix_board[i][j] = currPiece->type;
             else matrix_board[i][j] = '.';
@@ -179,7 +179,7 @@ void Board::highlight_tiles(const std::vector<int> &arr){
     for(auto &x :arr){
             int row = (63 - x) % 8;
             int col = (63 - x) / 8;
-            bool occupied_tile = isThereA_Piece(col, row);
+            bool occupied_tile = isThereA_PieceUI(col, row);
             row *= tileSize;
             col *= tileSize;
             row += leftPadding;
@@ -204,7 +204,7 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
     unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
                   destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
 
-    PieceUI *releasedOnPiece = isThereA_Piece(releasedOnTileRow,releasedOnTileCol); 
+    PieceUI *releasedOnPiece = isThereA_PieceUI(releasedOnTileRow,releasedOnTileCol); 
     
     bool isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false;
 
@@ -220,11 +220,11 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             PieceUI *captured_pawn = nullptr;
 
             if(currPiece->type == 'P') {
-                captured_pawn = isThereA_Piece(((63-destination_tile)+8)/8, ((63-destination_tile)+8)%8);
+                captured_pawn = isThereA_PieceUI(((63-destination_tile)+8)/8, ((63-destination_tile)+8)%8);
                 piece_set[char_pieces.at(captured_pawn->type)].pop_bit(destination_tile-8);
             }
             else {
-                captured_pawn = isThereA_Piece(((63-destination_tile)-8)/8, ((63-destination_tile)-8)%8);
+                captured_pawn = isThereA_PieceUI(((63-destination_tile)-8)/8, ((63-destination_tile)-8)%8);
                 piece_set[char_pieces.at(captured_pawn->type)].pop_bit(destination_tile+8);
             }
 
@@ -236,7 +236,7 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
 
         //conditions to handle pawn promotion
         if(destination_tile <= 7 || destination_tile >= 56){
-            PieceUI *promoted_pawn = isThereA_Piece((63-source_tile)/8, (63-source_tile)%8);
+            PieceUI *promoted_pawn = isThereA_PieceUI((63-source_tile)/8, (63-source_tile)%8);
             piece_set[char_pieces.at(promoted_pawn->type)].pop_bit(source_tile);
             if(promoted_pawn->type >= 'a'){
                 piece_set['q'].set_bit(destination_tile);
@@ -264,14 +264,14 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
     
             kingPosition[white] = destination_tile; //update the global white king position
             if(source_tile == 3 && destination_tile == 1){
-                PieceUI* rook = isThereA_Piece(7,7);
+                PieceUI* rook = isThereA_PieceUI(7,7);
                 piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 5;
                 piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
                 sound.playCastle();
             }
             else if(source_tile == 3 && destination_tile == 5){
-                PieceUI* rook = isThereA_Piece(7,0);
+                PieceUI* rook = isThereA_PieceUI(7,0);
                 piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 3;
                 piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
@@ -291,14 +291,14 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             kingPosition[black] =  destination_tile; //update the global black king positions
 
             if(source_tile == 59 && destination_tile == 57){
-                PieceUI* rook = isThereA_Piece(0,7);
+                PieceUI* rook = isThereA_PieceUI(0,7);
                 piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 5;
                 piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
                 sound.playCastle();
             }
             else if(source_tile == 59 && destination_tile == 61){
-                PieceUI* rook = isThereA_Piece(0,0);
+                PieceUI* rook = isThereA_PieceUI(0,0);
                 piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 3;
                 piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards

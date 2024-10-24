@@ -74,7 +74,7 @@ void deletePiece(PieceUI* piece){
     totalPiece--;
 }
 
-PieceUI* isThereA_Piece(int x, int y){
+PieceUI* isThereA_PieceUI(int x, int y){
      for (int i{}; i < totalPiece; i++)
             if ((pieceTextures[i].row == x) && (pieceTextures[i].col == y)) return &pieceTextures[i]; 
     return nullptr;

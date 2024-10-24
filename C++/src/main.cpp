@@ -3,6 +3,7 @@
 #include "../include/helper.hpp"
 #include "../include/chessboard.hpp"
 #include "../include/piece.hpp"
+#include "../include/engine.hpp"
 #include <string>
 #include <iostream>
 
@@ -32,6 +33,7 @@ int main()
     loadTextures();
     Board board;
     Piece piece;
+    Engine engine;
     InputHandler inputHandler(board, piece);
 
     //print the intial position of every piece
@@ -44,7 +46,7 @@ int main()
     {  
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        board.draw();;
+        board.draw();
         inputHandler.mouseInputHandler();
         EndDrawing();
     }

@@ -38,7 +38,7 @@ void InputHandler::mouseInputHandler()
         // std::cout<<pressedMousePosX<<" "<<pressedMousePosY<<std::endl;
 
         //if clicked on a tile with a piece; 
-        currPiece = isThereA_Piece(clickedOnRow, clickedOnCol);
+        currPiece = isThereA_PieceUI(clickedOnRow, clickedOnCol);
     
         if(currPiece != nullptr){
             pieceSelected = true;
@@ -104,7 +104,7 @@ void InputHandler::movedPiece(){
     SetMouseCursor(MOUSE_CURSOR_ARROW);
     releasedOnTileCol = (GetMousePosition().x-leftPadding)/tileSize;
     releasedOnTileRow =( GetMousePosition().y-topPadding)/tileSize;
-    PieceUI *releasedOnPiece = isThereA_Piece(releasedOnTileRow,releasedOnTileCol); 
+    PieceUI *releasedOnPiece = isThereA_PieceUI(releasedOnTileRow,releasedOnTileCol); 
 
     bool isMouseInsideBoard = GetMousePosition().y > board.bounds[top] && GetMousePosition().y <= board.bounds[bottom] && 
                                     GetMousePosition().x > board.bounds[left] && GetMousePosition().x < board.bounds[right],

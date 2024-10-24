@@ -54,6 +54,14 @@ Piece::Piece(){
                     Below are all the functions which are used to generate possible moves for every type of piece
 =======================================================================================================================================================================================================
 */
+/*  
+    i have used some algorithms which do bitmanipulation to geenrate some numbers which in binary representation 
+    have all those ith bits set which can be reached by the current piece for example
+    u64 knight_attack_bitmask(int square)
+    this function takes the position of the knight and returns a number (attacks) which have the attacking squares set as 1 bit
+    
+    we can do similar to slider pieces while doing bit operation with blocker pieces(friendly and enemy bitboard) to find correct moves
+*/
 BitBoard pawn_attack_bitmask_init(int side, int square){
     
     // result attacks bitboard
@@ -267,22 +275,55 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
         case 'K': {
             res.val = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
             bool kingSafety = is_king_safe(turn);
+
+            /* 
+            below are the bitmanipulation operations to find whether casteling is available or not
+            first do the operation with unsafe tiles and blocker pieces if there are none of these pieces our bitmask will not be changed
+            now we can apply king side castle bitmask and queen side castle bitmask with the resultenT castle bitmask to find valid casteling
+
+            decimal vlaues used to find white valid casteling
+
+            118ULL = 0 0 0 0 0 0 0 0     6ULL =  0 0 0 0 0 0 0 0   112ULL = 0 0 0 0 0 0 0 0 
+                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
+                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
+                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
+                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
+                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
+                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
+                     0 1 1 1 0 1 1 0             0 0 0 0 0 1 1 0            0 1 1 1 0 0 0 0
+                    castleBitmask             kingside castleBitmask     queenside castlebitmask
+
+           decimal vlaues used to find black valid casteling
+
+            8502796096475496448ULL       432345564227567616ULL       8070450532247928832ULL
+                0 1 1 1 0 1 1 0             0 0 0 0 0 1 1 0             0 1 1 1 0 0 0 0 
+                0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0
+                castleBitmask             kingside castleBitmask      queenside castlebitmask
+            */
+
             if(!turn && kingSafety && (board.castle[wk] || board.castle[wq])){ //for white castle
                 uint64 castle_bitmask = 118ULL;
                 castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
 
-                if((castle_bitmask & 6ULL) == 6ULL && board.castle[wk]) 
+                if(((castle_bitmask & 6ULL) == 6ULL) && board.castle[wk]) 
                     res.val |= 6ULL;
-                if((castle_bitmask & 112ULL) == 112ULL && board.castle[wq])
+                if(((castle_bitmask & 112ULL) == 112ULL) && board.castle[wq])
                     res.val |= 48ULL;
             }
+        
             else if(turn && kingSafety && (board.castle[bk] || board.castle[bq])){ // for black castle
                 uint64 castle_bitmask = 8502796096475496448ULL;
                 castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
 
-                if((castle_bitmask & 432345564227567616ULL) == 432345564227567616ULL && board.castle[bk])
+                if(((castle_bitmask & 432345564227567616ULL) == 432345564227567616ULL) && board.castle[bk])
                     res.val |= 432345564227567616ULL;
-                if((castle_bitmask & 8070450532247928832ULL) == 8070450532247928832ULL && board.castle[bq]) 
+                if(((castle_bitmask & 8070450532247928832ULL) == 8070450532247928832ULL) && board.castle[bq]) 
                     res.val |= 3458764513820540928ULL;
             }
             break;
@@ -336,11 +377,14 @@ void Piece::update_unsafe_tiles(Board board){
 }
 
 bool Piece::is_king_safe(bool white){
+    return !((1ULL << kingPosition[white]) & unsafe_tiles[white].val);
+}
 
-    std::vector<int> attacks = unsafe_tiles[white].get_set_bit_index();
-    for(auto& x:attacks)
-        if(kingPosition[white] == x) return false;
-    return true;
+char Piece::is_there_piece(int tile){
+    for (int i = P; i <= k; i++)
+        if((1ULL<<tile) & piece_set[p].val) return ascii_pieces[i];
+    
+    return 'z';
 }
 
 /*
@@ -374,7 +418,7 @@ std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
 
     for(auto &x: possible_moves){
         int row = (63-x)/8, col = (63-x)%8;
-        PieceUI *captured = isThereA_Piece(row, col);
+        PieceUI *captured = isThereA_PieceUI(row, col);
         uint64 captured_bitboard = 0ULL;
 
         if(captured){ // if the possible move is capture of enemy piece

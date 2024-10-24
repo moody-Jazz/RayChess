@@ -24,33 +24,6 @@ for example a white pawn that is on b2 will have attack bitmask as
 
 this bitmask can be used to perform some bitmanipulation with the enmy piece bitboard and the friendly piece bitboard to find
 the pseudo legal move. 
-i have used some algorithms from piece.cpp which do bitmanipulation to geenrate all this numbers for example to find knight moves i have used:
-    u64 knight_attack_bitmask(int square){
-        u64 attacks = 0ULL;
-
-        u64 bitboard = 0ULL;
-
-        // set piece position
-        set_bit(bitboard, square);
-
-        //generate knight attacks
-        if((bitboard >> 17) & not_h_file) attacks |= (bitboard >> 17);
-        if((bitboard >> 15) & not_a_file) attacks |= (bitboard >> 15);
-        if((bitboard >> 10) & not_hg_file) attacks |= (bitboard >> 10);
-        if((bitboard >> 6) & not_ab_file) attacks |= (bitboard >> 6);    
-
-        if((bitboard << 17) & not_a_file) attacks |= (bitboard << 17);
-        if((bitboard << 15) & not_h_file) attacks |= (bitboard << 15);
-        if((bitboard << 10) & not_ab_file) attacks |= (bitboard << 10);
-        if((bitboard << 6) & not_hg_file) attacks |= (bitboard << 6); 
-        return attacks;
-    }
-    this algorithm takes the position of the knight and returns a number (attacks) which have the attacking squares set as 1 bit
-    then i printed the binary form and decimal value of attacks using the print_binary() method defined in bitboard.cpp
-
-    the process mentioned above have been used for generating all the attack bitmask and then storing them so that we dont have 
-    to generate them on the fly at the expense of loosing speed
-
 */
 
 // the pawn attack bitmask is only of size 56 and not 64 is because we dont need the last 8 bits as the black pawns start from 
@@ -129,19 +102,22 @@ public:
     int kingPosition[2];
     BitBoard unsafe_tiles[2];
 
-    // leaper piece attack bitmasks
+    // methods for leaper piece attack bitmasks
     BitBoard pawn_attack_bitmask_init(int side, int square);
     BitBoard pawn_push_bitmask_init(int side, int square);
     BitBoard knight_attack_bitmask_init(int square);
     BitBoard king_attack_bitmask_init(int square);
 
-    // slider piece attack bitmask
+    // methods for slider piece attack bitmask
     uint64 get_bishop_attacks(int square, uint64 block);
     uint64 get_rook_attacks(int square, uint64 block);
     uint64 get_queen_attacks(int square, uint64 block);
+
+    // other eessential methods
     void update_piece_bitboard(char type, int src, int dest);
     BitBoard get_pseudo_legal_move(Board board, char type, int square);
     void update_unsafe_tiles(Board board);
     bool is_king_safe(bool white);
+    char is_there_piece(int tile);
     std::vector<int> get_legal_moves(Board board, char type, int source);
 };
