@@ -3,7 +3,6 @@
 #include "../include/bitboard.hpp"
 #include "../include/chessboard.hpp"
 #include <unordered_map>
-#include <vector>
 
 #define uint64 unsigned long long
 
@@ -115,9 +114,9 @@ public:
 
     // other eessential methods
     void update_piece_bitboard(char type, int src, int dest);
-    BitBoard get_pseudo_legal_move(Board board, char type, int square);
+    uint64 get_pseudo_legal_move(Board board, char type, int square);
     void update_unsafe_tiles(Board board);
     bool is_king_safe(bool white);
     char is_there_piece(int tile);
-    std::vector<int> get_legal_moves(Board board, char type, int source);
+    uint64 get_legal_moves(Board board, char type, int source);
 };

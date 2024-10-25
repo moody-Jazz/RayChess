@@ -1,31 +1,47 @@
 #include "../include/chessboard.hpp"
+#include "../include/bitboard.hpp"
 #include "../include/helper.hpp"
 #include <iostream>
-#include <vector>
 
 Board::Board(){
     turn = white;
+    legal_moves.set_val(0ULL);
     castle[wk] = castle[wq] = castle[bk] = castle[bq] = true;
     bitboards[white].val = bitboards[black].val = bitboards[both].val = 0ULL;
     FEN_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     this->update_matrix_board();
     en_passant = -1;
-    empty_moves = 0;
-    total_moves = 0;
+    empty_turns = 0;
+    total_turns = 0;
     bounds[left] = leftPadding;
     bounds[right] = tileSize * 8 + leftPadding;
     bounds[top] = topPadding;
     bounds[bottom] = tileSize * 8 + topPadding;
 }
 
-void Board::draw()
-{
+/*
+=======================================================================================================================================================================================================
+                    Below are all the function which are used to draw board related stuff
+=======================================================================================================================================================================================================
+*/
+void Board::draw_tiles(){
+    Color tileColor;
+    for (int row{}; row < 8; row++)
+    {
+        for (int col{}; col < 8; col++)
+        {
+            tileColor = ((row + col) % 2 == 0) ? light : dark; // white tiles will always be on (row + col == even) position
+            DrawRectangle((tileSize * col)+leftPadding,( tileSize * row)+topPadding, tileSize, tileSize, tileColor);
+        }
+    }
+}
+
+void Board::draw_strips(){
     DrawRectangle(0, topPadding, leftPadding, tileSize*8 ,BROWN);
     DrawRectangle(leftPadding+tileSize*8, topPadding, leftPadding, tileSize*8 ,BROWN);
     DrawRectangle(0, 0, tileSize*8+leftPadding*2, topPadding,BROWN);
     DrawRectangle(0, topPadding+tileSize*8, tileSize*8+leftPadding*2, topPadding,BROWN);
-
-    Color tileColor;
+    
     int itr{};
     int rank, flag, offset;
     char file;
@@ -56,25 +72,64 @@ void Board::draw()
     posY = tileSize * 8 + topPadding + 8;
     posX = leftPadding + tileSize/2;
     for(itr = 0; itr<8; itr++){
-     
         std::string str = std::string(1, file);
         DrawText(str.c_str(), posX, posY,20, WHITE);
-        DrawText(str.c_str(), posX, 0 + topPadding/2,20, WHITE);
+        DrawText(str.c_str(), posX, 10, 20, WHITE);
         posX += tileSize;
         file += offset;
     }
+}
 
-    // draw all the tiles
-    for (int row{}; row < 8; row++)
-    {
-        for (int col{}; col < 8; col++)
-        {
-            tileColor = ((row + col) % 2 == 0) ? light : dark; // white tiles will always be on (row + col == even) position
-            DrawRectangle((tileSize * col)+leftPadding,( tileSize * row)+topPadding, tileSize, tileSize, tileColor);
+void Board::highlight_tiles(BitBoard tiles){
+    while(tiles.val){
+        int x = tiles.get_lsb_index();
+        int row = (63 - x) % 8;
+        int col = (63 - x) / 8;
+        bool occupied_tile = isThereA_PieceUI(col, row);
+        row *= tileSize;
+        col *= tileSize;
+        row += leftPadding;
+        col += topPadding;
+        row += tileSize/2;
+        col += tileSize/2;
+        Color temp = {70, 70, 70, 100};
+        
+        if(occupied_tile) DrawRing({(float)row, (float)col}, 
+                tileSize/2-7, tileSize/2, 0, 360, 1000, temp);
+
+        else DrawCircle(row, col, tileSize/2-35, temp);
+        tiles.pop_bit(x);
+    }
+}
+
+void Board::draw_updated_board(){
+
+    draw_tiles();
+    draw_strips();
+    // draw all the pieces on board
+    for (int i{}; i < totalPiece; i++)
+        DrawTexture(pieceOnBoard[i].texture, (pieceOnBoard[i].col * tileSize)+leftPadding, (pieceOnBoard[i].row * tileSize)+topPadding, WHITE);
+
+    // highlight legal moves if there are any
+    highlight_tiles(legal_moves);
+
+    // draw all the captured pieces 
+    int posX = ((tileSize*8) + leftPadding*3);
+    int itr1{}, itr2{};
+    for(int i{}; i<totalCaptured; i++){
+        if(PieceCaptured[i].type < 'Z'){
+            DrawTexture(PieceCaptured[i].texture, posX+(tileSize/3)*itr1, tileSize*2, WHITE );
+            itr1++;
+        } 
+        else{ 
+            DrawTexture(PieceCaptured[i].texture, posX+(tileSize/3)*itr2, tileSize*8, WHITE );
+            itr2++;
         }
     }
-    for (int i{}; i < totalPiece; i++)
-        DrawTexture(pieceTextures[i].texture, (pieceTextures[i].col * tileSize)+leftPadding, (pieceTextures[i].row * tileSize)+topPadding, WHITE);
+    std::string str1 = FEN_string.substr(0, FEN_string.length()/2);
+    std::string str2 = FEN_string.substr(FEN_string.length()/2);
+    DrawText(str1.c_str(), posX, tileSize*3, 20, RAYWHITE);
+    DrawText(str2.c_str(), posX, tileSize*3+50, 20, RAYWHITE);
 }
 
 void Board::update_matrix_board(){
@@ -95,20 +150,6 @@ void Board::print(){
         std::cout<<"\n";
     }
     std::cout<<FEN_string<<"\n";
-    /*
-    bool empty;
-    for(int tile = 63; tile>=0; tile--){ 
-        empty = true;  
-        for(int i = P; i<=k; i++){
-            if(piece_set[i].get_bit(tile)){
-                std::cout<<ascii_pieces[i]<<" ";
-                empty = false;
-            }
-        }
-        if(empty) std::cout<<". ";
-        if(tile % 8 == 0) std::cout<<"\n";
-    }
-    */
 }
 
 void Board::sync_bitboards(BitBoard *piece_set){
@@ -164,35 +205,10 @@ void Board::matrix_to_FEN(){
     if(en_passant != -1) str += coordinate[en_passant];
     else str += "-";
     str+=" ";
-    str+= std::to_string(empty_moves);
+    str+= std::to_string(empty_turns);
     str += " ";
-    str += std::to_string(total_moves);
+    str += std::to_string(total_turns);
     FEN_string = str;
-}
-
-/*
-=======================================================================================================================================================================================================
-                    This function takes array of tiles and highlights them 
-=======================================================================================================================================================================================================
-*/
-void Board::highlight_tiles(const std::vector<int> &arr){
-    for(auto &x :arr){
-            int row = (63 - x) % 8;
-            int col = (63 - x) / 8;
-            bool occupied_tile = isThereA_PieceUI(col, row);
-            row *= tileSize;
-            col *= tileSize;
-            row += leftPadding;
-            col += topPadding;
-            row += tileSize/2;
-            col += tileSize/2;
-            Color temp = {70, 70, 70, 100};
-            
-            if(occupied_tile) DrawRing({(float)row, (float)col}, 
-                    tileSize/2-7, tileSize/2, 0, 360, 1000, temp);
-
-            else DrawCircle(row, col, tileSize/2-35, temp);
-    }
 }
 
 /*
@@ -374,14 +390,14 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             }
 
             deletePiece(releasedOnPiece);
-            empty_moves = 0;
+            empty_turns = 0;
         }
         else if(isPieceReleasedOnEmptyTile){
             sound.playDefault();
-            if(std::toupper(currPiece->type) != 'P')empty_moves++;
+            if(std::toupper(currPiece->type) != 'P')empty_turns++;
         }
-        total_moves++;
-        if(std::toupper(currPiece->type) == 'P' || !isPieceReleasedOnEmptyTile) empty_moves = 0; // if pawn is moved or piece is captured reset empty moves
+        total_turns++;
+        if(std::toupper(currPiece->type) == 'P' || !isPieceReleasedOnEmptyTile) empty_turns = 0; // if pawn is moved or piece is captured reset empty moves
 
         sync_bitboards(piece_set);
         update_matrix_board();

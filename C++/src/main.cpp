@@ -4,7 +4,6 @@
 #include "../include/chessboard.hpp"
 #include "../include/piece.hpp"
 #include "../include/engine.hpp"
-#include <string>
 #include <iostream>
 
 void loadTextures()
@@ -27,13 +26,12 @@ void loadTextures()
 int main()
 {
     std::cout<<"Success"<<std::endl;
-
-    InitWindow(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()), "Chess");
+    std::string logo = "RAY CHESS";
+    InitWindow(1700, 1000, logo.c_str());
     SetTargetFPS(60);
     loadTextures();
     Board board;
     Piece piece;
-    Engine engine;
     InputHandler inputHandler(board, piece);
 
     //print the intial position of every piece
@@ -45,12 +43,11 @@ int main()
     while (!WindowShouldClose())
     {  
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-        board.draw();
+        ClearBackground(bg);
+        DrawText(logo.c_str(), (tileSize*8) + leftPadding*3, tileSize/2, 100,RAYWHITE);
+        board.draw_updated_board();
         inputHandler.mouseInputHandler();
         EndDrawing();
     }
     CloseWindow();
-
-    ///////////////////////////////////// testing /////////////////////////////////////
 }

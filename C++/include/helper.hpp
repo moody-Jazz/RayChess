@@ -6,7 +6,7 @@
 
 // this header file contains all the necessary stuff related to ui managment like piece textures
 extern int tileSize;
-extern Color light, dark;
+extern Color light, dark, bg;
 extern int topPadding, leftPadding;
 
 enum{white, black, both};
@@ -41,9 +41,11 @@ typedef struct PieceUI
     int col;
 } PieceUI;
 
-extern PieceUI pieceTextures[32];
+extern PieceUI pieceOnBoard[32];
+extern PieceUI PieceCaptured[30];
 
 extern int totalPiece;
+extern int totalCaptured;
 
 void InitializePiece(PieceUI *piece, char type, Texture2D texture, int row, int col);
 

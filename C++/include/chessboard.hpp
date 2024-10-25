@@ -1,7 +1,5 @@
 #pragma once
-#include<string>
 #include "../include/bitboard.hpp"
-#include <vector>
 #include "../include/helper.hpp"
 
 #define uint64 unsigned long long
@@ -68,27 +66,25 @@ not_ab_file:
 class Board{
     public:
         int turn;
+        BitBoard legal_moves;
         bool castle[4]; 
         BitBoard bitboards[3]; // {white, black, both}
         char matrix_board[8][8];
         std::string FEN_string;
         int en_passant;
-        int empty_moves;
-        int total_moves;
+        int empty_turns;
+        int total_turns;
         float bounds[4];
 
         Board();
-        void draw();
+        void draw_tiles();
+        void draw_strips();
+        void draw_updated_board();
         void update_matrix_board();
         void print();
         void sync_bitboards(BitBoard *piece_set);
         void flip_turn();
         void matrix_to_FEN();
-        void highlight_tiles(const std::vector<int> &arr);
+        void highlight_tiles(BitBoard tiles);
         void make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTileCol, BitBoard *piece_set, int *kingPosition);
 };
-
-/*
-     0 0 0 0 0 0 0 0 
-
-*/

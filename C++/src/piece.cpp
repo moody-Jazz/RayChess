@@ -1,7 +1,7 @@
 #include "../include/piece.hpp"
+#include "../include/bitboard.hpp"
 #include "../include/chessboard.hpp"
 #include "../include/helper.hpp"
-#include <vector>
 #include <iostream>
 
 /*
@@ -229,11 +229,11 @@ void Piece::update_piece_bitboard(char type, int src, int dest){
                     This function generates all the pseudo legal moves: meaning it doesn't check if a move put the king in danger it still consider them legal
 =======================================================================================================================================================================================================
 */
-BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
+uint64 Piece::get_pseudo_legal_move(Board board, char type, int square){
 
     char piece = toupper(type);
     int turn = (type < 'Z')?0:1;
-    BitBoard res(0ULL);
+    uint64 res = 0ULL;
     
     switch (piece)
     {
@@ -265,15 +265,15 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
                 (turn && 1ULL<<(square-8) & board.bitboards[both].val)) {
                     pawn_push = 0ULL; 
             }
-            res.val = pawn_attack | pawn_push;
+            res = pawn_attack | pawn_push;
             break;
         }
         case 'N': {
-            res.val = knight_attack_bitmask[square] & ~(board.bitboards[turn].val);
+            res = knight_attack_bitmask[square] & ~(board.bitboards[turn].val);
             break;
         }
         case 'K': {
-            res.val = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
+            res = king_attack_bitmask[square] & ~(board.bitboards[turn].val);
             bool kingSafety = is_king_safe(turn);
 
             /* 
@@ -312,9 +312,9 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
                 castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
 
                 if(((castle_bitmask & 6ULL) == 6ULL) && board.castle[wk]) 
-                    res.val |= 6ULL;
+                    res |= 6ULL;
                 if(((castle_bitmask & 112ULL) == 112ULL) && board.castle[wq])
-                    res.val |= 48ULL;
+                    res |= 48ULL;
             }
         
             else if(turn && kingSafety && (board.castle[bk] || board.castle[bq])){ // for black castle
@@ -322,24 +322,24 @@ BitBoard Piece::get_pseudo_legal_move(Board board, char type, int square){
                 castle_bitmask &= ~unsafe_tiles[turn].val & ~board.bitboards[both].val;
 
                 if(((castle_bitmask & 432345564227567616ULL) == 432345564227567616ULL) && board.castle[bk])
-                    res.val |= 432345564227567616ULL;
+                    res |= 432345564227567616ULL;
                 if(((castle_bitmask & 8070450532247928832ULL) == 8070450532247928832ULL) && board.castle[bq]) 
-                    res.val |= 3458764513820540928ULL;
+                    res |= 3458764513820540928ULL;
             }
             break;
         }
         case 'R': {
-            res.val = get_rook_attacks(square, board.bitboards[both].val) &
+            res = get_rook_attacks(square, board.bitboards[both].val) &
                         ~(board.bitboards[turn].val);
             break;
         }
         case 'B': {
-            res.val = get_bishop_attacks(square, board.bitboards[both].val) &
+            res = get_bishop_attacks(square, board.bitboards[both].val) &
                         ~(board.bitboards[turn].val);
             break;
         }
         case 'Q': {
-            res.val = get_queen_attacks(square, board.bitboards[both].val) &
+            res = get_queen_attacks(square, board.bitboards[both].val) &
                         ~(board.bitboards[turn].val);
             break;
         }
@@ -364,12 +364,12 @@ void Piece::update_unsafe_tiles(Board board){
         if(i<=K){
             std::vector<int> possible_moves = this->piece_set[i].get_set_bit_index();
             for(auto &x: possible_moves)
-                white_attacks.val |= get_pseudo_legal_move(board, ascii_pieces[i], x).val;
+                white_attacks.val |= get_pseudo_legal_move(board, ascii_pieces[i], x);
         }
         else{
             std::vector<int> possible_moves = this->piece_set[i].get_set_bit_index();
             for(auto &x: possible_moves)
-                black_attacks.val |= get_pseudo_legal_move(board, ascii_pieces[i], x).val;
+                black_attacks.val |= get_pseudo_legal_move(board, ascii_pieces[i], x);
         }
     }
     unsafe_tiles[white] = black_attacks.val;
@@ -382,9 +382,9 @@ bool Piece::is_king_safe(bool white){
 
 char Piece::is_there_piece(int tile){
     for (int i = P; i <= k; i++)
-        if((1ULL<<tile) & piece_set[p].val) return ascii_pieces[i];
+        if((1ULL<<tile) & piece_set[i].val) return ascii_pieces[i];
     
-    return 'z';
+    return '0';
 }
 
 /*
@@ -393,7 +393,7 @@ char Piece::is_there_piece(int tile){
                     if king is safe then that move is considered legal
 =======================================================================================================================================================================================================
 */
-std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
+uint64 Piece::get_legal_moves(Board board, char type, int source){
     int turn = (type < 'Z')?0:1;
     int piece = char_pieces.at(type);
     BitBoard temp_unsafe[2];
@@ -412,18 +412,17 @@ std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
     temp_king_position[black] = kingPosition[black];
 
     // find the possible moves
-    std::vector<int> possible_moves = get_pseudo_legal_move(board, type, source).get_set_bit_index();
+    BitBoard possible_moves(get_pseudo_legal_move(board, type, source));
 
-    std::vector<int> valid_moves;
-
-    for(auto &x: possible_moves){
-        int row = (63-x)/8, col = (63-x)%8;
-        PieceUI *captured = isThereA_PieceUI(row, col);
+    uint64 valid_moves = 0ULL;
+    while(possible_moves.val){
+        int x = possible_moves.get_lsb_index();
+        char captured = is_there_piece(x);
         uint64 captured_bitboard = 0ULL;
 
-        if(captured){ // if the possible move is capture of enemy piece
-            captured_bitboard = piece_set[char_pieces.at(captured->type)].val;
-            update_piece_bitboard(captured->type, x, x);
+        if(captured != '0'){ // if the possible move is capture of enemy piece
+            captured_bitboard = piece_set[char_pieces.at(captured)].val;
+            update_piece_bitboard(captured, x, x);
         }
 
         // if king is bieng moved then update the king position as well
@@ -434,10 +433,11 @@ std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
         board.sync_bitboards(this->piece_set);
         update_unsafe_tiles(board);
 
-        if(is_king_safe(turn)) valid_moves.push_back(x); //if king is safe after executing the current possible move then consider this as a valid move
+        //if king is safe after executing the current possible move then consider this as a valid move
+        if(is_king_safe(turn)) valid_moves = valid_moves | (1ULL << x); 
 
         // reset everything;
-        if(captured) piece_set[char_pieces.at(captured->type)].val = captured_bitboard;
+        if(captured != '0') piece_set[char_pieces.at(captured)].val = captured_bitboard;
 
         unsafe_tiles[white] = temp_unsafe[white];
         unsafe_tiles[black] = temp_unsafe[black];
@@ -450,7 +450,7 @@ std::vector<int> Piece::get_legal_moves(Board board, char type, int source){
 
         kingPosition[white] = temp_king_position[white];
         kingPosition[black] = temp_king_position[black];
+        possible_moves.pop_bit(x);
     }
-    
     return valid_moves;
 }

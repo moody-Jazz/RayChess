@@ -4,8 +4,6 @@
 #include "../include/helper.hpp"
 #include "../include/bitboard.hpp"
 #include "../include/piece.hpp"
-#include <unordered_map>
-#include <vector>
 
 InputHandler::InputHandler(Board &board, Piece &piece):
     board(board), piece(piece){ // Initialize references using an initializer list
@@ -18,8 +16,6 @@ InputHandler::InputHandler(Board &board, Piece &piece):
     currPiece = nullptr;
     this->board.sync_bitboards(this->piece.piece_set);
 }
-
-std::vector<int> legal_moves; // legal moves array contains the legal moves for the piece currently held by the player
 
 /*
 =======================================================================================================================================================================================================
@@ -49,8 +45,8 @@ void InputHandler::mouseInputHandler()
 
             int currTurn = (currPiece->type >= 'a')?black : white; 
 
-            if(currTurn == board.turn) legal_moves = piece.get_legal_moves(board, currPiece->type, source_tile);
-            //std::cout<<legal_moves.size()<<" is total legal moves\n";
+            // if a valid piece is clicked then insert its corrosponding legal moves into the bitboard
+            if(currTurn == board.turn) board.legal_moves.val = piece.get_legal_moves(board, currPiece->type, source_tile);
         }
     }
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && pieceSelected)
@@ -67,13 +63,11 @@ void InputHandler::mouseInputHandler()
 */
 
 void InputHandler::draggingPiece(){
-
-    board.highlight_tiles(legal_moves);
    
    if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
         SetMouseCursor(MOUSE_CURSOR_ARROW);
         pieceSelected = false;
-        legal_moves = {};
+        board.legal_moves.set_val(0ULL);
         return;
    } 
 
@@ -122,14 +116,8 @@ void InputHandler::movedPiece(){
     // pop the source tile bit and set the destinatio tile bit to update the bitboard
     unsigned int destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
 
-    bool isMoveLegal = false;
-    for(auto &x: legal_moves){
-        if((int)destination_tile == x){
-            isMoveLegal = true;
-            break;
-        }
-    }
-    legal_moves = {};
+    bool isMoveLegal = (board.legal_moves.val & (1ULL << destination_tile));
+    
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
     if((isMouseInsideBoard && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
         board.en_passant = -1;
@@ -140,10 +128,9 @@ void InputHandler::movedPiece(){
 
         // flip the turn
         board.flip_turn();
-        
         //printf((board.turn)?"black's turn\n": "white's turn\n");
     }        
-    
+    board.legal_moves.set_val(0ULL);
     releasedOnPiece = nullptr;     
     currPiece = nullptr;
     pieceSelected = false;

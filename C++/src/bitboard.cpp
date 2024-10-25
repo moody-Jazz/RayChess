@@ -36,14 +36,6 @@ void BitBoard::print_binary(){
         }
     }
     cout<<"    bitboard value: "<<val<<"\n";
-// for(int rank = 7 ; rank>=0; rank--){
-//     cout<<"    ";
-//     for(int file = 7; file>=0; file--){
-//         int square = file+rank*8;
-//         bool x = (get_bit(square))? 1: 0;  
-//         cout<<x << " ";
-//     }
-//     cout<<"\n";
 }
 
  int BitBoard::count_bits(){
@@ -56,7 +48,7 @@ void BitBoard::print_binary(){
     }
     return count;
 }
-inline int BitBoard::get_lsb_index(){
+int BitBoard::get_lsb_index(){
     return this->val ? log2(this->val & -this->val) : -1;
 }
 
