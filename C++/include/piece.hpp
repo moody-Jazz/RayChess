@@ -21,7 +21,7 @@ for example a white pawn that is on b2 will have attack bitmask as
         1  0 0 0 0 0 0 0 0
            a b c d e f g h
 
-this bitmask can be used to perform some bitmanipulation with the enmy piece bitboard and the friendly piece bitboard to find
+this bitmask can be used to perform some bitmanipulation with the enemy piece bitboard and the friendly piece bitboard to find
 the pseudo legal move. 
 */
 
@@ -99,13 +99,13 @@ public:
     bool check[2];
     BitBoard piece_set[12];
     int kingPosition[2];
-    BitBoard unsafe_tiles[2];
+    uint64 unsafe_tiles[2];
 
     // methods for leaper piece attack bitmasks
-    BitBoard pawn_attack_bitmask_init(int side, int square);
-    BitBoard pawn_push_bitmask_init(int side, int square);
-    BitBoard knight_attack_bitmask_init(int square);
-    BitBoard king_attack_bitmask_init(int square);
+    uint64 pawn_attack_bitmask_init(int side, int square);
+    uint64 pawn_push_bitmask_init(int side, int square);
+    uint64 knight_attack_bitmask_init(int square);
+    uint64 king_attack_bitmask_init(int square);
 
     // methods for slider piece attack bitmask
     uint64 get_bishop_attacks(int square, uint64 block);

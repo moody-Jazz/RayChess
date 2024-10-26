@@ -6,8 +6,19 @@
 Board::Board(){
     turn = white;
     legal_moves.set_val(0ULL);
-    castle[wk] = castle[wq] = castle[bk] = castle[bq] = true;
-    bitboards[white].val = bitboards[black].val = bitboards[both].val = 0ULL;
+    castle[white][kingside] = castle[white][queenside] = true;
+    castle[black][kingside] = castle[black][queenside] = true;
+
+/*  The following bitmask values are set for castling rights for both white and black sides.
+    Refer to the get_pseudo_legal_move() function to understand why these specific numbers are assigned. */
+    castle_bitmasks[white][kingside] = 6ULL;
+    castle_bitmasks[white][queenside] = 48ULL;
+    castle_bitmasks[white][both] = 54ULL; 
+    castle_bitmasks[black][kingside] = 432345564227567616ULL;
+    castle_bitmasks[black][queenside] = 3458764513820540928ULL;
+    castle_bitmasks[black][both] = 3891110078048108544ULL;
+    
+    bitboards[white] = bitboards[black] = bitboards[both] = 0ULL;
     FEN_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     this->update_matrix_board();
     en_passant = -1;
@@ -153,12 +164,12 @@ void Board::print(){
 }
 
 void Board::sync_bitboards(BitBoard *piece_set){
-    bitboards[white].val = bitboards[black].val = 0ULL;
+    bitboards[white] = bitboards[black] = 0ULL;
     for(int i{}; i<12; i++){
-        if(i<6) bitboards[white].val |= piece_set[i].val;
-        else  bitboards[black].val |= piece_set[i].val;
+        if(i<6) bitboards[white] |= piece_set[i].val;
+        else  bitboards[black] |= piece_set[i].val;
     }
-    bitboards[both].val =  bitboards[white].val |  bitboards[black].val;
+    bitboards[both] =  bitboards[white] |  bitboards[black];
 }
 
 void Board::flip_turn(){
@@ -194,11 +205,11 @@ void Board::matrix_to_FEN(){
     }
     str += (turn)?" w":" b"; // Add turn
     str+=" ";
-    if(castle[wk] || castle[wq] || castle[bk] || castle[bq]){
-        if(castle[wk]) str += "K";
-        if(castle[wq]) str += "Q";
-        if(castle[bk]) str += "k";
-        if(castle[bq]) str += "q";
+    if(castle[white][kingside] || castle[white][queenside] || castle[black][kingside] || castle[black][queenside]){
+        if(castle[white][kingside]) str += "K";
+        if(castle[white][queenside]) str += "Q";
+        if(castle[black][kingside]) str += "k";
+        if(castle[black][queenside]) str += "q";
     }
     else str += "-";
     str+=" ";
@@ -294,9 +305,9 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
                 sound.playCastle();
             }
 
-            if(castle[wk] || castle[wq]){
-                castle[wk] = false;
-                castle[wq] = false;
+            if(castle[white][kingside] || castle[white][queenside]){
+                castle[white][kingside] = false;
+                castle[white][queenside] = false;
                 std::cout<<"White king can't castle now\n";
             }
         }
@@ -321,29 +332,29 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
                 sound.playCastle();
             }
 
-            if(castle[bk] || castle[bq]){
-                castle[bk] = false;
-                castle[bq] = false;
+            if(castle[black][kingside] || castle[black][queenside]){
+                castle[black][kingside] = false;
+                castle[black][queenside] = false;
                 std::cout<<"Black king can't castle now\n";
             }
         }
-        if((castle[wk] || castle[wq]) && currPiece->type == 'R'){
+        if((castle[white][kingside] || castle[white][queenside]) && currPiece->type == 'R'){
             if(currPiece->row == 7 && currPiece->col == 7){
-                castle[wk] = false;
+                castle[white][kingside] = false;
                 std::cout<<"White king can't castle king side now\n";
             }
             else if (currPiece->row == 7 && currPiece->col == 0){
-                castle[wq] = false;
+                castle[white][queenside] = false;
                 std::cout<<"White king can't castle queen side now\n";
             }
         }
-        else if((castle[bk] || castle[bq]) && currPiece->type == 'r'){
+        else if((castle[black][kingside] || castle[black][queenside]) && currPiece->type == 'r'){
             if(currPiece->row == 0 && currPiece->col == 7){
-                castle[bk] = false;
+                castle[black][kingside] = false;
                 std::cout<<"black king can't castle king side now\n";
             }
             else if (currPiece->row == 0 && currPiece->col == 0){
-                castle[bq] = false;
+                castle[black][queenside] = false;
                 std::cout<<"black king can't castle queen side now\n";
             }
         }
@@ -368,23 +379,23 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             // like deleting the captured piece textures updating the casteling state
 
             // below if else conditions are for checking if the rooks have been captured to update the casteling state ont he board
-            if((castle[wk] || castle[wq]) && releasedOnPiece->type == 'R'){
+            if((castle[white][kingside] || castle[white][queenside]) && releasedOnPiece->type == 'R'){
                 if(releasedOnPiece->row == 7 && releasedOnPiece->col == 7){
-                    castle[wk] = false;
+                    castle[white][kingside] = false;
                     std::cout<<"White king can't castle king side now\n";
                 }
                 else if (releasedOnPiece->row == 7 && releasedOnPiece->col == 0){  
-                    castle[wq] = false;
+                    castle[white][queenside] = false;
                     std::cout<<"White king can't castle queen side now\n";
                 }
             }
-            else if((castle[bk] || castle[bq]) && releasedOnPiece->type == 'r'){
+            else if((castle[black][kingside] || castle[black][queenside]) && releasedOnPiece->type == 'r'){
                 if(releasedOnPiece->row == 0 && releasedOnPiece->col == 7)  {
-                    castle[bk] = false;
+                    castle[black][kingside] = false;
                     std::cout<<"black king can't castle king side now\n";
                 }
                 else if (releasedOnPiece->row == 0 && releasedOnPiece->col == 0)  {
-                    castle[bq] = false;
+                    castle[black][queenside] = false;
                     std::cout<<"black king can't castle queen side now\n";
                 }
             }

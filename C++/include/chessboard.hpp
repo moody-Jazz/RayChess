@@ -67,8 +67,9 @@ class Board{
     public:
         int turn;
         BitBoard legal_moves;
-        bool castle[4]; 
-        BitBoard bitboards[3]; // {white, black, both}
+        bool castle[2][2]; 
+        uint64 castle_bitmasks[2][3];
+        uint64 bitboards[3]; // {white, black, both}
         char matrix_board[8][8];
         std::string FEN_string;
         int en_passant;

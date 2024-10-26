@@ -13,9 +13,9 @@ enum{white, black, both};
 
 enum{P,N,B,R,Q,K,p,n,b,r,q,k};
 
-enum{ wk, wq, bk, bq};
+enum{kingside, queenside};
 
-enum{ left, top, right, bottom};
+enum{left, top, right, bottom};
 
 enum{
     a8, b8, c8, d8, e8, f8, g8, h8,
