@@ -1,72 +1,86 @@
 #include "../include/bitboard.hpp"
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
-using std::cout;
-using std::endl;
+BitBoard::BitBoard(): val_(0ULL) {}
 
-BitBoard::BitBoard(){
+BitBoard::BitBoard(uint64_t val): val_(val) {}
 
-}
-BitBoard::BitBoard(uint64 val){
-    this->val = val;
-}
-
- bool BitBoard::get_bit(int square){
-    return (bool)((this->val) & (1ULL <<(square )));
-}
- void BitBoard::set_bit(int square){
-    (this->val) |= (1ULL << (square ));
-}
- void BitBoard::pop_bit(int square){
-    (this->val)  &= ~(1ULL << (square));
-}
- void BitBoard::set_val(uint64 bitboard){
-    this->val = bitboard;
+uint64_t BitBoard::getVal() const
+{
+    return val_;
 }
 
-void BitBoard::print_binary(){
-    int count = 0;
-    for(int i = 63; i>=0; i--){
-        cout<<get_bit(i)<<" ";
+void BitBoard::printBinary() const
+{
+    size_t count = 0;
+
+    for(size_t i = 63; i>=0; i--)
+    {
+        std::cout<<getBit(i)<<" ";
         count++;
-        if(count == 8){
-            cout<<"\n";
+        if(count == 8)
+        {
+            std::cout<<"\n";
             count = 0;
         }
     }
-    cout<<"    bitboard value: "<<val<<"\n";
+    std::cout<<"    bitboard value: "<<val_<<"\n";
 }
 
- int BitBoard::count_bits(){
-    int count{};
-    uint64 bitboard = this->val;
+bool BitBoard::getBit(size_t square) const
+{
+    return (val_) & (1ULL << square);
+}
+
+size_t BitBoard::getSetBitCount() const
+{
+    size_t count{};
+    uint64_t bitboard = val_;
     // keep reseting least significatn 1st bit until bitboard is 0
-    while(bitboard){
+    while(bitboard)
+    {
         bitboard = bitboard & (bitboard -1);
         count++;
     }
     return count;
 }
-int BitBoard::get_lsb_index(){
-    return this->val ? log2(this->val & -this->val) : -1;
+
+int BitBoard::getLSBIndex() const
+{
+    return val_ ? static_cast<int>(log2(val_ & -val_)): -1;
 }
 
-std::vector<int> BitBoard::get_set_bit_index(){
+void BitBoard::setVal(uint64_t val)
+{
+   val_ = val;
+}
 
+void BitBoard::setBit(size_t square)
+{
+    // setting a specific the bit by doing OR operation with 1 at that specific index
+    val_ |= (1ULL << square );
+}
+
+void BitBoard::popBit(size_t square)
+{   
+    // erasing a specific the bit by doing AND operation with 0 at that specific index
+    val_  &= ~(1ULL << square);
+}
+
+std::vector<size_t> BitBoard::getSetBitIndices() const
+{
     // insert the index of all the set bit into vec
-    std::vector<int> vec;
-    BitBoard temp(this->val);
-    while(temp.val){
-        int lsb_index = temp.get_lsb_index();
-        vec.push_back(lsb_index);
+    BitBoard temp(getVal());
+    std::vector<size_t> vec(temp.getSetBitCount());
+    size_t itr{};
+
+    while(temp.getVal() && itr <vec.size()){
+        size_t lsbIndex = temp.getLSBIndex();
+        vec[itr] = lsbIndex;
         // erase the bit at least significant index
-        temp.pop_bit(lsb_index);
+        temp.popBit(lsbIndex);
+        itr++;
     }
-    // print all the content of array
-    // for(auto x: vec) std::cout<<x<<" ";
-    // std::cout<<std::endl;
     return vec;
 }
-
-

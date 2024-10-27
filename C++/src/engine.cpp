@@ -109,13 +109,13 @@ const int mirror_score[128] =
 
 int Engine::evaluate(BitBoard* piece){
     int score{};
-    for(int i = P; i<=k; i++){
+    for(size_t i = P; i<=k; i++){
         BitBoard piececpy;
-        piececpy.set_val(piece[i].val);
+        piececpy.setVal(piece[i].getVal());
 
-        score += (piececpy.count_bits() * material_score[i]);
+        score += (piececpy.getSetBitCount() * material_score[i]);
 
-        std::vector<int> piece_position = piececpy.get_set_bit_index();
+        std::vector<size_t> piece_position = piececpy.getSetBitIndices();
 
         for(auto& square: piece_position){
             square = 63 - square;

@@ -1,32 +1,44 @@
 #include "../include/gamesound.hpp"
 
-GameSound::GameSound(){
+GameSound::GameSound()
+{
     InitAudioDevice();
-    defaultMove = LoadSound("../../Assets/sounds/default.wav");
-    capture = LoadSound("../../Assets/sounds/capture.wav");
-    castle = LoadSound("../../Assets/sounds/castle.wav");
-    check = LoadSound("../../Assets/sounds/check.wav");
-    gameEnd = LoadSound("../../Assets/sounds/gameEnd.wav");
+    defaultMove_ =   LoadSound("../../Assets/sounds/default.wav");
+    capture_     =   LoadSound("../../Assets/sounds/capture.wav");
+    castle_      =   LoadSound("../../Assets/sounds/castle.wav");
+    check_       =   LoadSound("../../Assets/sounds/check.wav");
+    checkMate_   =   LoadSound("../../Assets/sounds/gameEnd.wav");
 }
-GameSound::~GameSound(){
-    // Unload the music streams when they're no longer needed
-    UnloadSound(defaultMove);
-    UnloadSound(capture);
-    UnloadSound(castle);
-    UnloadSound(check);
-    UnloadSound(gameEnd);
 
-    CloseAudioDevice(); // Close the audio device
+GameSound::~GameSound()
+{
+    // Unload the music streams when they're no longer needed
+    UnloadSound(defaultMove_);
+    UnloadSound(capture_);
+    UnloadSound(castle_);
+    UnloadSound(check_);
+    UnloadSound(checkMate_);
+
+    CloseAudioDevice(); 
 }
-void GameSound::playCapture(){
-    PlaySound(capture);
+
+void GameSound::playDefault() const
+{
+    PlaySound(defaultMove_);
 }
-void GameSound::playDefault(){
-    PlaySound(defaultMove);
+void GameSound::playCapture() const
+{
+    PlaySound(capture_);
 }
-void GameSound::playCastle(){
-    PlaySound(castle);
+void GameSound::playCastle() const
+{
+    PlaySound(castle_);
 }
-void GameSound::playCheck(){
-    PlaySound(check);
+void GameSound::playCheck() const
+{
+    PlaySound(check_);
+}
+void GameSound::playCheckMate() const
+{
+    PlaySound(checkMate_);
 }

@@ -16,7 +16,7 @@ void loadTextures()
     for (int i{}; i < 12; i++)
     {
         Image image = LoadImage(pieceDir[i].c_str());
-        ImageResize(&image, tileSize, tileSize);
+        ImageResize(&image, Globals::tileSize, Globals::tileSize);
         pieceTexture[i] = LoadTextureFromImage(image); // Load texture in graphics VRAM
         UnloadImage(image);                            // unload image from RAM
     }
@@ -43,9 +43,9 @@ int main()
     while (!WindowShouldClose())
     {  
         BeginDrawing();
-        ClearBackground(bg);
-        DrawText(logo.c_str(), (tileSize*8) + leftPadding*3, tileSize/2, 100,RAYWHITE);
-        board.draw_updated_board();
+        ClearBackground(Globals::bg);
+        DrawText(logo.c_str(), (Globals::tileSize*8) + Globals::leftPadding*3, Globals::tileSize/2, 100,RAYWHITE);
+        board.drawUpdatedBoard();
         inputHandler.mouseInputHandler();
         EndDrawing();
     }

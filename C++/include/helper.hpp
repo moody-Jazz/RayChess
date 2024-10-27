@@ -1,23 +1,44 @@
 #pragma once
-#include "raylib.h"
-#include <unordered_map>
+
 #include <string>
+#include <unordered_map>
 #include "../include/gamesound.hpp"
 
-// this header file contains all the necessary stuff related to ui managment like piece textures
-extern int tileSize;
-extern Color light, dark, bg;
-extern int topPadding, leftPadding;
+typedef struct PieceUI                      // Represents a Visual piece with its corrosponding texture and coo3rdinate on board
+{
+    char type;
+    Texture2D texture;
+    size_t row;
+    size_t col;
+} PieceUI;
 
-enum{white, black, both};
+namespace Globals 
+{
+    extern size_t tileSize;                 // Dimension of single tile
+    extern size_t totalPiece;               // Stores the number of total Pieces which are still on the board
+    extern size_t totalCaptured;            // Stores the number of total pieces that have been captured
+    extern size_t topPadding;               // Stores the height of top File strip
+    extern size_t leftPadding;              // Stores the width of left Rank strip
 
-enum{P,N,B,R,Q,K,p,n,b,r,q,k};
+    extern Color light;                     // Stores the color of light tiles
+    extern Color dark;                      // Stores the color of dark tile
+    extern Color bg;                        // Stores the BG color 
 
-enum{kingside, queenside};
+    extern const std::string asciiPieces;   // "PNBRQKpnbrqk" stores this string 
+    extern const std::unordered_map<char, int> charPieces; // Map piece character to its corrosponding enum 
 
-enum{left, top, right, bottom};
+    extern GameSound sound;                 // Stores all the sound like capture, move etc        
 
-enum{
+    extern PieceUI pieceOnBoard[32];        // Stores information about the pieces on Board
+    extern PieceUI pieceCaptured[30];       // Stores information about the pieces that have been captured
+}
+
+// Enums to organize constants
+enum { white, black, both };
+enum { P, N, B, R, Q, K, p, n, b, r, q, k };// used to iterate to all the pieces and acess a piece like 'P' for white pawn
+enum { kingside, queenside };
+enum { left, top, right, bottom };
+enum {
     a8, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a6, b6, c6, d6, e6, f6, g6, h6,
@@ -27,30 +48,9 @@ enum{
     a2, b2, c2, d2, e2, f2, g2, h2,
     a1, b1, c1, d1, e1, f1, g1, h1, no_sq
 };
-// ASCII pieces
-extern const std::string ascii_pieces;
-// convert ascii char pieces to encode constants
-extern const std::unordered_map<char, int>char_pieces;
 
-extern GameSound sound;
-typedef struct PieceUI
-{
-    char type;
-    Texture2D texture;
-    int row;
-    int col;
-} PieceUI;
-
-extern PieceUI pieceOnBoard[32];
-extern PieceUI PieceCaptured[30];
-
-extern int totalPiece;
-extern int totalCaptured;
-
-void InitializePiece(PieceUI *piece, char type, Texture2D texture, int row, int col);
-
+// Function declarations
+void InitializePiece(PieceUI* piece, char type, Texture2D texture, int row, int col);
 void InitializePieces(Texture2D texture[]);
-
-void deletePiece(PieceUI *piece);
-
-PieceUI* isThereA_PieceUI(int x, int y);
+void deletePiece(PieceUI* piece);
+PieceUI* isThereAPieceTexture(int x, int y);

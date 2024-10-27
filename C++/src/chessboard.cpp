@@ -1,203 +1,219 @@
 #include "../include/chessboard.hpp"
-#include "../include/bitboard.hpp"
-#include "../include/helper.hpp"
 #include <iostream>
 
-Board::Board(){
-    turn = white;
-    legal_moves.set_val(0ULL);
+Board::Board():
+    turn(white),
+    legalMoves(0ULL),
+    enPassant(0ULL),
+    emptyTurns_(no_sq),
+    totalTurns_(0),
+    FENString_("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+{
     castle[white][kingside] = castle[white][queenside] = true;
     castle[black][kingside] = castle[black][queenside] = true;
 
 /*  The following bitmask values are set for castling rights for both white and black sides.
-    Refer to the get_pseudo_legal_move() function to understand why these specific numbers are assigned. */
-    castle_bitmasks[white][kingside] = 6ULL;
-    castle_bitmasks[white][queenside] = 48ULL;
-    castle_bitmasks[white][both] = 54ULL; 
-    castle_bitmasks[black][kingside] = 432345564227567616ULL;
-    castle_bitmasks[black][queenside] = 3458764513820540928ULL;
-    castle_bitmasks[black][both] = 3891110078048108544ULL;
-    
+    Refer to the getPseudoLegalMoves() function to understand why these specific numbers are assigned. */
+    castleBitmasks[white][kingside] = 6ULL;
+    castleBitmasks[white][queenside] = 48ULL;
+    castleBitmasks[white][both] = 54ULL; 
+    castleBitmasks[black][kingside] = 432345564227567616ULL;
+    castleBitmasks[black][queenside] = 3458764513820540928ULL;
+    castleBitmasks[black][both] = 3891110078048108544ULL;
+
     bitboards[white] = bitboards[black] = bitboards[both] = 0ULL;
-    FEN_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    this->update_matrix_board();
-    en_passant = -1;
-    empty_turns = 0;
-    total_turns = 0;
-    bounds[left] = leftPadding;
-    bounds[right] = tileSize * 8 + leftPadding;
-    bounds[top] = topPadding;
-    bounds[bottom] = tileSize * 8 + topPadding;
+    
+    padding[left] = Globals::leftPadding;
+    padding[right] = Globals::tileSize * 8 + Globals::leftPadding;
+    padding[top] = Globals::topPadding;
+    padding[bottom] = Globals::tileSize * 8 + Globals::topPadding;
+
+    updateMatrixBoard();
 }
 
-/*
-=======================================================================================================================================================================================================
-                    Below are all the function which are used to draw board related stuff
-=======================================================================================================================================================================================================
-*/
-void Board::draw_tiles(){
+// Draw the Checkers pattern
+void Board::drawTiles() const
+{
     Color tileColor;
-    for (int row{}; row < 8; row++)
+    for (size_t row{}; row < 8; row++)
     {
-        for (int col{}; col < 8; col++)
+        for (size_t col{}; col < 8; col++)
         {
-            tileColor = ((row + col) % 2 == 0) ? light : dark; // white tiles will always be on (row + col == even) position
-            DrawRectangle((tileSize * col)+leftPadding,( tileSize * row)+topPadding, tileSize, tileSize, tileColor);
+            tileColor = ((row + col) % 2 == 0) ? Globals::light : Globals::dark; // white tiles will always be on (row + col == even) position
+            DrawRectangle(
+                ( Globals::tileSize * col)+Globals::leftPadding,
+                ( Globals::tileSize * row)+Globals::topPadding,
+                Globals::tileSize, Globals::tileSize, tileColor
+            );
         }
     }
 }
 
-void Board::draw_strips(){
-    DrawRectangle(0, topPadding, leftPadding, tileSize*8 ,BROWN);
-    DrawRectangle(leftPadding+tileSize*8, topPadding, leftPadding, tileSize*8 ,BROWN);
-    DrawRectangle(0, 0, tileSize*8+leftPadding*2, topPadding,BROWN);
-    DrawRectangle(0, topPadding+tileSize*8, tileSize*8+leftPadding*2, topPadding,BROWN);
+// Draw the file and rank strips
+void Board::drawStrips() const
+{
+    DrawRectangle(0, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,BROWN);
+    DrawRectangle(Globals::leftPadding+Globals::tileSize*8, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,BROWN);
+    DrawRectangle(0, 0, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,BROWN);
+    DrawRectangle(0, Globals::topPadding+Globals::tileSize*8, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,BROWN);
     
-    int itr{};
+    size_t itr{};
     int rank, flag, offset;
     char file;
 
-    if(black){
+    if(black)
+    {
         rank = -8;
         flag = 0;
         offset = 1;
         file = 'a';
     }
-    else{
+    else
+    {
         rank = 1;
         flag = 9;
         offset = -1;
         file = 'h';
     }
     
-    int posX = leftPadding/2;
-    int posY = topPadding + tileSize/2;
-    // draw the rank number strip
-    for(; rank != flag; rank++){
+    int posX = Globals::leftPadding/2;
+    int posY = Globals::topPadding + Globals::tileSize/2;
+    
+    // Draw the rank number strip
+    for(; rank != flag; rank++)
+    {
         std::string str = std::to_string(abs(rank));
-        DrawText(str.c_str(), posX, posY,20, WHITE);
-        posY += tileSize;
+        DrawText(str.c_str(), posX, posY, 20, WHITE);
+        posY += Globals::tileSize;
     }
 
-    // draw the file number strip like a, b, c etc
-    posY = tileSize * 8 + topPadding + 8;
-    posX = leftPadding + tileSize/2;
-    for(itr = 0; itr<8; itr++){
+    // Draw the file number strip like a, b, c etc
+    posY = Globals::tileSize * 8 + Globals::topPadding + 8;
+    posX = Globals::leftPadding + Globals::tileSize/2;
+    for(itr = 0; itr<8; itr++)
+    {
         std::string str = std::string(1, file);
-        DrawText(str.c_str(), posX, posY,20, WHITE);
+        DrawText(str.c_str(), posX, posY, 20, WHITE);
         DrawText(str.c_str(), posX, 10, 20, WHITE);
-        posX += tileSize;
+        posX += Globals::tileSize;
         file += offset;
     }
 }
 
-void Board::highlight_tiles(BitBoard tiles){
-    while(tiles.val){
-        int x = tiles.get_lsb_index();
+void Board::highlightTiles(BitBoard tiles) const
+{
+    while(tiles.getVal())
+    {
+        int x = tiles.getLSBIndex();
         int row = (63 - x) % 8;
         int col = (63 - x) / 8;
-        bool occupied_tile = isThereA_PieceUI(col, row);
-        row *= tileSize;
-        col *= tileSize;
-        row += leftPadding;
-        col += topPadding;
-        row += tileSize/2;
-        col += tileSize/2;
+        bool occupied_tile = isThereAPieceTexture(col, row);
+        row *= Globals::tileSize;
+        col *= Globals::tileSize;
+        row += Globals::leftPadding;
+        col += Globals::topPadding;
+        row += Globals::tileSize/2;
+        col += Globals::tileSize/2;
         Color temp = {70, 70, 70, 100};
         
-        if(occupied_tile) DrawRing({(float)row, (float)col}, 
-                tileSize/2-7, tileSize/2, 0, 360, 1000, temp);
+        if(occupied_tile) 
+            DrawRing({static_cast<float>(row), static_cast<float>(col)}, Globals::tileSize/2-7, Globals::tileSize/2, 0, 360, 1000, temp);
+        else 
+            DrawCircle(row, col, Globals::tileSize/2-35, temp);
 
-        else DrawCircle(row, col, tileSize/2-35, temp);
-        tiles.pop_bit(x);
+        tiles.popBit(x);
     }
 }
 
-void Board::draw_updated_board(){
-
-    draw_tiles();
-    draw_strips();
+void Board::drawUpdatedBoard() const
+{
+    drawTiles();
+    drawStrips();
     // draw all the pieces on board
-    for (int i{}; i < totalPiece; i++)
-        DrawTexture(pieceOnBoard[i].texture, (pieceOnBoard[i].col * tileSize)+leftPadding, (pieceOnBoard[i].row * tileSize)+topPadding, WHITE);
+    for (size_t i{}; i < Globals::totalPiece; i++)
+        DrawTexture(
+            Globals::pieceOnBoard[i].texture, 
+            (Globals::pieceOnBoard[i].col * Globals::tileSize)+Globals::leftPadding, 
+            (Globals::pieceOnBoard[i].row * Globals::tileSize)+Globals::topPadding, WHITE
+        );
 
     // highlight legal moves if there are any
-    highlight_tiles(legal_moves);
+    highlightTiles(legalMoves);
 
     // draw all the captured pieces 
-    int posX = ((tileSize*8) + leftPadding*3);
-    int itr1{}, itr2{};
-    for(int i{}; i<totalCaptured; i++){
-        if(PieceCaptured[i].type < 'Z'){
-            DrawTexture(PieceCaptured[i].texture, posX+(tileSize/3)*itr1, tileSize*2, WHITE );
+    int posX = ((Globals::tileSize*8) + Globals::leftPadding*3);
+    size_t itr1{}, itr2{};
+    for(size_t i{}; i<Globals::totalCaptured; i++)
+    {
+        if(Globals::pieceCaptured[i].type < 'Z')
+        {
+            DrawTexture(Globals::pieceCaptured[i].texture, posX+(Globals::tileSize/3)*itr1, Globals::tileSize*2, WHITE );
             itr1++;
         } 
-        else{ 
-            DrawTexture(PieceCaptured[i].texture, posX+(tileSize/3)*itr2, tileSize*8, WHITE );
+        else
+        { 
+            DrawTexture(Globals::pieceCaptured[i].texture, posX+(Globals::tileSize/3)*itr2, Globals::tileSize*8, WHITE );
             itr2++;
         }
     }
-    std::string str1 = FEN_string.substr(0, FEN_string.length()/2);
-    std::string str2 = FEN_string.substr(FEN_string.length()/2);
-    DrawText(str1.c_str(), posX, tileSize*3, 20, RAYWHITE);
-    DrawText(str2.c_str(), posX, tileSize*3+50, 20, RAYWHITE);
+    std::string str1 = FENString_.substr(0, FENString_.length()/2);
+    std::string str2 = FENString_.substr(FENString_.length()/2);
+    DrawText(str1.c_str(), posX, Globals::tileSize*3, 20, RAYWHITE);
+    DrawText(str2.c_str(), posX, Globals::tileSize*3+50, 20, RAYWHITE);
 }
 
-void Board::update_matrix_board(){
-    for(int i{}; i<8; i++){
-        for(int j{}; j<8; j++){
-            PieceUI *currPiece = isThereA_PieceUI(i, j);
-            if(currPiece)
-                matrix_board[i][j] = currPiece->type;
-            else matrix_board[i][j] = '.';
-        }
-    }
-}
-void Board::print(){
-    for(int i{}; i<8; i++){
-        for(int j{}; j<8; j++){
-            std::cout<<matrix_board[i][j];
+void Board::print() const
+{
+    for(size_t i{}; i<8; i++)
+    {
+        for(size_t j{}; j<8; j++)
+        {
+            std::cout<<matrixBoard_[i][j];
         }
         std::cout<<"\n";
     }
-    std::cout<<FEN_string<<"\n";
+    std::cout<<FENString_<<"\n";
 }
 
-void Board::sync_bitboards(BitBoard *piece_set){
-    bitboards[white] = bitboards[black] = 0ULL;
-    for(int i{}; i<12; i++){
-        if(i<6) bitboards[white] |= piece_set[i].val;
-        else  bitboards[black] |= piece_set[i].val;
-    }
-    bitboards[both] =  bitboards[white] |  bitboards[black];
-}
-
-void Board::flip_turn(){
+void Board::flipTurn()
+{
     (turn == white)?turn = black: turn = white;
 }
 
-/*
-=======================================================================================================================================================================================================
-                    Function Uses the matrix board representation and convert it into a FEN notation string
-=======================================================================================================================================================================================================
-*/
-void Board::matrix_to_FEN(){
+void Board::updateMatrixBoard() 
+{
+    for(size_t i{}; i<8; i++){
+        for(size_t j{}; j<8; j++){
+            PieceUI *currPiece = isThereAPieceTexture(i, j);
+            if(currPiece)
+                matrixBoard_[i][j] = currPiece->type;
+            else matrixBoard_[i][j] = '.';
+        }
+    }
+}
+
+void Board::updateFENViamatrixBoard()
+{
     std::string str;
-    for(int i{}; i<8; i++){
+    for(size_t i{}; i<8; i++)
+    {
         int emptyCol{};
-        for(int j{}; j<8; j++){
-            if(matrix_board[i][j] != '.'){
-                if(emptyCol){
+        for(size_t j{}; j<8; j++)
+        {
+            if(matrixBoard_[i][j] != '.')
+            {
+                if(emptyCol)
+                {
                     str += std::to_string(emptyCol);
                     emptyCol = 0;
                 }
-                str += matrix_board[i][j];
+                str += matrixBoard_[i][j];
             }
-            else{
-                emptyCol++;
-            }
+            else emptyCol++;
+
         }
-        if(emptyCol){
+        if(emptyCol)
+        {
             str += std::to_string(emptyCol);
             emptyCol = 0;
         }
@@ -205,7 +221,8 @@ void Board::matrix_to_FEN(){
     }
     str += (turn)?" w":" b"; // Add turn
     str+=" ";
-    if(castle[white][kingside] || castle[white][queenside] || castle[black][kingside] || castle[black][queenside]){
+    if(castle[white][kingside] || castle[white][queenside] || castle[black][kingside] || castle[black][queenside])
+    {
         if(castle[white][kingside]) str += "K";
         if(castle[white][queenside]) str += "Q";
         if(castle[black][kingside]) str += "k";
@@ -213,13 +230,24 @@ void Board::matrix_to_FEN(){
     }
     else str += "-";
     str+=" ";
-    if(en_passant != -1) str += coordinate[en_passant];
+    if(enPassant != no_sq) str += coordinate[enPassant];
     else str += "-";
     str+=" ";
-    str+= std::to_string(empty_turns);
+    str+= std::to_string(emptyTurns_);
     str += " ";
-    str += std::to_string(total_turns);
-    FEN_string = str;
+    str += std::to_string(totalTurns_);
+    FENString_ = str;
+}
+
+void Board::syncBitboards(BitBoard *pieceBitboards)
+{
+    bitboards[white] = bitboards[black] = 0ULL;
+    for(size_t i{}; i<12; i++)
+    {
+        if(i<6) bitboards[white] |= pieceBitboards[i].getVal();
+        else  bitboards[black] |= pieceBitboards[i].getVal();
+    }
+    bitboards[both] =  bitboards[white] |  bitboards[black];
 }
 
 /*
@@ -227,11 +255,11 @@ void Board::matrix_to_FEN(){
                     Function to Make move: this function updates all the logical bitboards and also the visual board
 =======================================================================================================================================================================================================
 */
-void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTileCol, BitBoard *piece_set, int *kingPosition){
-    unsigned int source_tile = 63-(currPiece->row * 8 + currPiece->col),
-                  destination_tile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
+void Board::makeMove(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTileCol, BitBoard *pieceBitboards, size_t *kingPosition){
+    unsigned int sourceTile = 63-(currPiece->row * 8 + currPiece->col),
+                  destTile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
 
-    PieceUI *releasedOnPiece = isThereA_PieceUI(releasedOnTileRow,releasedOnTileCol); 
+    PieceUI *releasedOnPiece = isThereAPieceTexture(releasedOnTileRow,releasedOnTileCol); 
     
     bool isPieceReleasedOnEmptyTile = (!releasedOnPiece && (currPiece->row != releasedOnTileRow || currPiece->col != releasedOnTileCol))? true : false;
 
@@ -239,45 +267,45 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
     if(currPiece->type == 'P' || currPiece->type == 'p'){
 
         // check if current move activates any enpassant on the board
-        if(abs(source_tile - destination_tile) == 16)
-            (currPiece->type == 'P')? en_passant = 63 - (destination_tile-8): en_passant = 63 - (destination_tile + 8);
+        if(abs(sourceTile - destTile) == 16)
+            (currPiece->type == 'P')? enPassant = 63 - (destTile-8): enPassant = 63 - (destTile + 8);
 
         // check if this is an enpassant capture
-        else if((abs(source_tile - destination_tile) == 7 || abs(source_tile - destination_tile) == 9) && isPieceReleasedOnEmptyTile){
+        else if((abs(sourceTile - destTile) == 7 || abs(sourceTile - destTile) == 9) && isPieceReleasedOnEmptyTile){
             PieceUI *captured_pawn = nullptr;
 
             if(currPiece->type == 'P') {
-                captured_pawn = isThereA_PieceUI(((63-destination_tile)+8)/8, ((63-destination_tile)+8)%8);
-                piece_set[char_pieces.at(captured_pawn->type)].pop_bit(destination_tile-8);
+                captured_pawn = isThereAPieceTexture(((63-destTile)+8)/8, ((63-destTile)+8)%8);
+                pieceBitboards[Globals::charPieces.at(captured_pawn->type)].popBit(destTile-8);
             }
             else {
-                captured_pawn = isThereA_PieceUI(((63-destination_tile)-8)/8, ((63-destination_tile)-8)%8);
-                piece_set[char_pieces.at(captured_pawn->type)].pop_bit(destination_tile+8);
+                captured_pawn = isThereAPieceTexture(((63-destTile)-8)/8, ((63-destTile)-8)%8);
+                pieceBitboards[Globals::charPieces.at(captured_pawn->type)].popBit(destTile+8);
             }
 
-            sound.playCapture();
+            Globals::sound.playCapture();
             
             // remove the pawn capture via enpassant
             deletePiece(captured_pawn);
         }
 
         //conditions to handle pawn promotion
-        if(destination_tile <= 7 || destination_tile >= 56){
-            PieceUI *promoted_pawn = isThereA_PieceUI((63-source_tile)/8, (63-source_tile)%8);
-            piece_set[char_pieces.at(promoted_pawn->type)].pop_bit(source_tile);
+        if(destTile <= 7 || destTile >= 56){
+            PieceUI *promoted_pawn = isThereAPieceTexture((63-sourceTile)/8, (63-sourceTile)%8);
+            pieceBitboards[Globals::charPieces.at(promoted_pawn->type)].popBit(sourceTile);
             if(promoted_pawn->type >= 'a'){
-                piece_set['q'].set_bit(destination_tile);
+                pieceBitboards['q'].setBit(destTile);
                 promoted_pawn->type = 'q';
                 Image image = LoadImage("../../Assets/images/blackQueen.png");
-                ImageResize(&image, tileSize, tileSize);
+                ImageResize(&image, Globals::tileSize, Globals::tileSize);
                 promoted_pawn->texture = LoadTextureFromImage(image); // Load texture in graphics VRAM
                 UnloadImage(image);
             } 
             else{
-                piece_set['Q'].set_bit(destination_tile);
+                pieceBitboards['Q'].setBit(destTile);
                 promoted_pawn->type = 'Q';
                 Image image = LoadImage("../../Assets/images/whiteQueen.png");
-                ImageResize(&image, tileSize, tileSize);
+                ImageResize(&image, Globals::tileSize, Globals::tileSize);
                 promoted_pawn->texture = LoadTextureFromImage(image); // Load texture in graphics VRAM
                 UnloadImage(image);
             }   
@@ -289,20 +317,20 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
     // if white king is moved
     if(currPiece->type == 'K'){
     
-            kingPosition[white] = destination_tile; //update the global white king position
-            if(source_tile == 3 && destination_tile == 1){
-                PieceUI* rook = isThereA_PieceUI(7,7);
-                piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
+            kingPosition[white] = destTile; //update the global white king position
+            if(sourceTile == 3 && destTile == 1){
+                PieceUI* rook = isThereAPieceTexture(7,7);
+                pieceBitboards[Globals::charPieces.at(rook->type)].popBit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 5;
-                piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
+                pieceBitboards[Globals::charPieces.at(rook->type)].setBit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
+                Globals::sound.playCastle();
             }
-            else if(source_tile == 3 && destination_tile == 5){
-                PieceUI* rook = isThereA_PieceUI(7,0);
-                piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
+            else if(sourceTile == 3 && destTile == 5){
+                PieceUI* rook = isThereAPieceTexture(7,0);
+                pieceBitboards[Globals::charPieces.at(rook->type)].popBit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 3;
-                piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
+                pieceBitboards[Globals::charPieces.at(rook->type)].setBit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
+                Globals::sound.playCastle();
             }
 
             if(castle[white][kingside] || castle[white][queenside]){
@@ -315,21 +343,21 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
         // if black king is moved
         else if(currPiece->type == 'k'){
 
-            kingPosition[black] =  destination_tile; //update the global black king positions
+            kingPosition[black] =  destTile; //update the global black king positions
 
-            if(source_tile == 59 && destination_tile == 57){
-                PieceUI* rook = isThereA_PieceUI(0,7);
-                piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
+            if(sourceTile == 59 && destTile == 57){
+                PieceUI* rook = isThereAPieceTexture(0,7);
+                pieceBitboards[Globals::charPieces.at(rook->type)].popBit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 5;
-                piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
+                pieceBitboards[Globals::charPieces.at(rook->type)].setBit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
+                Globals::sound.playCastle();
             }
-            else if(source_tile == 59 && destination_tile == 61){
-                PieceUI* rook = isThereA_PieceUI(0,0);
-                piece_set[char_pieces.at(rook->type)].pop_bit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
+            else if(sourceTile == 59 && destTile == 61){
+                PieceUI* rook = isThereAPieceTexture(0,0);
+                pieceBitboards[Globals::charPieces.at(rook->type)].popBit(63-(rook->row*8+rook->col)); // eraset the old position of this rook in bitboards
                 rook->col = 3;
-                piece_set[char_pieces.at(rook->type)].set_bit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
-                sound.playCastle();
+                pieceBitboards[Globals::charPieces.at(rook->type)].setBit(63-(rook->row*8+rook->col)); // update the new position of this rook in bitboards
+                Globals::sound.playCastle();
             }
 
             if(castle[black][kingside] || castle[black][queenside]){
@@ -359,8 +387,8 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             }
         }
 
-        piece_set[char_pieces.at(currPiece->type)].pop_bit(source_tile);
-        piece_set[char_pieces.at(currPiece->type)].set_bit(destination_tile);
+        pieceBitboards[Globals::charPieces.at(currPiece->type)].popBit(sourceTile);
+        pieceBitboards[Globals::charPieces.at(currPiece->type)].setBit(destTile);
 
         currPiece->row = releasedOnTileRow;
         currPiece->col = releasedOnTileCol;
@@ -368,10 +396,10 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
 
         // if enemy piece is captured then put the captured piece at the end of the array and decrease the size till which updateBoard have acess 
         if(!isPieceReleasedOnEmptyTile){
-            sound.playCapture();
+            Globals::sound.playCapture();
 
             // if piece is release on enemy tile pop that enemy piece from the bitboards
-            piece_set[char_pieces.at(releasedOnPiece->type)].pop_bit(destination_tile);
+            pieceBitboards[Globals::charPieces.at(releasedOnPiece->type)].popBit(destTile);
 
             //std::cout<<"captured piece: "<<releasedOnPiece->type<<std::endl;
 
@@ -401,17 +429,17 @@ void Board::make_move(PieceUI *currPiece, int releasedOnTileRow, int releasedOnT
             }
 
             deletePiece(releasedOnPiece);
-            empty_turns = 0;
+            emptyTurns_ = 0;
         }
         else if(isPieceReleasedOnEmptyTile){
-            sound.playDefault();
-            if(std::toupper(currPiece->type) != 'P')empty_turns++;
+            Globals::sound.playDefault();
+            if(std::toupper(currPiece->type) != 'P')emptyTurns_++;
         }
-        total_turns++;
-        if(std::toupper(currPiece->type) == 'P' || !isPieceReleasedOnEmptyTile) empty_turns = 0; // if pawn is moved or piece is captured reset empty moves
+        totalTurns_++;
+        if(std::toupper(currPiece->type) == 'P' || !isPieceReleasedOnEmptyTile) emptyTurns_ = 0; // if pawn is moved or piece is captured reset empty moves
 
-        sync_bitboards(piece_set);
-        update_matrix_board();
-        matrix_to_FEN();
-        std::cout<<FEN_string<<"\n";
+        syncBitboards(pieceBitboards);
+        updateMatrixBoard();
+        updateFENViamatrixBoard();
+        std::cout<<FENString_<<"\n";
 }
