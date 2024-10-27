@@ -1,9 +1,0 @@
-/**
- * 
- */
-/**
- * @author Amit
- *
- */
-module Chess {
-}

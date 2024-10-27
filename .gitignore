@@ -1,6 +1,4 @@
 *.exe
-C++/lib/
-C++/.vscode
-C++/include/raylib.h
-C++/lib
-.vscode
+lib/
+include/raylib.h
+.vscode/
