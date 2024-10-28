@@ -1,4 +1,4 @@
-#include "../include/helper.hpp"
+#include "helper.hpp"
 
 namespace Globals 
 {
@@ -97,7 +97,7 @@ void deletePiece(PieceUI* piece)
     Globals::totalCaptured++;
 }
 
-PieceUI* isThereAPieceTexture(int x, int y)
+PieceUI* isThereAPieceTexture(size_t x, size_t y)
 {
     for (size_t i{}; i < Globals::totalPiece; i++)
             if ((Globals::pieceOnBoard[i].row == x) && (Globals::pieceOnBoard[i].col == y)) return &Globals::pieceOnBoard[i]; 

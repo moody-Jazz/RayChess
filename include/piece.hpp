@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/chessboard.hpp"
+#include "chessboard.hpp"
 
 /*
 Below are the absolute values of bitmask that is required to find the pseudo legal move of a piece 

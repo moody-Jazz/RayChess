@@ -1,13 +1,13 @@
-#include "../include/gamesound.hpp"
+#include "gamesound.hpp"
 
 GameSound::GameSound()
 {
     InitAudioDevice();
-    defaultMove_ =   LoadSound("../../Assets/sounds/default.wav");
-    capture_     =   LoadSound("../../Assets/sounds/capture.wav");
-    castle_      =   LoadSound("../../Assets/sounds/castle.wav");
-    check_       =   LoadSound("../../Assets/sounds/check.wav");
-    checkMate_   =   LoadSound("../../Assets/sounds/gameEnd.wav");
+    defaultMove_ =   LoadSound("sounds/default.wav");
+    capture_     =   LoadSound("sounds/capture.wav");
+    castle_      =   LoadSound("sounds/castle.wav");
+    check_       =   LoadSound("sounds/check.wav");
+    checkMate_   =   LoadSound("sounds/gameEnd.wav");
 }
 
 GameSound::~GameSound()

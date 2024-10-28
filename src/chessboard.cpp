@@ -1,4 +1,4 @@
-#include "../include/chessboard.hpp"
+#include "chessboard.hpp"
 #include <iostream>
 
 Board::Board():
@@ -296,7 +296,7 @@ void Board::makeMove(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTi
             if(promoted_pawn->type >= 'a'){
                 pieceBitboards['q'].setBit(destTile);
                 promoted_pawn->type = 'q';
-                Image image = LoadImage("../../Assets/images/blackQueen.png");
+                Image image = LoadImage("images/blackQueen.png");
                 ImageResize(&image, Globals::tileSize, Globals::tileSize);
                 promoted_pawn->texture = LoadTextureFromImage(image); // Load texture in graphics VRAM
                 UnloadImage(image);
@@ -304,7 +304,7 @@ void Board::makeMove(PieceUI *currPiece, int releasedOnTileRow, int releasedOnTi
             else{
                 pieceBitboards['Q'].setBit(destTile);
                 promoted_pawn->type = 'Q';
-                Image image = LoadImage("../../Assets/images/whiteQueen.png");
+                Image image = LoadImage("images/whiteQueen.png");
                 ImageResize(&image, Globals::tileSize, Globals::tileSize);
                 promoted_pawn->texture = LoadTextureFromImage(image); // Load texture in graphics VRAM
                 UnloadImage(image);

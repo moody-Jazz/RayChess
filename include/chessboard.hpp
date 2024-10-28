@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../include/helper.hpp"
-#include "../include/bitboard.hpp"
+#include "helper.hpp"
+#include "bitboard.hpp"
 
 static const std::string coordinate[] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",

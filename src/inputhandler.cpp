@@ -1,9 +1,5 @@
 #include <iostream>
-#include "../include/inputhandler.hpp"
-#include "../include/raylib.h"
-#include "../include/helper.hpp"
-#include "../include/bitboard.hpp"
-#include "../include/piece.hpp"
+#include "inputhandler.hpp"
 
 InputHandler::InputHandler(Board &board, Piece &piece):
     board(board), piece(piece){ // Initialize references using an initializer list
@@ -102,7 +98,7 @@ void InputHandler::movedPiece(){
     
     // if mouse is holding a piece and released inside the board (onto empty tile or enemy tile) update the position of the piece 
     if((isMouseInsideBoard && isMoveLegal && pieceSelected) && (isPieceReleasedOnEmptyTile || isPieceReleasedOnEnemyTile)){
-        board.enPassant = -1;
+        board.enPassant = no_sq;
         
         board.makeMove(currPiece, releasedOnTileRow, releasedOnTileCol, piece.pieceBitboards, piece.kingPosition);
 

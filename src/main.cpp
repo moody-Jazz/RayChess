@@ -1,16 +1,12 @@
-#include "../include/raylib.h"
-#include "../include/InputHandler.hpp"
-#include "../include/helper.hpp"
-#include "../include/chessboard.hpp"
-#include "../include/piece.hpp"
-#include "../include/engine.hpp"
+
+#include "inputhandler.hpp"
 #include <iostream>
 
 void loadTextures()
 {
-    std::string pieceDir[] = {"../../Assets/images/blackRook.png", "../../Assets/images/blackKnight.png", "../../Assets/images/blackBishop.png", "../../Assets/images/blackQueen.png", 
-                              "../../Assets/images/blackKing.png", "../../Assets/images/blackPawn.png", "../../Assets/images/whitePawn.png", "../../Assets/images/whiteRook.png", 
-                              "../../Assets/images/whiteKnight.png", "../../Assets/images/whiteBishop.png", "../../Assets/images/whiteQueen.png", "../../Assets/images/whiteKing.png"};
+    std::string pieceDir[] = {"images/blackRook.png", "images/blackKnight.png", "images/blackBishop.png", "images/blackQueen.png", 
+                              "images/blackKing.png", "images/blackPawn.png", "images/whitePawn.png", "images/whiteRook.png", 
+                              "images/whiteKnight.png", "images/whiteBishop.png", "images/whiteQueen.png", "images/whiteKing.png"};
     Texture2D pieceTexture[12]; //[br, bk, bb, bq, bking, bpawn, wpawn, wr, wk, wb, wq, wking]
 
     for (int i{}; i < 12; i++)

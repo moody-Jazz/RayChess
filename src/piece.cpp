@@ -1,4 +1,4 @@
-#include "../include/piece.hpp"
+#include "piece.hpp"
 #include <iostream>
 
 Piece::Piece(){

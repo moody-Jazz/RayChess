@@ -1,7 +1,5 @@
 #include "raylib.h"
-#include "../include/helper.hpp"
-#include "../include/piece.hpp"
-#include "../include/chessboard.hpp"
+#include "piece.hpp"
 
 class InputHandler
 {

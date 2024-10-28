@@ -2,7 +2,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "../include/gamesound.hpp"
+#include "gamesound.hpp"
 
 typedef struct PieceUI                      // Represents a Visual piece with its corrosponding texture and coo3rdinate on board
 {
@@ -53,4 +53,4 @@ enum {
 void InitializePiece(PieceUI* piece, char type, Texture2D texture, int row, int col);
 void InitializePieces(Texture2D texture[]);
 void deletePiece(PieceUI* piece);
-PieceUI* isThereAPieceTexture(int x, int y);
+PieceUI* isThereAPieceTexture(size_t x, size_t y);

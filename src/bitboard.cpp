@@ -1,4 +1,4 @@
-#include "../include/bitboard.hpp"
+#include "bitboard.hpp"
 #include <iostream>
 #include <cmath>
 

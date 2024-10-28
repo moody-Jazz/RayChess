@@ -1,6 +1,4 @@
-#include "../include/engine.hpp"
-#include "../include/helper.hpp"
-#include "../include/bitboard.hpp"
+#include "engine.hpp"
 #include <vector>
 
 /*

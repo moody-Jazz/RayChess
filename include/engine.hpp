@@ -1,5 +1,5 @@
-#include "../include/helper.hpp"
-#include "../include/bitboard.hpp"
+#include "helper.hpp"
+#include "bitboard.hpp"
 
 class Engine{
     public:
