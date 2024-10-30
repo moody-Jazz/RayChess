@@ -3,11 +3,12 @@
 GameSound::GameSound()
 {
     InitAudioDevice();
-    defaultMove_ =   LoadSound("sounds/default.wav");
-    capture_     =   LoadSound("sounds/capture.wav");
-    castle_      =   LoadSound("sounds/castle.wav");
-    check_       =   LoadSound("sounds/check.wav");
-    checkMate_   =   LoadSound("sounds/gameEnd.wav");
+    defaultMove_   =   LoadSound("sounds/default.wav");
+    capture_       =   LoadSound("sounds/capture.wav");
+    castle_        =   LoadSound("sounds/castle.wav");
+    check_         =   LoadSound("sounds/check.wav");
+    checkMate_     =   LoadSound("sounds/gameEnd.wav");
+    buttonClicked_ =   LoadSound("sounds/mouseClick.wav");
 }
 
 GameSound::~GameSound()
@@ -41,4 +42,8 @@ void GameSound::playCheck() const
 void GameSound::playCheckMate() const
 {
     PlaySound(checkMate_);
+}
+void GameSound::playButtonClicked() const
+{
+    PlaySound(buttonClicked_);
 }
