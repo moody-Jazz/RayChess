@@ -20,8 +20,3 @@ public:
     void draggingPiece();
     void movedPiece();
 };
-
-
- 
-
-

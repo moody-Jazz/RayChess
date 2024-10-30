@@ -1,5 +1,5 @@
 #include <iostream>
-#include "inputhandler.hpp"
+#include "interface.hpp"
 
 InputHandler::InputHandler(Board &board, Piece &piece):
     board(board), piece(piece){ // Initialize references using an initializer list

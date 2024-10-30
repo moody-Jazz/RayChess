@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include "gamesound.hpp"
 
-typedef struct PieceUI                      // Represents a Visual piece with its corrosponding texture and coo3rdinate on board
+typedef struct PieceUI                   // Represents a Visual piece with its corrosponding texture and coo3rdinate on board
 {
     char type;
     Texture2D texture;
@@ -14,23 +14,34 @@ typedef struct PieceUI                      // Represents a Visual piece with it
 
 namespace Globals 
 {
-    extern size_t tileSize;                 // Dimension of single tile
-    extern size_t totalPiece;               // Stores the number of total Pieces which are still on the board
-    extern size_t totalCaptured;            // Stores the number of total pieces that have been captured
-    extern size_t topPadding;               // Stores the height of top File strip
-    extern size_t leftPadding;              // Stores the width of left Rank strip
+    extern size_t tileSize;              // Dimension of single tile
+    extern size_t totalPiece;            // Stores the number of total Pieces which are still on the board
+    extern size_t totalCaptured;         // Stores the number of total pieces that have been captured
+    extern size_t topPadding;            // Stores the height of top File strip
+    extern size_t leftPadding;           // Stores the width of left Rank strip
 
-    extern Color light;                     // Stores the color of light tiles
-    extern Color dark;                      // Stores the color of dark tile
-    extern Color bg;                        // Stores the BG color 
-
-    extern const std::string asciiPieces;   // "PNBRQKpnbrqk" stores this string 
+    extern const std::string asciiPieces;// "PNBRQKpnbrqk" stores this string 
     extern const std::unordered_map<char, int> charPieces; // Map piece character to its corrosponding enum 
 
-    extern GameSound sound;                 // Stores all the sound like capture, move etc        
+    extern GameSound sound;              // Stores all the sound like capture, move etc        
 
-    extern PieceUI pieceOnBoard[32];        // Stores information about the pieces on Board
-    extern PieceUI pieceCaptured[30];       // Stores information about the pieces that have been captured
+    extern PieceUI pieceOnBoard[32];     // Stores information about the pieces on Board
+    extern PieceUI pieceCaptured[30];    // Stores information about the pieces that have been captured
+}
+
+namespace Colors
+{
+    extern Color lightTile;              // Color of light tiles
+    extern Color darkTile;               // Color of dark tiles
+    extern Color boardOutline;           // Color of the border strip of the board
+    extern Color tileHighlight;          // Color used to highlight the tiles on which we can move
+    extern Color danger;                 // Color used to highlight the king's tiles when in check
+    extern Color background;             // Backgound Color of the gaem
+
+    extern Color btnBase;                // Button Color
+    extern Color btnBorder;              // Button border color
+    extern Color labelColor;             // Color of text inside the button
+    extern Color btnHighlight;           // Color when btn is cliked to hightlight it
 }
 
 // Enums to organize constants

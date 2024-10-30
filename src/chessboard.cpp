@@ -39,7 +39,7 @@ void Board::drawTiles() const
     {
         for (size_t col{}; col < 8; col++)
         {
-            tileColor = ((row + col) % 2 == 0) ? Globals::light : Globals::dark; // white tiles will always be on (row + col == even) position
+            tileColor = ((row + col) % 2 == 0) ? Colors::lightTile : Colors::darkTile; // white tiles will always be on (row + col == even) position
             DrawRectangle(
                 ( Globals::tileSize * col)+Globals::leftPadding,
                 ( Globals::tileSize * row)+Globals::topPadding,
@@ -52,10 +52,10 @@ void Board::drawTiles() const
 // Draw the file and rank strips
 void Board::drawStrips() const
 {
-    DrawRectangle(0, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,BROWN);
-    DrawRectangle(Globals::leftPadding+Globals::tileSize*8, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,BROWN);
-    DrawRectangle(0, 0, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,BROWN);
-    DrawRectangle(0, Globals::topPadding+Globals::tileSize*8, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,BROWN);
+    DrawRectangle(0, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,Colors::boardOutline);
+    DrawRectangle(Globals::leftPadding+Globals::tileSize*8, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,Colors::boardOutline);
+    DrawRectangle(0, 0, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,Colors::boardOutline);
+    DrawRectangle(0, Globals::topPadding+Globals::tileSize*8, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,Colors::boardOutline);
     
     size_t itr{};
     int rank, flag, offset;

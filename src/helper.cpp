@@ -8,10 +8,6 @@ namespace Globals
     size_t topPadding = 40;
     size_t leftPadding = 40;
 
-    Color light = {218, 217, 233, 255};
-    Color dark = {161, 123, 185, 255};
-    Color bg = {49, 54, 63, 255};
-
     const std::string asciiPieces = "PNBRQKpnbrqk";
     const std::unordered_map<char, int> charPieces = 
     {
@@ -25,6 +21,20 @@ namespace Globals
     PieceUI pieceCaptured[30];
 }
 
+namespace Colors
+{
+    Color lightTile     = {218, 217, 233, 255};
+    Color darkTile      = {161, 123, 185, 255};
+    Color boardOutline  = {142, 80, 48, 255};
+    Color tileHighlight = {37, 150, 190, 90};
+    Color background    = {49, 54, 63, 255};
+    Color danger        = RED;
+    
+    Color btnBase       = {185, 133, 204, 255};
+    Color btnBorder     = {116, 84, 132, 255};
+    Color labelColor    = {76, 52, 91, 255};
+    Color btnHighlight  = btnBorder;
+}
 void InitializePiece(PieceUI *piece, char type, Texture2D texture, int row, int col)
 {
     piece->type = type;
