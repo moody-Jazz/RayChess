@@ -114,12 +114,11 @@ void Board::highlightTiles(BitBoard tiles) const
         col += Globals::topPadding;
         row += Globals::tileSize/2;
         col += Globals::tileSize/2;
-        Color temp = {70, 70, 70, 100};
         
         if(occupied_tile) 
-            DrawRing({static_cast<float>(row), static_cast<float>(col)}, Globals::tileSize/2-7, Globals::tileSize/2, 0, 360, 1000, temp);
+            DrawRing({static_cast<float>(row), static_cast<float>(col)}, Globals::tileSize/2-7, Globals::tileSize/2, 0, 360, 1000, Colors::tileHighlight);
         else 
-            DrawCircle(row, col, Globals::tileSize/2-35, temp);
+            DrawCircle(row, col, Globals::tileSize/2-35, Colors::tileHighlight);
 
         tiles.popBit(x);
     }

@@ -26,7 +26,7 @@ namespace Colors
     Color lightTile     = {218, 217, 233, 255};
     Color darkTile      = {161, 123, 185, 255};
     Color boardOutline  = {142, 80, 48, 255};
-    Color tileHighlight = {37, 150, 190, 90};
+    Color tileHighlight = {70, 70, 70, 100};
     Color background    = {49, 54, 63, 255};
     Color danger        = RED;
     

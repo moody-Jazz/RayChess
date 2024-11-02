@@ -1,4 +1,5 @@
 *.exe
-lib/
+obj
+lib
 include/raylib.h
 .vscode/
