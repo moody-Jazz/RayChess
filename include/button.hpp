@@ -6,6 +6,8 @@
 class Button
 {
 public:
+    Button() = default;
+
     Button
     (   Rectangle base, Color baseColor, Color borderColor,
         std::string label, size_t labelHeight,

@@ -14,8 +14,7 @@ uint64_t BitBoard::getVal() const
 void BitBoard::printBinary() const
 {
     size_t count = 0;
-
-    for(size_t i = 63; i>=0; i--)
+    for(int i = 63; i>=0; i--)
     {
         std::cout<<getBit(i)<<" ";
         count++;

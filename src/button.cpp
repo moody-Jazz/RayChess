@@ -37,10 +37,6 @@ void Button::interactionHandler()
         (mousePosition.x > base_.x && mousePosition.x < topRightX_) &&
         (mousePosition.y > base_.y && mousePosition.y < bottomleftY_);
 
-    // if mouse is hovering over the button change the cursor
-    if(isMouseInsideButton) SetMouseCursor(MOUSE_CURSOR_POINTING_HAND); 
-    else SetMouseCursor(MOUSE_CURSOR_ARROW); // reset the cursor when not onto the button
-
     // if button is bieng clicked
     if(isMouseInsideButton && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
