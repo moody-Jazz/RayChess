@@ -1,7 +1,10 @@
 #include "piece.hpp"
+#include "helper.hpp"
 #include <iostream>
 
-Piece::Piece(){
+Piece::Piece():
+    enPassant(no_sq)
+{
     /* 
     all the pieces will be initialised with a decimal value which in binary is similar to initial chess pieces position
 
@@ -32,12 +35,19 @@ Piece::Piece(){
     pieceBitboards[q].setVal(1152921504606846976ULL);
     pieceBitboards[k].setVal(576460752303423488ULL);
 
+    bitboards_[white] = 65535ULL;
+    bitboards_[black] = 18446462598732840960uLL;
+    bitboards_[both] = bitboards_[white] | bitboards_[black];
+
     check[white] = check[black] = false;
+
+    castle[white][kingside] = castle[white][queenside] = true;
+    castle[black][kingside] = castle[black][queenside] = true;
 
     kingPosition[white] = 3;
     kingPosition[black] = 59;
 
-    unsafeTiles[white] = unsafeTiles[black] = 0ULL;
+    unsafeTiles_[white] = unsafeTiles_[black] = 0ULL;
 }
 
 /*  Below are all the functions which are used to generate possible moves for every type of piece
@@ -57,14 +67,14 @@ uint64_t Piece::pawnAttackBitmaskInit(size_t side, size_t square) const
     //black pawns
     if(side)
     {
-        if((bitboard >> 7) & notAFile) attacks |= (bitboard >> 7);
-        if((bitboard >> 9) & notHFile) attacks |= (bitboard >> 9);
+        if((bitboard >> 7) & Globals::notAFile) attacks |= (bitboard >> 7);
+        if((bitboard >> 9) & Globals::notHFile) attacks |= (bitboard >> 9);
     }
     //white pawns
     else
     {
-        if((bitboard << 7) & notHFile) attacks |= (bitboard << 7);
-        if((bitboard << 9) & notAFile) attacks |= (bitboard << 9);
+        if((bitboard << 7) & Globals::notHFile) attacks |= (bitboard << 7);
+        if((bitboard << 9) & Globals::notAFile) attacks |= (bitboard << 9);
     }
     return attacks;
 }
@@ -103,14 +113,14 @@ uint64_t Piece::knightAttackBitmaskInit(size_t square) const
     uint64_t bitboard(0ULL);
     bitboard |= (1ULL << square);
     //generate knight attacks
-    if((bitboard >> 17) & notHFile) attacks |= (bitboard >> 17);
-    if((bitboard >> 15) & notAFile) attacks |= (bitboard >> 15);
-    if((bitboard >> 10) & notGHFile) attacks |= (bitboard >> 10);
-    if((bitboard >> 6) & notABFile) attacks |= (bitboard >> 6); 
-    if((bitboard << 17) & notAFile) attacks |= (bitboard << 17);
-    if((bitboard << 15) & notHFile) attacks |= (bitboard << 15);
-    if((bitboard << 10) & notABFile) attacks |= (bitboard << 10);
-    if((bitboard << 6) & notGHFile) attacks |= (bitboard << 6); 
+    if((bitboard >> 17) & Globals::notHFile) attacks |= (bitboard >> 17);
+    if((bitboard >> 15) & Globals::notAFile) attacks |= (bitboard >> 15);
+    if((bitboard >> 10) & Globals::notGHFile) attacks |= (bitboard >> 10);
+    if((bitboard >> 6) & Globals::notABFile) attacks |= (bitboard >> 6); 
+    if((bitboard << 17) & Globals::notAFile) attacks |= (bitboard << 17);
+    if((bitboard << 15) & Globals::notHFile) attacks |= (bitboard << 15);
+    if((bitboard << 10) & Globals::notABFile) attacks |= (bitboard << 10);
+    if((bitboard << 6) & Globals::notGHFile) attacks |= (bitboard << 6); 
     return attacks;
 }
 uint64_t Piece::kingAttackBitmaskInit(size_t square) const
@@ -120,14 +130,14 @@ uint64_t Piece::kingAttackBitmaskInit(size_t square) const
     bitboard |= (1ULL << square);
 
     if(bitboard >> 8) attacks |= (bitboard >> 8);
-    if((bitboard >> 9) & notHFile) attacks |= (bitboard >> 9);
-    if((bitboard >> 7) & notAFile) attacks |= (bitboard >> 7);
-    if((bitboard >> 1) & notHFile)attacks |= (bitboard >> 1);  
+    if((bitboard >> 9) & Globals::notHFile) attacks |= (bitboard >> 9);
+    if((bitboard >> 7) & Globals::notAFile) attacks |= (bitboard >> 7);
+    if((bitboard >> 1) & Globals::notHFile)attacks |= (bitboard >> 1);  
 
     if(bitboard << 8) attacks |= (bitboard << 8);
-    if((bitboard << 9) & notAFile) attacks |= (bitboard << 9);
-    if((bitboard << 7) & notHFile) attacks |= (bitboard << 7);
-    if((bitboard << 1) & notAFile)attacks |= (bitboard << 1);  
+    if((bitboard << 9) & Globals::notAFile) attacks |= (bitboard << 9);
+    if((bitboard << 7) & Globals::notHFile) attacks |= (bitboard << 7);
+    if((bitboard << 1) & Globals::notAFile)attacks |= (bitboard << 1);  
     
     return attacks;
 }
@@ -197,28 +207,51 @@ uint64_t Piece::getQueenAttacks(size_t square, uint64_t block) const
     return attacks;
 }
 
-void Piece::updatePieceBitboard(char type, size_t src, size_t dest)
+void Piece::updatePieceBitboards(char type, size_t source, size_t dest)
 {
-    pieceBitboards[Globals::charPieces.at(type)].setBit(dest);
-    pieceBitboards[Globals::charPieces.at(type)].popBit(src);
+    // remove any captured piece
+    char captured = isTherePiece(dest);
+    if(captured != '0')
+        pieceBitboards[charPieces.at(captured)].popBit(dest);
+
+    // update moved piece bitboards
+    pieceBitboards[charPieces.at(type)].setBit(dest);
+    pieceBitboards[charPieces.at(type)].popBit(source);
 }
 
-bool Piece::isKingSafe(bool turn) const
+void Piece::updatePieceBitboards(size_t srcTile, size_t destTile)
 {
-    return !((1ULL << kingPosition[turn]) & unsafeTiles[turn]);
+    char pieceType = isTherePiece(srcTile);
+    updatePieceBitboards(pieceType, srcTile, destTile);
 }
 
-char Piece::isTherePiece(size_t tile) const
+void Piece::updateCombinedBitboards()
+{
+    bitboards_[white] = bitboards_[black] = 0ULL;
+    for(size_t i{}; i<12; i++)
+    {
+        if(i<6) bitboards_[white] |= pieceBitboards[i].getVal();
+        else  bitboards_[black] |= pieceBitboards[i].getVal();
+    }
+    bitboards_[both] =  bitboards_[white] |  bitboards_[black];
+}
+
+bool Piece::isKingSafe(bool side) const
+{
+    return !((1ULL << kingPosition[side]) & unsafeTiles_[side]);
+}
+
+char Piece::isTherePiece(size_t source) const
 {
     for (int i = P; i <= k; i++)
-        if((1ULL<<tile) & pieceBitboards[i].getVal()) return Globals::asciiPieces[i];
+        if(((1ULL << source) & pieceBitboards[i].getVal())) return asciiPieces[i];
     
     return '0';
 }
-uint64_t Piece::getPseudoLegalMoves(Board board, char type, size_t square) const
+uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
 {
+    bool side = findTurn(type);
     char piece = toupper(type);
-    size_t turn = (type < 'Z')?0:1;
     uint64_t res = 0ULL;
     
     switch (piece)
@@ -226,13 +259,13 @@ uint64_t Piece::getPseudoLegalMoves(Board board, char type, size_t square) const
         case 'P': 
         {
            // find legal attack moves
-            uint64_t pawn_attack = pawnAttackBitmask[turn][square] & board.bitboards[!turn];
+            uint64_t pawn_attack = pawnAttackBitmask[side][square] & bitboards_[!side];
             // if there is an enpassant available a pawn can catpure it add it to pawn attack
-            if(board.enPassant != no_sq)
-                pawn_attack |= (pawnAttackBitmask[turn][square] & (1ULL << (63 - board.enPassant)));
+            if(enPassant != no_sq)
+                pawn_attack |= (pawnAttackBitmask[side][square] & (1ULL << (63 - enPassant)));
             
             // find legal push moves
-            uint64_t pawn_push = pawnPushBitmask[turn][square] & ~(board.bitboards[both]);
+            uint64_t pawn_push = pawnPushBitmask[side][square] & ~(bitboards_[both]);
 
             /*
             check if there is a piece directly infront of pawn if so then return zero legal push moves
@@ -248,20 +281,20 @@ uint64_t Piece::getPseudoLegalMoves(Board board, char type, size_t square) const
                 2   P - P - P - - P
                 1   - - - - - - - -
             */ 
-            if((!turn && 1ULL<<(square+8) & board.bitboards[both]) || (turn && 1ULL<<(square-8) & board.bitboards[both]))
+            if((!side && 1ULL<<(square+8) & bitboards_[both]) || (side && 1ULL<<(square-8) & bitboards_[both]))
                 pawn_push = 0ULL; 
             res = pawn_attack | pawn_push;
             break;
         }
         case 'N': 
         {
-            res = knightAttackBitmask[square] & ~(board.bitboards[turn]);
+            res = knightAttackBitmask[square] & ~(bitboards_[side]);
             break;
         }
         case 'K': 
         {
-            res = kingAttackBitmask[square] & ~(board.bitboards[turn]);
-            bool kingSafety = isKingSafe(turn);
+            res = kingAttackBitmask[square] & ~(bitboards_[side]);
+            bool kingSafety = isKingSafe(side);
             /* 
             below are the bitmanipulation operations to find whether casteling is available or not
             first do operations with unsafe tiles and blocker pieces if there are no blocker pieces our bitmask won't change
@@ -277,54 +310,51 @@ uint64_t Piece::getPseudoLegalMoves(Board board, char type, size_t square) const
                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
                     0 0 0 0 0 0 0 0             0 0 0 0 0 0 0 0            0 0 0 0 0 0 0 0
                     0 0 1 1 0 1 1 0             0 0 0 0 0 1 1 0            0 0 1 1 0 0 0 0
-                    castleBitmask             kingside castleBitmask     queenside castlebitmask
+                    bitmaskCastle             kingside castleBitmask     queenside castlebitmask
                 
             similarly different numbers have been used to do the same for black
             */
-            uint64_t castleBitmasks = board.castleBitmasks[turn][both];
-            uint64_t bitmaskKingside = board.castleBitmasks[turn][kingside];
-            uint64_t bitmaskQueenside = board.castleBitmasks[turn][queenside];
+            uint64_t bitmaskCastle    = Globals::castleBitmasks[side][both];
+            uint64_t bitmaskKingside  = Globals::castleBitmasks[side][kingside];
+            uint64_t bitmaskQueenside = Globals::castleBitmasks[side][queenside];
 
-            castleBitmasks &= ~unsafeTiles[turn] & ~board.bitboards[both];
+            bitmaskCastle &= ~unsafeTiles_[side] & ~bitboards_[both];
 
             // check if kingside castling is available
-            bool castleAvailable = (castleBitmasks & bitmaskKingside) == bitmaskKingside;
-            castleAvailable = castleAvailable && kingSafety && board.castle[turn][kingside];
+            bool castleAvailable = (bitmaskCastle & bitmaskKingside) == bitmaskKingside;
+            castleAvailable = castleAvailable && kingSafety && castle[side][kingside];
             res = res | (bitmaskKingside * castleAvailable);
 
             // check if queenside castling is avialble
-            castleAvailable = (castleBitmasks & bitmaskQueenside) == bitmaskQueenside;
-            castleAvailable = castleAvailable && kingSafety && board.castle[turn][kingside];
+            castleAvailable = (bitmaskCastle & bitmaskQueenside) == bitmaskQueenside;
+            castleAvailable = castleAvailable && kingSafety && castle[side][queenside];
             res = res | (bitmaskQueenside * castleAvailable);
             
             break;
         }
         case 'R': 
         {
-            res = getRookAttacks(square, board.bitboards[both]) & ~(board.bitboards[turn]);
+            res = getRookAttacks(square, bitboards_[both]) & ~(bitboards_[side]);
             break;
         }
         case 'B': 
         {
-            res = getBishopAttacks(square, board.bitboards[both]) & ~(board.bitboards[turn]);
+            res = getBishopAttacks(square, bitboards_[both]) & ~(bitboards_[side]);
             break;
         }
         case 'Q': 
         {
-            res = getQueenAttacks(square, board.bitboards[both]) & ~(board.bitboards[turn]);
+            res = getQueenAttacks(square, bitboards_[both]) & ~(bitboards_[side]);
             break;
         }
-        default:
-        {
-            break;
-        }
+        default: break;
     }
     return res;
 }
 
-void Piece::updateUnsafeTiles(Board board)
+void Piece::updateUnsafeTiles()
 {
-    unsafeTiles[white] = unsafeTiles[black] = 0ULL;
+    unsafeTiles_[white] = unsafeTiles_[black] = 0ULL;
     
     // find all the possible moves of white and add it to unsafeTiles for black and vice versa
     for(int i = P; i<=k; i++)
@@ -332,37 +362,37 @@ void Piece::updateUnsafeTiles(Board board)
         BitBoard pieceBitboards(this->pieceBitboards[i].getVal());
         while (pieceBitboards.getVal())
         {
-            bool turn = (i<=K)? 1: 0;
+            bool side = (i<=K)? 1: 0;
             size_t sourceTile = pieceBitboards.getLSBIndex();
-            unsafeTiles[turn] |= getPseudoLegalMoves(board, Globals::asciiPieces[i], sourceTile);
+            unsafeTiles_[side] |= getPseudoLegalMoves(asciiPieces[i], sourceTile);
             pieceBitboards.popBit(sourceTile);
         }
     }
 }
 
-uint64_t Piece::getLegalMoves(Board board, char type, size_t source)
+uint64_t Piece::getLegalMoves(char type, size_t source)
 {
-    size_t turn = (type < 'Z')?0:1;
-    size_t piece = Globals::charPieces.at(type);
+    size_t side = findTurn(type);
+    size_t piece = charPieces.at(type);
 
     // Create a temporary copy of bitboards, unsafeTile, and king position
     uint64_t tempUnsafe[2];
-    tempUnsafe[white] = unsafeTiles[white];
-    tempUnsafe[black] = unsafeTiles[black];
+    tempUnsafe[white] = unsafeTiles_[white];
+    tempUnsafe[black] = unsafeTiles_[black];
 
     uint64_t bitboards[3];
-    bitboards[white] = board.bitboards[white];
-    bitboards[black] = board.bitboards[black];
-    bitboards[both] = board.bitboards[both];
+    bitboards[white] = bitboards_[white];
+    bitboards[black] = bitboards_[black];
+    bitboards[both] = bitboards_[both];
 
-    BitBoard piece_bitboard(this->pieceBitboards[piece].getVal());
+    BitBoard pieceBitboard(pieceBitboards[piece].getVal());
 
     size_t tempKingPosition[2];
     tempKingPosition[white] = kingPosition[white];
     tempKingPosition[black] = kingPosition[black];
 
     // find the possible moves
-    BitBoard possibleMoves(getPseudoLegalMoves(board, type, source));
+    BitBoard possibleMoves(getPseudoLegalMoves(type, source));
     uint64_t validMoves = 0ULL;
 
     while(possibleMoves.getVal())
@@ -373,32 +403,32 @@ uint64_t Piece::getLegalMoves(Board board, char type, size_t source)
 
         if(capturedPieceType != '0')
         { // if the possible move is capture of enemy piece
-            capturedBitboard = pieceBitboards[Globals::charPieces.at(capturedPieceType)].getVal();
-            updatePieceBitboard(capturedPieceType, destTile, destTile);
+            capturedBitboard = this->pieceBitboards[charPieces.at(capturedPieceType)].getVal();
+            updatePieceBitboards(capturedPieceType, destTile, destTile);
         }
 
         // if king is bieng moved then update the king position as well
-        if(type == 'k' || type == 'K') kingPosition[turn] = destTile;
+        if(toupper(type) == 'K') kingPosition[side] = destTile;
 
         // update all the variables representing the state of board and pieceSet according to move
-        updatePieceBitboard(type, source, destTile);
-        board.syncBitboards(this->pieceBitboards);
-        updateUnsafeTiles(board);
+        updatePieceBitboards(type, source, destTile);
+        updateCombinedBitboards();
+        updateUnsafeTiles();
 
         //if king is safe after executing the current possible move then consider this as a valid move
-        if(isKingSafe(turn)) validMoves = validMoves | (1ULL << destTile); 
+        if(isKingSafe(side)) validMoves = validMoves | (1ULL << destTile); 
 
         // reset everything using all the temporary variables
-        if(capturedPieceType != '0') pieceBitboards[Globals::charPieces.at(capturedPieceType)].setVal(capturedBitboard);
+        if(capturedPieceType != '0') pieceBitboards[charPieces.at(capturedPieceType)].setVal(capturedBitboard);
 
-        unsafeTiles[white] = tempUnsafe[white];
-        unsafeTiles[black] = tempUnsafe[black];
+        unsafeTiles_[white] = tempUnsafe[white];
+        unsafeTiles_[black] = tempUnsafe[black];
 
-        board.bitboards[white] = bitboards[white];
-        board.bitboards[black] = bitboards[black];
-        board.bitboards[both] = bitboards[both];
+        bitboards_[white] = bitboards[white];
+        bitboards_[black] = bitboards[black];
+        bitboards_[both] = bitboards[both];
 
-        this->pieceBitboards[piece].setVal(piece_bitboard.getVal());
+        this->pieceBitboards[piece].setVal(pieceBitboard.getVal());
 
         kingPosition[white] = tempKingPosition[white];
         kingPosition[black] = tempKingPosition[black];
