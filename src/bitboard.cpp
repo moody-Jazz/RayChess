@@ -67,6 +67,11 @@ void BitBoard::popBit(size_t square)
     val_  &= ~(1ULL << square);
 }
 
+uint64_t BitBoard::operator = (const BitBoard& obj)
+{
+    return obj.getVal();
+}
+
 std::vector<size_t> BitBoard::getSetBitIndices() const
 {
     // insert the index of all the set bit into vec

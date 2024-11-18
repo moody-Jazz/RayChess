@@ -7,18 +7,21 @@ GameSound::GameSound()
     capture_       =   LoadSound("sounds/capture.wav");
     castle         =   LoadSound("sounds/castle.wav");
     check          =   LoadSound("sounds/check.wav");
-    checkMate_     =   LoadSound("sounds/gameEnd.wav");
+    checkmate_     =   LoadSound("sounds/checkmate.wav");
+    stalemate_     =   LoadSound("sounds/stalemate.wav");
     buttonClicked_ =   LoadSound("sounds/mouseClick.wav");
 }
 
 GameSound::~GameSound()
 {
-    // Unload the music streams when they're no longer needed
+    // Unload the sounds when they're no longer needed
     UnloadSound(defaultMove_);
     UnloadSound(capture_);
     UnloadSound(castle);
     UnloadSound(check);
-    UnloadSound(checkMate_);
+    UnloadSound(checkmate_);
+    UnloadSound(stalemate_);
+    UnloadSound(buttonClicked_);
 
     CloseAudioDevice(); 
 }
@@ -39,9 +42,13 @@ void GameSound::playCheck() const
 {
     PlaySound(check);
 }
-void GameSound::playCheckMate() const
+void GameSound::playCheckmate() const
 {
-    PlaySound(checkMate_);
+    PlaySound(checkmate_);
+}
+void GameSound::playStalemate() const
+{
+    PlaySound(stalemate_);
 }
 void GameSound::playButtonClicked() const
 {
