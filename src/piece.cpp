@@ -2,54 +2,6 @@
 #include "helper.hpp"
 #include <iostream>
 
-Piece::Piece():
-    enPassant(no_sq)
-{
-    /* 
-    all the pieces will be initialised with a decimal value which in binary is similar to initial chess pieces position
-
-    White pawn bitboard                 black pawn bitboard                 black rook bitboard
-
-    8  0 0 0 0 0 0 0 0                  8  0 0 0 0 0 0 0 0                  8  1 0 0 0 0 0 0 1            
-    7  0 0 0 0 0 0 0 0                  7  1 1 1 1 1 1 1 1                  7  0 0 0 0 0 0 0 0 
-    6  0 0 0 0 0 0 0 0                  6  0 0 0 0 0 0 0 0                  6  0 0 0 0 0 0 0 0 
-    5  0 0 0 0 0 0 0 0                  5  0 0 0 0 0 0 0 0                  5  0 0 0 0 0 0 0 0 
-    4  0 0 0 0 0 0 0 0                  4  0 0 0 0 0 0 0 0                  4  0 0 0 0 0 0 0 0 
-    3  0 0 0 0 0 0 0 0                  3  0 0 0 0 0 0 0 0                  3  0 0 0 0 0 0 0 0
-    2  1 1 1 1 1 1 1 1                  2  0 0 0 0 0 0 0 0                  2  0 0 0 0 0 0 0 0
-    1  0 0 0 0 0 0 0 0                  1  0 0 0 0 0 0 0 0                  1  0 0 0 0 0 0 0 0
-
-       a b c d e f g h                     a b c d e f g h                     a b c d e f g h
-    */
-
-    pieceBitboards[P].setVal(65280ULL);
-    pieceBitboards[N].setVal(66ULL);
-    pieceBitboards[B].setVal(36ULL);
-    pieceBitboards[R].setVal(129ULL);
-    pieceBitboards[Q].setVal(16ULL);
-    pieceBitboards[K].setVal(8ULL);
-    pieceBitboards[p].setVal(71776119061217280ULL);
-    pieceBitboards[n].setVal(4755801206503243776ULL);
-    pieceBitboards[b].setVal(2594073385365405696ULL);
-    pieceBitboards[r].setVal(9295429630892703744ULL);
-    pieceBitboards[q].setVal(1152921504606846976ULL);
-    pieceBitboards[k].setVal(576460752303423488ULL);
-
-    bitboards_[white] = 65535ULL;
-    bitboards_[black] = 18446462598732840960uLL;
-    bitboards_[both] = bitboards_[white] | bitboards_[black];
-
-    check[white] = check[black] = false;
-
-    castle[white][kingside] = castle[white][queenside] = true;
-    castle[black][kingside] = castle[black][queenside] = true;
-
-    kingPosition[white] = 3;
-    kingPosition[black] = 59;
-
-    unsafeTiles_[white] = unsafeTiles_[black] = 0ULL;
-}
-
 /*  Below are all the functions which are used to generate possible moves for every type of piece
     i have used some algorithms which do bitmanipulation to geenrate some numbers which in binary representation 
     have all those ith bits which represnt the tiles that can be reached by the current piece are set to 1 for example
@@ -207,10 +159,62 @@ uint64_t Piece::getQueenAttacks(size_t square, uint64_t block) const
     return attacks;
 }
 
+void Piece::initPieceBitboards()
+{
+    /* 
+    all the pieces will be initialised with a decimal value which in binary is similar to initial chess pieces position
+
+    White pawn bitboard                 black pawn bitboard                 black rook bitboard
+
+    8  0 0 0 0 0 0 0 0                  8  0 0 0 0 0 0 0 0                  8  1 0 0 0 0 0 0 1            
+    7  0 0 0 0 0 0 0 0                  7  1 1 1 1 1 1 1 1                  7  0 0 0 0 0 0 0 0 
+    6  0 0 0 0 0 0 0 0                  6  0 0 0 0 0 0 0 0                  6  0 0 0 0 0 0 0 0 
+    5  0 0 0 0 0 0 0 0                  5  0 0 0 0 0 0 0 0                  5  0 0 0 0 0 0 0 0 
+    4  0 0 0 0 0 0 0 0                  4  0 0 0 0 0 0 0 0                  4  0 0 0 0 0 0 0 0 
+    3  0 0 0 0 0 0 0 0                  3  0 0 0 0 0 0 0 0                  3  0 0 0 0 0 0 0 0
+    2  1 1 1 1 1 1 1 1                  2  0 0 0 0 0 0 0 0                  2  0 0 0 0 0 0 0 0
+    1  0 0 0 0 0 0 0 0                  1  0 0 0 0 0 0 0 0                  1  0 0 0 0 0 0 0 0
+
+       a b c d e f g h                     a b c d e f g h                     a b c d e f g h
+    */
+
+    pieceBitboards[P].setVal(65280ULL);
+    pieceBitboards[N].setVal(66ULL);
+    pieceBitboards[B].setVal(36ULL);
+    pieceBitboards[R].setVal(129ULL);
+    pieceBitboards[Q].setVal(1ULL << Globals::queenInitPos[white]);
+    pieceBitboards[K].setVal(1ULL << Globals::kingsInitPos[white]);
+    pieceBitboards[p].setVal(71776119061217280ULL);
+    pieceBitboards[n].setVal(4755801206503243776ULL);
+    pieceBitboards[b].setVal(2594073385365405696ULL);
+    pieceBitboards[r].setVal(9295429630892703744ULL);
+    pieceBitboards[q].setVal(1ULL << Globals::queenInitPos[black]);
+    pieceBitboards[k].setVal(1ULL << Globals::kingsInitPos[black]);
+
+    bitboards_[white] = 65535ULL;
+    bitboards_[black] = 18446462598732840960uLL;
+    bitboards_[both] = bitboards_[white] | bitboards_[black];
+
+}
+
+void Piece::setupInitialFlagsAndPositions()
+{
+    enPassant = no_sq;
+    check[white] = check[black] = false;
+
+    castle[white][kingside] = castle[white][queenside] = true;
+    castle[black][kingside] = castle[black][queenside] = true;
+
+    kingPosition[white] = Globals::kingsInitPos[white];
+    kingPosition[black] = Globals::kingsInitPos[black];
+
+    unsafeTiles_[white] = unsafeTiles_[black] = 0ULL;
+}
+
 void Piece::updatePieceBitboards(char type, size_t source, size_t dest)
 {
     // remove any captured piece
-    char captured = isTherePiece(dest);
+    char captured = getPieceType(dest);
     if(captured != '0')
         pieceBitboards[charPieces.at(captured)].popBit(dest);
 
@@ -221,7 +225,7 @@ void Piece::updatePieceBitboards(char type, size_t source, size_t dest)
 
 void Piece::updatePieceBitboards(size_t srcTile, size_t destTile)
 {
-    char pieceType = isTherePiece(srcTile);
+    char pieceType = getPieceType(srcTile);
     updatePieceBitboards(pieceType, srcTile, destTile);
 }
 
@@ -241,7 +245,7 @@ bool Piece::isKingSafe(bool side) const
     return !((1ULL << kingPosition[side]) & unsafeTiles_[side]);
 }
 
-char Piece::isTherePiece(size_t source) const
+char Piece::getPieceType(size_t source) const
 {
     for (int i = P; i <= k; i++)
         if(((1ULL << source) & pieceBitboards[i].getVal())) return asciiPieces[i];
@@ -250,7 +254,7 @@ char Piece::isTherePiece(size_t source) const
 }
 uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
 {
-    bool side = findTurn(type);
+    bool side = flipType(type);
     char piece = toupper(type);
     uint64_t res = 0ULL;
     
@@ -372,7 +376,7 @@ void Piece::updateUnsafeTiles()
 
 uint64_t Piece::getLegalMoves(char type, size_t source)
 {
-    size_t side = findTurn(type);
+    size_t side = flipType(type);
     size_t piece = charPieces.at(type);
 
     // Create a temporary copy of bitboards, unsafeTile, and king position
@@ -398,7 +402,7 @@ uint64_t Piece::getLegalMoves(char type, size_t source)
     while(possibleMoves.getVal())
     {
         size_t destTile = possibleMoves.getLSBIndex();
-        char capturedPieceType = isTherePiece(destTile);
+        char capturedPieceType = getPieceType(destTile);
         uint64_t capturedBitboard = 0ULL;
 
         if(capturedPieceType != '0')

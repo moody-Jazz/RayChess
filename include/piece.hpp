@@ -102,7 +102,6 @@ static const uint64_t kingAttackBitmask[64] // stores king attack bitmask for ea
 class Piece
 {
 public:
-    Piece();
 
     BitBoard pieceBitboards[12];           // Stores bitboard of each piece set for example for all the white pawns
     bool check[2];                         // Stores the boolean to indicate wheather king is in check for both white and black
@@ -119,10 +118,12 @@ public:
     uint64_t getRookAttacks(size_t square, uint64_t block) const;      // Used to get a bitboard indicating all the possible Rook moves
     uint64_t getQueenAttacks(size_t square, uint64_t block) const;     // Used to get a bitboard indicating all the possible Queen moves
     bool isKingSafe(bool white) const;                                 // Returns true or false based on king safety
-    char isTherePiece(size_t tile) const;                              // if theres a piece on tile it returns it char type else returns '0'
+    char getPieceType(size_t tile) const;                              // if theres a piece on tile it returns it char type else returns '0'
     uint64_t getPseudoLegalMoves(char type, size_t square) const; // returns a bitboard indicating all the possible move of a piece
 
     // Mutator Functions
+    void initPieceBitboards();
+    void setupInitialFlagsAndPositions();
     void updatePieceBitboards(char type, size_t source, size_t dest);       // updates given piece bitboard
     void updatePieceBitboards(size_t srcTile, size_t destTile);
     void updateCombinedBitboards();

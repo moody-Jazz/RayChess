@@ -1,18 +1,14 @@
 #include "chessboard.hpp"
 #include <iostream>
 
-Board::Board():
-    turn(white),
-    legalMoves(0ULL),
-    emptyTurns_(no_sq),
-    totalTurns_(0)
+Board::Board()
 {    
+    turn = Globals::player;
     padding[left] = Globals::leftPadding;
     padding[right] = Globals::tileSize * 8 + Globals::leftPadding;
     padding[top] = Globals::topPadding;
     padding[bottom] = Globals::tileSize * 8 + Globals::topPadding;
-
-    updateMatrixBoard();
+    setupInitialBoardState();
 }
 
 // Draw the Checkers pattern
@@ -45,7 +41,7 @@ void Board::drawStrips() const
     int rank, flag, offset;
     char file;
 
-    if(black)
+    if(!Globals::player) // if player has chose white
     {
         rank = -8;
         flag = 0;
@@ -91,7 +87,7 @@ void Board::highlightTiles(BitBoard tiles) const
         int x = tiles.getLSBIndex();
         int row = (63 - x) % 8;
         int col = (63 - x) / 8;
-        bool isTileOccupied = (piece.isTherePiece(tiles.getLSBIndex()) != '0')? true: false;
+        bool isTileOccupied = (piece.getPieceType(tiles.getLSBIndex()) != '0')? true: false;
         row *= Globals::tileSize;
         col *= Globals::tileSize;
         row += Globals::leftPadding;
@@ -129,8 +125,41 @@ void Board::drawBoardAndPieces() const
             );
         }
     }
+    // Draw all the captured pieces
+    drawCapturedPieces();
     // highlight legal moves if there are any
     highlightTiles(legalMoves);
+}
+
+void Board::drawCapturedPieces() const
+{
+    if(!capturedPieceString.size()) return;
+    size_t yPosForWhite(Globals::tileSize*2);
+    size_t yPosForBlack(Globals::tileSize*8);
+    size_t xPosition(Globals::tileSize*8 + Globals::leftPadding*3);
+
+    size_t itrBlack{}, itrWhite{};
+    for(auto& ch: capturedPieceString)
+    {
+        Vector2 positionVector;
+        if(isupper(ch)) 
+        {
+            positionVector.x = xPosition + (Globals::tileSize/3)*itrWhite;
+            positionVector.y = yPosForWhite;
+            itrWhite++;
+        }
+        else 
+        {
+            positionVector.x = xPosition + (Globals::tileSize/3)*itrBlack;
+            positionVector.y = yPosForBlack;
+            itrBlack++;
+        } 
+        
+        DrawTexture
+        (
+            Globals::captureTextures[charPieces.at(ch)], positionVector.x,positionVector.y,RAYWHITE
+        );
+    }
 }
 
 void Board::print() const
@@ -142,6 +171,19 @@ void Board::print() const
         std::cout<<"\n";
     }
     std::cout<<Globals::FENString<<"\n";
+}
+
+void Board::setupInitialBoardState()
+{
+    turn = Globals::player;
+    emptyTurns_ = 0;
+    totalTurns_ = 0;
+    legalMoves.setVal(0ULL);
+    capturedPieceString = "";
+    piece.setupInitialFlagsAndPositions();
+    piece.initPieceBitboards();
+    updateMatrixBoard();
+    updateFENViamatrixBoard();
 }
 
 void Board::flipTurn()
@@ -156,7 +198,7 @@ void Board::updateMatrixBoard()
     {
         i = itr / 8;
         j = itr % 8;
-        char pieceType = piece.isTherePiece(63-(i * 8 + j));
+        char pieceType = piece.getPieceType(63-(i * 8 + j));
         if(pieceType != '0') matrixBoard_[i][j] = pieceType;
         else matrixBoard_[i][j] = '.';
     }
@@ -170,7 +212,7 @@ void Board::updateFENViamatrixBoard()
         int emptyCol{};
         for(size_t j{}; j<8; j++)
         {
-            if(matrixBoard_[i][j] != '.')
+            if(!Globals::player && matrixBoard_[i][j] != '.')
             {
                 if(emptyCol)
                 {
@@ -178,6 +220,15 @@ void Board::updateFENViamatrixBoard()
                     emptyCol = 0;
                 }
                 str += matrixBoard_[i][j];
+            }
+            else if (Globals::player && matrixBoard_[7-i][7-j] != '.')
+            {
+                if(emptyCol)
+                {
+                    str += std::to_string(emptyCol);
+                    emptyCol = 0;
+                }
+                str += flipCase(matrixBoard_[7-i][7-j]);
             }
             else emptyCol++;
         }
@@ -188,7 +239,7 @@ void Board::updateFENViamatrixBoard()
         }
         if(i<7)str+='/';
     }
-    str += (turn)?" w":" b"; // Add turn
+    str += (turn)?" b":" w"; // Add turn
     str+=" ";
 
     if(piece.castle[white][kingside]) str += "K";
@@ -198,7 +249,8 @@ void Board::updateFENViamatrixBoard()
 
     else str += "-";
     str += " ";
-    if(piece.enPassant != no_sq) str += coordinate[piece.enPassant];
+    if(Globals::player == white && piece.enPassant != no_sq) str += coordinate[piece.enPassant];
+    else if (Globals::player == black && piece.enPassant != no_sq) str += coordinate[63 - piece.enPassant];
     else str += "-";
     str += " ";
     str += std::to_string(emptyTurns_);
@@ -207,16 +259,46 @@ void Board::updateFENViamatrixBoard()
     Globals::FENString = str;
 }
 
+size_t Board::findTotalLegalMoves(bool side)
+{
+    size_t peiceType = (side)? p : P;
+    size_t totalMovesCount{};
+    int itr = 6;
+    while(itr--)
+    {
+        BitBoard tempPiece(piece.pieceBitboards[peiceType].getVal());
+        while(tempPiece.getVal())
+        {
+            size_t setBitIndx(tempPiece.getLSBIndex());
+            uint64_t movesBitboard = piece.getLegalMoves(asciiPieces[peiceType], setBitIndx);
+            totalMovesCount += BitBoard(movesBitboard).getSetBitCount();
+            tempPiece.popBit(setBitIndx);
+        }
+        peiceType++;
+    }
+    return totalMovesCount;
+}
+
+size_t Board::getGameEndState(bool side)
+{
+    size_t totalMovesCount(findTotalLegalMoves(side));
+    bool isKingSafe(piece.isKingSafe(side));
+
+    if(!isKingSafe && !totalMovesCount) return checkmate;
+    else if(isKingSafe && !totalMovesCount) return stalemate;
+    return 0;
+}
+
 size_t Board::makeMove(std::string move)
 {
-    size_t moveType = Sounds::regular;
+    size_t moveType = regular;
     size_t srcTile{};
     size_t destTile{};
     moveDecoder(srcTile, destTile, move);
-    char movedType = piece.isTherePiece(srcTile);
-    char capturedType = piece.isTherePiece(destTile);
-    
-    bool side = findTurn(movedType); 
+    char movedType = piece.getPieceType(srcTile);
+    char capturedType = piece.getPieceType(destTile);
+    piece.enPassant = no_sq;
+    bool side = flipType(movedType); 
 
     bool isPieceReleasedOnEmptyTile = (capturedType == '0')? true : false;
 
@@ -231,11 +313,17 @@ size_t Board::makeMove(std::string move)
         else if((abs(srcTile - destTile) == 7 || abs(srcTile - destTile) == 9) && isPieceReleasedOnEmptyTile)
         {
             if(movedType == 'P') 
+            {
                 piece.updatePieceBitboards('p', destTile-8, destTile-8);
+                capturedPieceString += 'p';
+            }
             
             else 
+            {
                 piece.updatePieceBitboards('P', destTile+8, destTile+8);
-            moveType = Sounds::capture;
+                capturedPieceString += 'P';
+            }
+            moveType = capture;
         }
        // handle pawn promotion later
     }
@@ -255,7 +343,7 @@ size_t Board::makeMove(std::string move)
         if(movedSide < 2) // if any of the above condition is true then it means king has moved two tiles/castled
         {
             piece.updatePieceBitboards(Globals::rookInitPos[side][movedSide], Globals::castleRookTargetTiles[side][movedSide]);
-            moveType = Sounds::castle;
+            moveType = castle;
         }
 
         if(piece.castle[side][kingside] || piece.castle[side][queenside])
@@ -290,15 +378,16 @@ size_t Board::makeMove(std::string move)
             std::cout<<std::endl;
         }
     }
-
+    if(capturedType != '0') capturedPieceString += capturedType;
     piece.updatePieceBitboards(movedType, srcTile, destTile);
     piece.updateCombinedBitboards();
     piece.updateUnsafeTiles();
-
-    if(!isPieceReleasedOnEmptyTile) moveType = Sounds::capture;
-    if(!piece.isKingSafe(!side)) moveType = Sounds::check;
+    flipTurn();
+    if(!isPieceReleasedOnEmptyTile) moveType = capture;
+    if(!piece.isKingSafe(!side)) moveType = check;
     if(isPieceReleasedOnEmptyTile && std::toupper(movedType) != 'P') emptyTurns_++;
     totalTurns_++;
     if(std::toupper(movedType) == 'P' || !isPieceReleasedOnEmptyTile) emptyTurns_ = 0; // if pawn is moved or piece is captured reset empty moves
+    if(getGameEndState(!side)) moveType = getGameEndState(!side);
     return moveType;
 }
