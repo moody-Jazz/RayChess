@@ -1,6 +1,6 @@
 #pragma once
 
-#include "helper.hpp"
+#include "global.hpp"
 #include "piece.hpp"
 #include <memory>
 

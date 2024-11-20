@@ -1,5 +1,5 @@
 #include "piece.hpp"
-#include "helper.hpp"
+#include "global.cpp"
 #include <iostream>
 
 /*  Below are all the functions which are used to generate possible moves for every type of piece
@@ -199,7 +199,7 @@ void Piece::initPieceBitboards()
 
 void Piece::setupInitialFlagsAndPositions()
 {
-    enPassant = no_sq;
+    enPassant = noSq;
     check[white] = check[black] = false;
 
     castle[white][kingside] = castle[white][queenside] = true;
@@ -265,7 +265,7 @@ uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
            // find legal attack moves
             uint64_t pawn_attack = pawnAttackBitmask[side][square] & bitboards_[!side];
             // if there is an enpassant available a pawn can catpure it add it to pawn attack
-            if(enPassant != no_sq)
+            if(enPassant != noSq)
                 pawn_attack |= (pawnAttackBitmask[side][square] & (1ULL << (63 - enPassant)));
             
             // find legal push moves

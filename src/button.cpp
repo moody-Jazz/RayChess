@@ -26,7 +26,7 @@ Button::Button
 void Button::draw() const
 {
     DrawRectangleRounded(base_, 0.2, 20, baseColor_);
-    DrawRectangleRoundedLines(base_, 0.2, 20, 5, borderColor_);
+    DrawRectangleRoundedLines(base_, 0.2, 20, Globals::btnHeight/12, borderColor_);
     DrawText(label_.c_str(),labelX_, labelY_, labelHeight_, labelColor_);
 }
 
@@ -42,7 +42,7 @@ void Button::interactionHandler()
     {
         // Darken the button color and make a sound to highlight that it has been clicked
         Globals::sound.playButtonClicked();
-        DrawRectangleRounded(base_, 0.2, 20, Colors::btnHighlight);
+        DrawRectangleRounded(base_, 0.2, 20, labelColor_);
 
         // Call the custom implimentation of this button onClick()
         onClick_();

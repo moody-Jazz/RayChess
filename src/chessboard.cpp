@@ -19,8 +19,10 @@ void Board::drawTiles() const
     {
         for (size_t col{}; col < 8; col++)
         {
-            tileColor = ((row + col) % 2 == 0) ? Colors::lightTile : Colors::darkTile; // white tiles will always be on (row + col == even) position
-            DrawRectangle(
+            // white tiles will always be on (row + col == even) position
+            tileColor = ((row + col) % 2 == 0) ? Colors::lightTile : Colors::darkTile; 
+            DrawRectangle
+            (
                 ( Globals::tileSize * col)+Globals::leftPadding,
                 ( Globals::tileSize * row)+Globals::topPadding,
                 Globals::tileSize, Globals::tileSize, tileColor
@@ -32,10 +34,28 @@ void Board::drawTiles() const
 // Draw the file and rank strips
 void Board::drawStrips() const
 {
-    DrawRectangle(0, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,Colors::boardOutline);
-    DrawRectangle(Globals::leftPadding+Globals::tileSize*8, Globals::topPadding, Globals::leftPadding, Globals::tileSize*8 ,Colors::boardOutline);
-    DrawRectangle(0, 0, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,Colors::boardOutline);
-    DrawRectangle(0, Globals::topPadding+Globals::tileSize*8, Globals::tileSize*8+Globals::leftPadding*2, Globals::topPadding,Colors::boardOutline);
+    DrawRectangle
+    (
+        0, Globals::topPadding, Globals::leftPadding,
+        Globals::tileSize*8 ,Colors::boardOutline
+    );
+    DrawRectangle
+    (
+        Globals::leftPadding+Globals::tileSize*8, 
+        Globals::topPadding, Globals::leftPadding,
+        Globals::tileSize*8 ,Colors::boardOutline
+    );
+    DrawRectangle
+    (
+        0, 0, Globals::tileSize*8+Globals::leftPadding*2,
+        Globals::topPadding,Colors::boardOutline
+    );
+    DrawRectangle
+    (
+        0, Globals::topPadding+Globals::tileSize*8, 
+        Globals::tileSize*8+Globals::leftPadding*2, 
+        Globals::topPadding,Colors::boardOutline
+    );
     
     size_t itr{};
     int rank, flag, offset;
@@ -63,18 +83,18 @@ void Board::drawStrips() const
     for(; rank != flag; rank++)
     {
         std::string str = std::to_string(abs(rank));
-        DrawText(str.c_str(), posX, posY, 20, WHITE);
+        DrawText(str.c_str(), posX, posY, Globals::leftPadding/1.85, WHITE);
         posY += Globals::tileSize;
     }
 
     // Draw the file number strip like a, b, c etc
-    posY = Globals::tileSize * 8 + Globals::topPadding + 8;
+    posY = Globals::boardSize + Globals::topPadding + Globals::topPadding/5;
     posX = Globals::leftPadding + Globals::tileSize/2;
     for(itr = 0; itr<8; itr++)
     {
         std::string str = std::string(1, file);
-        DrawText(str.c_str(), posX, posY, 20, WHITE);
-        DrawText(str.c_str(), posX, 10, 20, WHITE);
+        DrawText(str.c_str(), posX, posY, Globals::topPadding/1.85, WHITE);
+        DrawText(str.c_str(), posX, Globals::leftPadding/5, Globals::topPadding/1.85, WHITE);
         posX += Globals::tileSize;
         file += offset;
     }
@@ -96,9 +116,14 @@ void Board::highlightTiles(BitBoard tiles) const
         col += Globals::tileSize/2;
         
         if(isTileOccupied) 
-            DrawRing({static_cast<float>(row), static_cast<float>(col)}, Globals::tileSize/2-7, Globals::tileSize/2, 0, 360, 1000, Colors::tileHighlight);
+            DrawRing
+            (
+                {static_cast<float>(row), static_cast<float>(col)}, 
+                Globals::tileSize/2-Globals::tileSize/12, Globals::tileSize/2, 0, 360, 
+                1000, Colors::tileHighlight
+            );
         else 
-            DrawCircle(row, col, Globals::tileSize/2-35, Colors::tileHighlight);
+            DrawCircle(row, col, Globals::tileSize/5, Colors::tileHighlight);
 
         tiles.popBit(x);
     }
@@ -135,8 +160,8 @@ void Board::drawCapturedPieces() const
 {
     if(!capturedPieceString.size()) return;
     size_t yPosForWhite(Globals::tileSize*2);
-    size_t yPosForBlack(Globals::tileSize*8);
-    size_t xPosition(Globals::tileSize*8 + Globals::leftPadding*3);
+    size_t yPosForBlack(Globals::tileSize * 7 + Globals::topPadding);
+    size_t xPosition(Globals::boardSize + Globals::leftPadding*3);
 
     size_t itrBlack{}, itrWhite{};
     for(auto& ch: capturedPieceString)
@@ -144,20 +169,21 @@ void Board::drawCapturedPieces() const
         Vector2 positionVector;
         if(isupper(ch)) 
         {
-            positionVector.x = xPosition + (Globals::tileSize/3)*itrWhite;
+            positionVector.x = xPosition + (Globals::capturedSize)*itrWhite;
             positionVector.y = yPosForWhite;
             itrWhite++;
         }
         else 
         {
-            positionVector.x = xPosition + (Globals::tileSize/3)*itrBlack;
+            positionVector.x = xPosition + (Globals::capturedSize)*itrBlack;
             positionVector.y = yPosForBlack;
             itrBlack++;
         } 
         
         DrawTexture
         (
-            Globals::captureTextures[charPieces.at(ch)], positionVector.x,positionVector.y,RAYWHITE
+            Globals::captureTextures[charPieces.at(ch)], 
+            positionVector.x,positionVector.y,RAYWHITE
         );
     }
 }
@@ -249,13 +275,16 @@ void Board::updateFENViamatrixBoard()
 
     else str += "-";
     str += " ";
-    if(Globals::player == white && piece.enPassant != no_sq) str += coordinate[piece.enPassant];
-    else if (Globals::player == black && piece.enPassant != no_sq) str += coordinate[63 - piece.enPassant];
+    if(Globals::player == white && piece.enPassant != noSq)
+        str += coordinate[piece.enPassant];
+    else if (Globals::player == black && piece.enPassant != noSq) 
+        str += coordinate[63 - piece.enPassant];
     else str += "-";
     str += " ";
     str += std::to_string(emptyTurns_);
     str += " ";
-    str += std::to_string(totalTurns_);
+    if(!totalTurns_) str += std::to_string(1);
+    else str += std::to_string(totalTurns_);
     Globals::FENString = str;
 }
 
@@ -297,7 +326,7 @@ size_t Board::makeMove(std::string move)
     moveDecoder(srcTile, destTile, move);
     char movedType = piece.getPieceType(srcTile);
     char capturedType = piece.getPieceType(destTile);
-    piece.enPassant = no_sq;
+    piece.enPassant = noSq;
     bool side = flipType(movedType); 
 
     bool isPieceReleasedOnEmptyTile = (capturedType == '0')? true : false;
@@ -342,7 +371,11 @@ size_t Board::makeMove(std::string move)
 
         if(movedSide < 2) // if any of the above condition is true then it means king has moved two tiles/castled
         {
-            piece.updatePieceBitboards(Globals::rookInitPos[side][movedSide], Globals::castleRookTargetTiles[side][movedSide]);
+            piece.updatePieceBitboards
+            (
+                Globals::rookInitPos[side][movedSide], 
+                Globals::castleRookTargetTiles[side][movedSide]
+            );
             moveType = castle;
         }
 
@@ -362,9 +395,10 @@ size_t Board::makeMove(std::string move)
         if(toupper(movedType) == 'R') rookPos = srcTile;
         else if(toupper(capturedType) == 'R') rookPos = destTile;
 
-        // if rookPos == source tile then it means rook is moved elseif rookpos == destination tile then rook is captured
+        // if rookPos == source tile then it means rook is moved else rook is captured
         int movedSide = -1;
-        if(rookPos == destTile) side = !side; // if rook is captured then we have to change state of the opposing side
+        // if rook is captured then we have to change state of the opposing side
+        if(rookPos == destTile) side = !side; 
 
         if((piece.castle[side][kingside] || piece.castle[side][queenside])) 
         {
@@ -387,7 +421,8 @@ size_t Board::makeMove(std::string move)
     if(!piece.isKingSafe(!side)) moveType = check;
     if(isPieceReleasedOnEmptyTile && std::toupper(movedType) != 'P') emptyTurns_++;
     totalTurns_++;
-    if(std::toupper(movedType) == 'P' || !isPieceReleasedOnEmptyTile) emptyTurns_ = 0; // if pawn is moved or piece is captured reset empty moves
+    // if pawn is moved or piece is captured reset empty moves
+    if(std::toupper(movedType) == 'P' || !isPieceReleasedOnEmptyTile) emptyTurns_ = 0; 
     if(getGameEndState(!side)) moveType = getGameEndState(!side);
     return moveType;
 }

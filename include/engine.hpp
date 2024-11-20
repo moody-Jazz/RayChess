@@ -1,4 +1,4 @@
-#include "helper.hpp"
+#include "global.hpp"
 #include "bitboard.hpp"
 
 class Engine{
