@@ -1,22 +1,32 @@
-#include "raylib.h"
-#include "piece.hpp"
+#include "global.hpp"
+#include "button.hpp"
+#include "chessboard.hpp"
+#include <memory>
 
-class InputHandler
+class Interface
 {
-private:
-    int clickedOnRow;
-    int clickedOnCol;;
-    int releasedOnTileRow;
-    int releasedOnTileCol;
-    bool pieceSelected;
-    // pieceUi is for the visual images fo thier pieces and piece is for the bitobards
-    PieceUI* currPiece;
-    Board &board;
-    // piece is for updating the bitboard of every piece and board
-    Piece &piece;
 public:
-    InputHandler(Board &board, Piece &piece);
-    void mouseInputHandler();
-    void draggingPiece();
-    void movedPiece();
+    Interface(Board& board);
+
+    // Utility Functions
+    void drawSidePanel() const;
+
+    void boardInteractionHandler();
+    void sidePanelInteractionHandler();
+    void interactionHandler();
+
+private:
+    Board& board;
+    size_t sidePanelX_;
+    size_t leftPadding_;
+    size_t topPadding_;
+    std::string logo_;
+    Button btnCopyFEN_;
+    Button btnStart_;
+    Button btnPlayWhite_;
+    Button btnPlayBlack_;
+    char currPieceType_;
+    int clickedOnRow_;
+    int clickedOnCol_;
+    bool pieceSelected_;
 };
