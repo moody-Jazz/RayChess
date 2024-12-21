@@ -7,6 +7,7 @@ CXXFLAGS = -O1 -Wall -std=c++11
 LDFLAGS = -lraylib -lopengl32 -lgdi32 -lwinmm
 
 # Variables
+RAYLIB_URL = https://github.com/raysan5/raylib
 RAYLIB_DIR = C:/raylib
 RAYLIB_SRC = $(RAYLIB_DIR)/src
 RAYLIB_INC = include
@@ -27,6 +28,8 @@ default: check_raylib build_raylib $(TARGET)
 check_raylib:
 	@if [ ! -d "$(RAYLIB_DIR)" ]; then \
 		echo "Raylib is not installed in C drive"; \
+		echo "Installing raylib in C drive..."; \
+		git clone $(RAYLIB_URL) $(RAYLIB_DIR); \
 	fi
 
 # build the static libraries if it doesn' exist
