@@ -1,6 +1,25 @@
 #include "piece.hpp"
-#include "global.cpp"
+#include "global.hpp"
 #include <iostream>
+
+Piece::Piece(const Piece& obj):
+    enPassant(obj.enPassant)
+{
+    for(int i{}; i<12; i++) pieceBitboards[i].setVal(obj.pieceBitboards[i].getVal());
+    castle[white][kingside]  = obj.castle[white][kingside];
+    castle[white][queenside] = obj.castle[white][queenside];
+    castle[black][kingside]  = obj.castle[black][kingside];
+    castle[black][queenside] = obj.castle[black][queenside];
+    check[white]        = obj.check[white];
+    check[black]        = obj.check[black];
+    kingPosition[white] = obj.kingPosition[white];
+    kingPosition[black] = obj.kingPosition[black];
+    bitboards_[white]   = obj.bitboards_[white];
+    bitboards_[black]   = obj.bitboards_[black];
+    bitboards_[both]    = obj.bitboards_[both];
+    unsafeTiles_[white] = obj.unsafeTiles_[white];
+    unsafeTiles_[black] = obj.unsafeTiles_[black];
+}
 
 /*  Below are all the functions which are used to generate possible moves for every type of piece
     i have used some algorithms which do bitmanipulation to geenrate some numbers which in binary representation 
@@ -254,7 +273,7 @@ char Piece::getPieceType(size_t source) const
 }
 uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
 {
-    bool side = flipType(type);
+    bool side = getType(type);
     char piece = toupper(type);
     uint64_t res = 0ULL;
     
@@ -373,69 +392,35 @@ void Piece::updateUnsafeTiles()
         }
     }
 }
-
-uint64_t Piece::getLegalMoves(char type, size_t source)
+uint64_t Piece::getLegalMoves(char type, size_t source) const
 {
-    size_t side = flipType(type);
-    size_t piece = charPieces.at(type);
-
-    // Create a temporary copy of bitboards, unsafeTile, and king position
-    uint64_t tempUnsafe[2];
-    tempUnsafe[white] = unsafeTiles_[white];
-    tempUnsafe[black] = unsafeTiles_[black];
-
-    uint64_t bitboards[3];
-    bitboards[white] = bitboards_[white];
-    bitboards[black] = bitboards_[black];
-    bitboards[both] = bitboards_[both];
-
-    BitBoard pieceBitboard(pieceBitboards[piece].getVal());
-
-    size_t tempKingPosition[2];
-    tempKingPosition[white] = kingPosition[white];
-    tempKingPosition[black] = kingPosition[black];
+    Piece pieceCpy(*this);
+    size_t side = getType(type);
 
     // find the possible moves
-    BitBoard possibleMoves(getPseudoLegalMoves(type, source));
+    BitBoard possibleMoves(pieceCpy.getPseudoLegalMoves(type, source));
     uint64_t validMoves = 0ULL;
 
     while(possibleMoves.getVal())
     {
         size_t destTile = possibleMoves.getLSBIndex();
-        char capturedPieceType = getPieceType(destTile);
-        uint64_t capturedBitboard = 0ULL;
+        char capturedPieceType = pieceCpy.getPieceType(destTile);
 
-        if(capturedPieceType != '0')
-        { // if the possible move is capture of enemy piece
-            capturedBitboard = this->pieceBitboards[charPieces.at(capturedPieceType)].getVal();
-            updatePieceBitboards(capturedPieceType, destTile, destTile);
-        }
-
+        if(capturedPieceType != '0') // if the possible move is capture of enemy piece
+            pieceCpy.updatePieceBitboards(capturedPieceType, destTile, destTile);
+       
         // if king is bieng moved then update the king position as well
-        if(toupper(type) == 'K') kingPosition[side] = destTile;
+        if(toupper(type) == 'K') pieceCpy.kingPosition[side] = destTile;
 
         // update all the variables representing the state of board and pieceSet according to move
-        updatePieceBitboards(type, source, destTile);
-        updateCombinedBitboards();
-        updateUnsafeTiles();
+        pieceCpy.updatePieceBitboards(type, source, destTile);
+        pieceCpy.updateCombinedBitboards();
+        pieceCpy.updateUnsafeTiles();
 
-        //if king is safe after executing the current possible move then consider this as a valid move
-        if(isKingSafe(side)) validMoves = validMoves | (1ULL << destTile); 
-
-        // reset everything using all the temporary variables
-        if(capturedPieceType != '0') pieceBitboards[charPieces.at(capturedPieceType)].setVal(capturedBitboard);
-
-        unsafeTiles_[white] = tempUnsafe[white];
-        unsafeTiles_[black] = tempUnsafe[black];
-
-        bitboards_[white] = bitboards[white];
-        bitboards_[black] = bitboards[black];
-        bitboards_[both] = bitboards[both];
-
-        this->pieceBitboards[piece].setVal(pieceBitboard.getVal());
-
-        kingPosition[white] = tempKingPosition[white];
-        kingPosition[black] = tempKingPosition[black];
+        // if king is safe after executing the current possible move then consider this as a valid move
+        if(pieceCpy.isKingSafe(side)) validMoves = validMoves | (1ULL << destTile); 
+        // reset
+        pieceCpy = *this;
         possibleMoves.popBit(destTile);
     }
     return validMoves;

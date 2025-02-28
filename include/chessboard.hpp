@@ -22,6 +22,8 @@ public:
     void drawCapturedPieces() const;            // Draws all the captured pieces
     void print() const;                         // Prints the current position as ASCII characters in matrix form
     void highlightTiles(BitBoard tiles) const;  // Highlight given tiles
+    std::vector<std::string> getMoveList(bool side) const; // Return a list of all the legal moves a side have
+    void printMoveList(bool side) const;        // prints Move list of the pieces of a side
 
     // Mutator Functions
     void setupInitialBoardState();               // Setup all the flags and varaibles to their initial state also used to reset the board

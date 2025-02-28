@@ -3,10 +3,10 @@
 
 Board::Board()
 {    
-    turn = Globals::player;
-    padding[left] = Globals::leftPadding;
-    padding[right] = Globals::tileSize * 8 + Globals::leftPadding;
-    padding[top] = Globals::topPadding;
+    turn            = Globals::player;
+    padding[left]   = Globals::leftPadding;
+    padding[right]  = Globals::tileSize * 8 + Globals::leftPadding;
+    padding[top]    = Globals::topPadding;
     padding[bottom] = Globals::tileSize * 8 + Globals::topPadding;
     setupInitialBoardState();
 }
@@ -23,8 +23,8 @@ void Board::drawTiles() const
             tileColor = ((row + col) % 2 == 0) ? Colors::lightTile : Colors::darkTile; 
             DrawRectangle
             (
-                ( Globals::tileSize * col)+Globals::leftPadding,
-                ( Globals::tileSize * row)+Globals::topPadding,
+                ( Globals::tileSize * col) + Globals::leftPadding,
+                ( Globals::tileSize * row) + Globals::topPadding,
                 Globals::tileSize, Globals::tileSize, tileColor
             );
         }
@@ -41,18 +41,18 @@ void Board::drawStrips() const
     );
     DrawRectangle
     (
-        Globals::leftPadding+Globals::tileSize*8, 
+        Globals::leftPadding + Globals::tileSize*8, 
         Globals::topPadding, Globals::leftPadding,
         Globals::tileSize*8 ,Colors::boardOutline
     );
     DrawRectangle
     (
-        0, 0, Globals::tileSize*8+Globals::leftPadding*2,
+        0, 0, Globals::tileSize*8 + Globals::leftPadding*2,
         Globals::topPadding,Colors::boardOutline
     );
     DrawRectangle
     (
-        0, Globals::topPadding+Globals::tileSize*8, 
+        0, Globals::topPadding + Globals::tileSize*8, 
         Globals::tileSize*8+Globals::leftPadding*2, 
         Globals::topPadding,Colors::boardOutline
     );
@@ -97,35 +97,6 @@ void Board::drawStrips() const
         DrawText(str.c_str(), posX, Globals::leftPadding/5, Globals::topPadding/1.85, WHITE);
         posX += Globals::tileSize;
         file += offset;
-    }
-}
-
-void Board::highlightTiles(BitBoard tiles) const
-{
-    while(tiles.getVal())
-    {
-        int x = tiles.getLSBIndex();
-        int row = (63 - x) % 8;
-        int col = (63 - x) / 8;
-        bool isTileOccupied = (piece.getPieceType(tiles.getLSBIndex()) != '0')? true: false;
-        row *= Globals::tileSize;
-        col *= Globals::tileSize;
-        row += Globals::leftPadding;
-        col += Globals::topPadding;
-        row += Globals::tileSize/2;
-        col += Globals::tileSize/2;
-        
-        if(isTileOccupied) 
-            DrawRing
-            (
-                {static_cast<float>(row), static_cast<float>(col)}, 
-                Globals::tileSize/2-Globals::tileSize/12, Globals::tileSize/2, 0, 360, 
-                1000, Colors::tileHighlight
-            );
-        else 
-            DrawCircle(row, col, Globals::tileSize/5, Colors::tileHighlight);
-
-        tiles.popBit(x);
     }
 }
 
@@ -199,11 +170,70 @@ void Board::print() const
     std::cout<<Globals::FENString<<"\n";
 }
 
+void Board::highlightTiles(BitBoard tiles) const
+{
+    while(tiles.getVal())
+    {
+        int x = tiles.getLSBIndex();
+        int row = (63 - x) % 8;
+        int col = (63 - x) / 8;
+        bool isTileOccupied = (piece.getPieceType(tiles.getLSBIndex()) != '0')? true: false;
+        row *= Globals::tileSize;
+        col *= Globals::tileSize;
+        row += Globals::leftPadding;
+        col += Globals::topPadding;
+        row += Globals::tileSize/2;
+        col += Globals::tileSize/2;
+        
+        if(isTileOccupied) 
+            DrawRing
+            (
+                {static_cast<float>(row), static_cast<float>(col)}, 
+                Globals::tileSize/2-Globals::tileSize/12, Globals::tileSize/2, 0, 360, 
+                1000, Colors::tileHighlight
+            );
+        else 
+            DrawCircle(row, col, Globals::tileSize/5, Colors::tileHighlight);
+
+        tiles.popBit(x);
+    }
+}
+
+std::vector<std::string> Board::getMoveList(bool side) const
+{
+    std::vector<std::string> res;
+    int offSet = side? 6 : 0;
+
+    for(int i = P+offSet; i<=K+offSet; i++)
+    {
+        BitBoard currPiece(piece.pieceBitboards[i]);
+        std::vector<size_t> setBit = currPiece.getSetBitIndices();
+        for(const auto& pos: setBit)
+        { 
+            BitBoard legalMove(piece.getLegalMoves(asciiPieces[i], pos));
+            std::vector<size_t> legalMoveList = legalMove.getSetBitIndices();
+            for(const auto& x: legalMoveList)
+            {
+                std::string move = moveEncoder(pos, x, '0');
+                res.push_back(move);
+            }
+        }
+    }
+    return res;
+}
+
+void Board::printMoveList(bool side) const
+{
+    std::vector<std::string> moveList = getMoveList(side);
+    for(const auto& str: moveList) std::cout<<str<<" ";
+    std::cout<<"\n";
+}
+
 void Board::setupInitialBoardState()
 {
-    turn = Globals::player;
-    emptyTurns_ = 0;
-    totalTurns_ = 0;
+    turn            = white;
+    emptyTurns_     = 0;
+    totalTurns_     = 0;
     legalMoves.setVal(0ULL);
     capturedPieceString = "";
     piece.setupInitialFlagsAndPositions();
@@ -327,7 +357,7 @@ size_t Board::makeMove(std::string move)
     char movedType = piece.getPieceType(srcTile);
     char capturedType = piece.getPieceType(destTile);
     piece.enPassant = noSq;
-    bool side = flipType(movedType); 
+    bool side = getType(movedType); 
 
     bool isPieceReleasedOnEmptyTile = (capturedType == '0')? true : false;
 
@@ -346,7 +376,6 @@ size_t Board::makeMove(std::string move)
                 piece.updatePieceBitboards('p', destTile-8, destTile-8);
                 capturedPieceString += 'p';
             }
-            
             else 
             {
                 piece.updatePieceBitboards('P', destTile+8, destTile+8);
@@ -406,11 +435,8 @@ size_t Board::makeMove(std::string move)
             else if(rookPos == Globals::rookInitPos[side][queenside]) movedSide = queenside;
 
             piece.castle[side][movedSide] = false;
-            side?std::cout<<"black ": std::cout<<"white ";
-            std::cout<<"king can't castle";
-            movedSide? std::cout<<" queenside now": std::cout<<" kingside now";
-            std::cout<<std::endl;
         }
+        if(rookPos == destTile) side = !side; // reset the side
     }
     if(capturedType != '0') capturedPieceString += capturedType;
     piece.updatePieceBitboards(movedType, srcTile, destTile);
@@ -419,6 +445,7 @@ size_t Board::makeMove(std::string move)
     flipTurn();
     if(!isPieceReleasedOnEmptyTile) moveType = capture;
     if(!piece.isKingSafe(!side)) moveType = check;
+
     if(isPieceReleasedOnEmptyTile && std::toupper(movedType) != 'P') emptyTurns_++;
     totalTurns_++;
     // if pawn is moved or piece is captured reset empty moves
