@@ -1,5 +1,5 @@
 #include "button.hpp"
-#include "helper.hpp"
+#include "global.hpp"
 
 Button::Button
 (   
@@ -26,7 +26,7 @@ Button::Button
 void Button::draw() const
 {
     DrawRectangleRounded(base_, 0.2, 20, baseColor_);
-    DrawRectangleRoundedLines(base_, 0.2, 20, Globals::btnHeight/12, borderColor_);
+    DrawRectangleRoundedLines(base_, 0.2, Globals::btnHeight/2, borderColor_);
     DrawText(label_.c_str(),labelX_, labelY_, labelHeight_, labelColor_);
 }
 

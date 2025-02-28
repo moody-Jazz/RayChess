@@ -21,7 +21,7 @@ public:
     void setVal(uint64_t val);             // Assigns a new value to val_
     void setBit(size_t square);            // Sets the bit state at the given index (0 to 63)
     void popBit(size_t square);            // Resets the bit at the given index (0 to 63)
-    uint64_t operator = (const BitBoard& obj);
+    BitBoard operator = (const BitBoard& obj);
 
     std::vector<size_t> getSetBitIndices() const; // Returns indices of all bits set to 1 in val_
 

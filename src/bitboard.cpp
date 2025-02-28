@@ -67,9 +67,12 @@ void BitBoard::popBit(size_t square)
     val_  &= ~(1ULL << square);
 }
 
-uint64_t BitBoard::operator = (const BitBoard& obj)
+BitBoard BitBoard::operator = (const BitBoard& obj)
 {
-    return obj.getVal();
+    if (this != &obj)  // Check for self-assignment
+        this->val_ = obj.getVal();
+
+    return *this;
 }
 
 std::vector<size_t> BitBoard::getSetBitIndices() const
