@@ -1,12 +1,13 @@
 #include "global.hpp"
 #include "button.hpp"
+#include "engine.hpp"
 #include "chessboard.hpp"
 #include <memory>
 
 class Interface
 {
 public:
-    Interface(Board& board);
+    Interface(Board& board, Engine& engine);
 
     // Utility Functions
     void drawSidePanel() const;
@@ -17,6 +18,7 @@ public:
 
 private:
     Board& board;
+    Engine& engine;
     size_t sidePanelX_;
     size_t leftPadding_;
     size_t topPadding_;

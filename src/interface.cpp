@@ -1,8 +1,9 @@
 #include "interface.hpp"
 #include <iostream>
 
-Interface::Interface(Board& board):
+Interface::Interface(Board& board, Engine& engine):
     board(board),
+    engine(engine),
     sidePanelX_(Globals::boardSize + Globals::leftPadding*2),
     leftPadding_(Globals::leftPadding),
     topPadding_(Globals::topPadding),
@@ -246,6 +247,9 @@ void Interface::boardInteractionHandler()
         pieceSelected_ = false;
         clickedOnRow_ = -1;
         clickedOnCol_ = -1;
+        board.printMoveList(board.turn);
+        std::pair<int, std::string> bestMove = engine.minimax(board, Globals::depth, board.turn, "");
+        std::cout<<bestMove.first<<" "<<bestMove.second<<std::endl;
     }
 }
 
