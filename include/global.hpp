@@ -7,6 +7,7 @@
 
 namespace Globals 
 {   extern bool player;                  // Stores the color which player has chosen
+    extern size_t depth;                 // stores the depth of search tree
     extern size_t tileSize;              // Dimension of single tile
     extern float capturedSize;           // Stores the size of textures of captured pieces
     extern size_t totalPiece;            // Stores the number of total Pieces which are still on the board

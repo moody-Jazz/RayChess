@@ -4,6 +4,7 @@
 namespace Globals 
 {
     bool player             = white;
+    size_t depth            = 3;
     size_t tileSize         = 110;
     float capturedSize      = tileSize/2.5;
     size_t totalPiece       = 32;
