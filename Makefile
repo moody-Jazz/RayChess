@@ -3,7 +3,7 @@
 # Compiler and flags
 CXX = g++
 
-CXXFLAGS = -O1 -Wall -std=c++11
+CXXFLAGS = -O3 -Wall -std=c++11
 LDFLAGS = -lraylib -lopengl32 -lgdi32 -lwinmm
 
 # Variables

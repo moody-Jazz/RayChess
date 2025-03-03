@@ -130,8 +130,8 @@ void Board::drawBoardAndPieces() const
 void Board::drawCapturedPieces() const
 {
     if(!capturedPieceString.size()) return;
-    size_t yPosForWhite(Globals::tileSize*2);
-    size_t yPosForBlack(Globals::tileSize * 7 + Globals::topPadding);
+    size_t yPosForWhite(Globals::tileSize*1.7);
+    size_t yPosForBlack(Globals::tileSize * 7.33 + Globals::topPadding);
     size_t xPosition(Globals::boardSize + Globals::leftPadding*3);
 
     size_t itrBlack{}, itrWhite{};
@@ -222,11 +222,12 @@ std::vector<std::string> Board::getMoveList(bool side) const
     return res;
 }
 
-void Board::printMoveList(bool side) const
+size_t Board::printMoveList(bool side) const
 {
     std::vector<std::string> moveList = getMoveList(side);
     for(const auto& str: moveList) std::cout<<str<<" ";
     std::cout<<"\n";
+    return moveList.size();
 }
 
 void Board::setupInitialBoardState()
@@ -410,8 +411,6 @@ size_t Board::makeMove(std::string move)
 
         if(piece.castle[side][kingside] || piece.castle[side][queenside])
         {
-            side?std::cout<<"black ": std::cout<<"white ";
-            std::cout<<"king can't castle now\n";
             piece.castle[side][kingside] = false;
             piece.castle[side][queenside] = false;
         }

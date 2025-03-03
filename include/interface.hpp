@@ -9,6 +9,10 @@ class Interface
 public:
     Interface(Board& board, Engine& engine);
 
+    Board& board;
+    Engine& engine;
+    uint64_t nodesSearched;
+    std::string bestMove;
     // Utility Functions
     void drawSidePanel() const;
 
@@ -17,8 +21,6 @@ public:
     void interactionHandler();
 
 private:
-    Board& board;
-    Engine& engine;
     size_t sidePanelX_;
     size_t leftPadding_;
     size_t topPadding_;

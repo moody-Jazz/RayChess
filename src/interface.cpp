@@ -4,6 +4,8 @@
 Interface::Interface(Board& board, Engine& engine):
     board(board),
     engine(engine),
+    nodesSearched(0),
+    bestMove("Null"),
     sidePanelX_(Globals::boardSize + Globals::leftPadding*2),
     leftPadding_(Globals::leftPadding),
     topPadding_(Globals::topPadding),
@@ -18,7 +20,7 @@ Interface::Interface(Board& board, Engine& engine):
     Rectangle copyFENBase
     {
         static_cast<float>(sidePanelX_ + leftPadding_), 
-        static_cast<float>((Globals::tileSize*5 + topPadding_) - Globals::btnHeight),
+        static_cast<float>((Globals::tileSize*6 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
@@ -26,7 +28,7 @@ Interface::Interface(Board& board, Engine& engine):
     Rectangle startBase 
     {
         static_cast<float>(sidePanelX_ + leftPadding_*3 + Globals::btnWidth),
-        static_cast<float>((Globals::tileSize*5 + topPadding_) - Globals::btnHeight),
+        static_cast<float>((Globals::tileSize*6 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
@@ -36,7 +38,7 @@ Interface::Interface(Board& board, Engine& engine):
     Rectangle playWhiteBase
     {
         static_cast<float>(sidePanelX_ + leftPadding_), 
-        static_cast<float>((Globals::tileSize*6 + topPadding_) - Globals::btnHeight),
+        static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
@@ -80,7 +82,7 @@ Interface::Interface(Board& board, Engine& engine):
     Rectangle playBlackBase
     {
         static_cast<float>(sidePanelX_ + leftPadding_*3 + Globals::btnWidth),
-        static_cast<float>((Globals::tileSize*6 + topPadding_) - Globals::btnHeight),
+        static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
@@ -131,8 +133,24 @@ void Interface::drawSidePanel() const
     // Draw the FEN string
     std::string str1 = Globals::FENString.substr(0, Globals::FENString.length()/2);
     std::string str2 = Globals::FENString.substr(Globals::FENString.length()/2);
-    DrawText(str1.c_str(), posX, Globals::tileSize*3, Globals::tileSize/5, RAYWHITE);
-    DrawText(str2.c_str(), posX, Globals::tileSize*3+Globals::tileSize/4, Globals::tileSize/5, RAYWHITE);
+    DrawText(str1.c_str(), posX, Globals::tileSize*2.5, Globals::tileSize/5, RAYWHITE);
+    DrawText(str2.c_str(), posX, Globals::tileSize*2.5+Globals::tileSize/4, Globals::tileSize/5, RAYWHITE);
+
+    
+    std::string totalMoves = "Total moves available for ";
+    totalMoves += (board.turn)? "black : ": "white : ";
+    totalMoves += std::to_string(board.findTotalLegalMoves(board.turn));
+
+    std::string depthMessage = "Current Global depth : " + std::to_string(Globals::depth);
+    std::string bestMoveStr = "Current best move : ";
+    bestMoveStr += bestMove;
+    std::string totalNodes = "Total positions Searched : " + std::to_string(nodesSearched);
+    
+    DrawText(depthMessage.c_str(), sidePanelX_ + leftPadding_, Globals::tileSize*3.5, Globals::tileSize/5, RAYWHITE);
+    DrawText(totalMoves.c_str(), sidePanelX_ + leftPadding_, Globals::tileSize*5, Globals::tileSize/5, RAYWHITE);
+  
+    DrawText(bestMoveStr.c_str(), posX, Globals::tileSize*4, Globals::tileSize/5, RAYWHITE);
+    DrawText(totalNodes.c_str(), posX, Globals::tileSize*4.5, Globals::tileSize/5, RAYWHITE);
 
     // Draw all the button
     btnCopyFEN_.draw();
@@ -247,9 +265,11 @@ void Interface::boardInteractionHandler()
         pieceSelected_ = false;
         clickedOnRow_ = -1;
         clickedOnCol_ = -1;
-        board.printMoveList(board.turn);
-        std::pair<int, std::string> bestMove = engine.minimax(board, Globals::depth, board.turn, "");
-        std::cout<<bestMove.first<<" "<<bestMove.second<<std::endl;
+
+        // testing for minimax
+        uint64_t total{};
+        bestMove = engine.minimax(board, Globals::depth, INT_MIN, INT_MAX, board.turn, "", total).second;
+        nodesSearched = total;
     }
 }
 

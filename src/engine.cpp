@@ -139,37 +139,35 @@ int Engine::evaluate(BitBoard* piece){
     return score;
 }
 
-std::pair<int, std::string> Engine::minimax(Board& board, size_t depth, bool turn, std::string initialMove)
+std::pair<int, std::string> Engine::minimax(Board& board, size_t depth,int alpha, int beta, bool turn, std::string initialMove, uint64_t& total)
 {
+    total++;
     if(depth == 0) return {evaluate(board.piece.pieceBitboards), initialMove};
-    std::pair<int, std::string> maxEval{};
-    if(!turn)
+
+    std::pair<int, std::string> maxEval;
+    maxEval.first = turn ? INT_MAX: INT_MIN;
+
+    std::vector<std::string> moveList = board.getMoveList(turn);
+
+    for(auto& move: moveList)
     {
-        maxEval.first = INT_MIN;
-        std::vector<std::string>moveList = board.getMoveList(turn);
-        for(auto& move: moveList)
+        if(depth == Globals::depth) initialMove = move;
+        Board boardCpy(board);
+        boardCpy.makeMove(move);
+        std::pair<int, std::string> eval = minimax(boardCpy, depth-1, alpha, beta, !turn, initialMove, total);
+
+        if(!turn)
         {
-            if(depth == Globals::depth) initialMove = move;
-            Board boardCpy(board);
-            boardCpy.makeMove(move);
-            std::pair<int, std::string> eval = minimax(boardCpy, depth-1, !turn, initialMove);
-            maxEval = std::max(maxEval, eval);
+            if(maxEval.first < eval.first) maxEval = eval;
+            alpha = std::max(alpha, maxEval.first);
+            if(beta <= alpha) break;
         }
-        std::cout<<"maximizing by white"<<std::endl;
-    }
-    else
-    {
-        maxEval.first = INT_MAX;
-        std::vector<std::string>moveList = board.getMoveList(turn);
-        for(auto& move: moveList)
+        else
         {
-            if(depth == Globals::depth) initialMove = move;
-            Board boardCpy(board);
-            boardCpy.makeMove(move);
-            std::pair<int, std::string> eval = minimax(boardCpy, depth-1, !turn, initialMove);
-            maxEval = std::min(maxEval, eval);
+            if(maxEval.first > eval.first) maxEval = eval;
+            beta = std::min(beta, maxEval.first);
+            if(beta <= alpha) break;
         }
-        std::cout<<"minimizing by black"<<std::endl;
     }
     return maxEval;
 }
