@@ -139,16 +139,35 @@ int Engine::evaluate(BitBoard* piece){
     return score;
 }
 
+uint64_t Engine::perft(Board& board, int depth, bool turn) {
+    if (depth == 0) return 1;
+    uint64_t nodes = 0;
+    std::vector<std::string> moveList = board.getMoveList(turn);
+    for (auto& move : moveList) {
+        Board boardCpy(board);
+        boardCpy.makeMove(move);
+        nodes += perft(boardCpy, depth - 1, !turn);
+    }
+    return nodes;
+}
+
+
 std::pair<int, std::string> Engine::minimax(Board& board, size_t depth,int alpha, int beta, bool turn, std::string initialMove, uint64_t& total)
 {
     total++;
     if(depth == 0) return {evaluate(board.piece.pieceBitboards), initialMove};
-
+    
     std::pair<int, std::string> maxEval;
     maxEval.first = turn ? INT_MAX: INT_MIN;
-
+    
     std::vector<std::string> moveList = board.getMoveList(turn);
 
+    if(board.emptyTurns_ >= 50) return {0, initialMove};
+    
+    if(moveList.size() == 0){
+        if (board.piece.isKingSafe(turn)) return {0, initialMove};
+        return turn? std::make_pair(1000000+depth, initialMove) : std::make_pair(-1000000-depth, initialMove);
+    }
     for(auto& move: moveList)
     {
         if(depth == Globals::depth) initialMove = move;
