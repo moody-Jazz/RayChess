@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cstdint>
+#include <fstream>
 #include <unordered_map>
 #include "gamesound.hpp"
 
@@ -21,6 +22,7 @@ namespace Globals
     extern size_t windowHeight;          // Stores the height of the game window
 
     extern std::string FENString;        // Stores the state of the board in FEN notation
+    extern std::ofstream outFile;
 
     extern GameSound sound;              // Stores all the sound like capture, move etc        
 
@@ -41,6 +43,7 @@ namespace Globals
     extern size_t castleKingTargetTile[2][2];
 
     extern uint64_t castleBitmasks[2][3];// stores the absolute bitmask used to check castle availability
+    extern uint64_t occupancyBitmask[2];
 }
 
 namespace Colors
@@ -84,10 +87,9 @@ extern const std::unordered_map<std::string, int> coordsToAbsolute; // map the c
 
 // Function declarations
 void loadPieceTextures();
-void invertPieceTextures();
 bool getType(char type);
 bool flipType(char type);
 char flipCase(char ch);
 void playSound(size_t moveType);
-std::string moveEncoder(size_t srcTile, size_t destTile, char promo);
-void moveDecoder(size_t& srcTile, size_t& destTile, std::string move);
+uint16_t moveEncoder(uint8_t srcTile, uint8_t destTile, char promo);
+void moveDecoder(uint8_t& srcTile, uint8_t& destTile, uint16_t move);

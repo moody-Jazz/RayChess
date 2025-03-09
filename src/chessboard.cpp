@@ -111,11 +111,20 @@ void Board::drawBoardAndPieces() const
     {
         row = i / 8;
         col = i % 8;
+       
         if(matrixBoard_[row][col] != '.')
         {
+            Texture2D currTexture =  Globals::pieceTextures[charPieces.at(matrixBoard_[row][col])];
+            
+            if(Globals::player)
+            { 
+                row = 7 - row; 
+                col = 7-col;
+            }
+        
             DrawTexture
             (
-                Globals::pieceTextures[charPieces.at(matrixBoard_[row][col])], 
+                currTexture, 
                 col * Globals::tileSize + Globals::leftPadding,
                 row * Globals::tileSize + Globals::topPadding, WHITE
             );
@@ -130,8 +139,20 @@ void Board::drawBoardAndPieces() const
 void Board::drawCapturedPieces() const
 {
     if(!capturedPieceString.size()) return;
-    size_t yPosForWhite(Globals::tileSize*1.7);
-    size_t yPosForBlack(Globals::tileSize * 7.33 + Globals::topPadding);
+
+    size_t yPosForWhite, yPosForBlack;
+
+    if(Globals::player)
+    {
+        yPosForBlack = Globals::tileSize*1.7;
+        yPosForWhite = Globals::tileSize * 7.33 + Globals::topPadding;
+    }
+    else 
+    {
+        yPosForWhite = Globals::tileSize*1.7;
+        yPosForBlack = Globals::tileSize * 7.33 + Globals::topPadding;
+    }
+
     size_t xPosition(Globals::boardSize + Globals::leftPadding*3);
 
     size_t itrBlack{}, itrWhite{};
@@ -175,6 +196,9 @@ void Board::highlightTiles(BitBoard tiles) const
     while(tiles.getVal())
     {
         int x = tiles.getLSBIndex();
+
+        if(Globals::player) x = 63 - x;
+
         int row = (63 - x) % 8;
         int col = (63 - x) / 8;
         bool isTileOccupied = (piece.getPieceType(tiles.getLSBIndex()) != '0')? true: false;
@@ -195,39 +219,51 @@ void Board::highlightTiles(BitBoard tiles) const
         else 
             DrawCircle(row, col, Globals::tileSize/5, Colors::tileHighlight);
 
+        if(Globals::player) x = 63 - x;
+        
         tiles.popBit(x);
     }
 }
 
-std::vector<std::string> Board::getMoveList(bool side) const
+void Board::getMoveList(uint16_t* res, uint8_t&curr, bool side) const
 {
-    std::vector<std::string> res;
     int offSet = side? 6 : 0;
-
     for(int i = P+offSet; i<=K+offSet; i++)
     {
         BitBoard currPiece(piece.pieceBitboards[i]);
-        std::vector<size_t> setBit = currPiece.getSetBitIndices();
-        for(const auto& pos: setBit)
-        { 
-            BitBoard legalMove(piece.getLegalMoves(asciiPieces[i], pos));
-            std::vector<size_t> legalMoveList = legalMove.getSetBitIndices();
-            for(const auto& x: legalMoveList)
+
+        uint8_t size = currPiece.getSetBitCount();
+        uint8_t setBitList[size];
+        currPiece.getSetBitIndices(setBitList, size);
+
+        for(uint8_t itr{}; itr<size; itr++)
+        {
+            BitBoard legalMove(const_cast<Piece&>(piece).getLegalMoves(asciiPieces[i], setBitList[itr]));
+            uint8_t legalMoveListSize = legalMove.getSetBitCount();
+            uint8_t legalMoveList[legalMoveListSize];
+            legalMove.getSetBitIndices(legalMoveList, legalMoveListSize);
+            for(uint8_t j{}; j<legalMoveListSize; j++)
             {
-                std::string move = moveEncoder(pos, x, '0');
-                res.push_back(move);
+                uint16_t move = moveEncoder(setBitList[itr], legalMoveList[j], '0');
+                res[curr++] = move;
             }
         }
     }
-    return res;
 }
 
-size_t Board::printMoveList(bool side) const
+uint8_t Board::printMoveList(bool side) const
 {
-    std::vector<std::string> moveList = getMoveList(side);
-    for(const auto& str: moveList) std::cout<<str<<" ";
+    uint8_t size{};
+    uint16_t moveList[218];
+    getMoveList(moveList, size, side);
+    uint8_t src, dest;
+    for(uint8_t i{}; i<size; i++)
+    {
+        moveDecoder(src, dest, moveList[i]);
+        std::cout<<coordinate[63-src] + coordinate[63-dest]<<" ";
+    }
     std::cout<<"\n";
-    return moveList.size();
+    return size;
 }
 
 void Board::setupInitialBoardState()
@@ -269,7 +305,7 @@ void Board::updateFENViamatrixBoard()
         int emptyCol{};
         for(size_t j{}; j<8; j++)
         {
-            if(!Globals::player && matrixBoard_[i][j] != '.')
+            if(matrixBoard_[i][j] != '.')
             {
                 if(emptyCol)
                 {
@@ -277,15 +313,6 @@ void Board::updateFENViamatrixBoard()
                     emptyCol = 0;
                 }
                 str += matrixBoard_[i][j];
-            }
-            else if (Globals::player && matrixBoard_[7-i][7-j] != '.')
-            {
-                if(emptyCol)
-                {
-                    str += std::to_string(emptyCol);
-                    emptyCol = 0;
-                }
-                str += flipCase(matrixBoard_[7-i][7-j]);
             }
             else emptyCol++;
         }
@@ -299,11 +326,13 @@ void Board::updateFENViamatrixBoard()
     str += (turn)?" b":" w"; // Add turn
     str+=" ";
 
-    if(piece.castle[white][kingside]) str += "K";
-    if(piece.castle[white][queenside]) str += "Q";
-    if(piece.castle[black][kingside]) str += "k";
-    if(piece.castle[black][queenside]) str += "q";
-
+    if(piece.castle[white][kingside] || piece.castle[white][queenside] 
+        || piece.castle[black][kingside] || piece.castle[black][queenside]){
+        if(piece.castle[white][kingside])  str += "K";
+        if(piece.castle[white][queenside]) str += "Q";
+        if(piece.castle[black][kingside])  str += "k";
+        if(piece.castle[black][queenside]) str += "q";
+    }
     else str += "-";
     str += " ";
     if(Globals::player == white && piece.enPassant != noSq)
@@ -349,11 +378,11 @@ size_t Board::getGameEndState(bool side)
     return 0;
 }
 
-size_t Board::makeMove(std::string move)
+size_t Board::makeMove(uint16_t move)
 {
     size_t moveType = regular;
-    size_t srcTile{};
-    size_t destTile{};
+    uint8_t srcTile{};
+    uint8_t destTile{};
     moveDecoder(srcTile, destTile, move);
     char movedType = piece.getPieceType(srcTile);
     char capturedType = piece.getPieceType(destTile);
@@ -385,6 +414,7 @@ size_t Board::makeMove(std::string move)
             moveType = capture;
         }
        // handle pawn promotion later
+       
     }
 
     // logic to update all the required variables if king has moved

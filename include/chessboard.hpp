@@ -22,8 +22,8 @@ public:
     void drawCapturedPieces() const;            // Draws all the captured pieces
     void print() const;                         // Prints the current position as ASCII characters in matrix form
     void highlightTiles(BitBoard tiles) const;  // Highlight given tiles
-    std::vector<std::string> getMoveList(bool side) const; // Return a list of all the legal moves a side have
-    size_t printMoveList(bool side) const;       // prints Move list of the pieces of a side
+    void getMoveList(uint16_t* res, uint8_t& curr, bool side) const; // Return a list of all the legal moves a side have
+    uint8_t printMoveList(bool side) const;       // prints Move list of the pieces of a side
 
     // Mutator Functions
     void setupInitialBoardState();               // Setup all the flags and varaibles to their initial state also used to reset the board
@@ -33,9 +33,9 @@ public:
     size_t findTotalLegalMoves(bool side);       // Finds the total number of legal moves a side has
     size_t getGameEndState(bool side);           // Determines and returns whether the game ended in checkmate or stalemate
 
-    size_t makeMove(std::string move);           // Executes a move on the boards and returns what type of move it is
+    size_t makeMove(uint16_t move);              // Executes a move on the boards and returns what type of move it is
 
-private:
+public:
     size_t emptyTurns_;                          // Stores the number of consecutive turns without captures or pawn moves
     size_t totalTurns_;                          // Stores total turns that have been played
     char matrixBoard_[8][8];                     // Stores the current position in matrix form

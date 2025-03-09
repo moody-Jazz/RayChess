@@ -18,6 +18,7 @@ namespace Globals
     size_t windowHeight     = boardSize + topPadding * 2;
 
     std::string FENString   = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    std::ofstream outFile("fen_log.txt", std::ios::app);
 
     GameSound sound;
    
@@ -51,6 +52,7 @@ namespace Globals
 
     size_t kingsInitPos[2]   = { 3, 59 };
     size_t queenInitPos[2]   = { 4, 60 };
+    
     size_t rookInitPos[2][2] = 
     {
         { 0, 7 },
@@ -75,6 +77,8 @@ namespace Globals
         { 6uLL, 48ULL, 54ULL }, 
         { 432345564227567616ULL, 3458764513820540928ULL, 3891110078048108544ULL }
     };
+    uint64_t occupancyBitmask[2] = {112ULL, 8070450532247928832ULL};
+
 }
 
 namespace Colors
@@ -140,20 +144,6 @@ void loadPieceTextures()
     }
 }
 
-void invertPieceTextures()
-{
-    for(size_t i = P; i<=K; i++)
-    {
-        Texture2D temp = Globals::pieceTextures[i];
-        Globals::pieceTextures[i] = Globals::pieceTextures[i+6];
-        Globals::pieceTextures[i+6] = temp;
-        Texture2D tempCapture = Globals::captureTextures[i];
-        Globals::captureTextures[i] = Globals::captureTextures[i+6];
-        Globals::captureTextures[i+6] = tempCapture;
-
-    }
-}
-
 bool getType(char type)
 {
     return (isupper(type))? white: black;
@@ -202,25 +192,16 @@ void playSound(size_t moveType)
     }
 }
 
-std::string moveEncoder(size_t srcTile, size_t destTile, char promo)
+uint16_t moveEncoder(uint8_t srcTile, uint8_t destTile, char promo)
 {
-    std::string move;
-    move += coordinate[63 - srcTile];
-    move += coordinate[63 - destTile];
-    if(promo != '0') move += promo;
-    return move;
+    uint16_t res = srcTile;
+    res <<= 6;
+    res |= destTile;
+    return res;
 }
 
-void moveDecoder(size_t& srcTile, size_t& destTile, std::string move)
+void moveDecoder(uint8_t& srcTile, uint8_t& destTile, uint16_t move)
 {
-    std::string src;
-    src += move[0];
-    src += move[1];
-
-    std::string dest;
-    dest += move[2];
-    dest += move[3];
-
-    srcTile = coordsToAbsolute.at(src);
-    destTile = coordsToAbsolute.at(dest);
+    destTile = move & 63;
+    srcTile = (move & 4032) >> 6;
 }

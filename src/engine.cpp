@@ -114,25 +114,27 @@ int Engine::evaluate(BitBoard* piece){
 
         score += (piececpy.getSetBitCount() * material_score[i]);
 
-        std::vector<size_t> piece_position = piececpy.getSetBitIndices();
+        uint8_t size = piececpy.getSetBitCount();
+        uint8_t piece_position[size];
+        piececpy.getSetBitIndices(piece_position, size);
 
-        for(auto& square: piece_position){
-            square = 63 - square;
+        for(uint8_t itr{}; itr<size; itr++){
+            piece_position[itr] = 63 - piece_position[itr];
             switch (i)
             {
                 // evaluate white pieces
-                case P: score += pawn_score[square]; break;
-                case N: score += knight_score[square]; break;
-                case B: score += bishop_score[square]; break;
-                case R: score += rook_score[square]; break;
-                case K: score += king_score[square]; break;
+                case P: score += pawn_score[piece_position[itr]]; break;
+                case N: score += knight_score[piece_position[itr]]; break;
+                case B: score += bishop_score[piece_position[itr]]; break;
+                case R: score += rook_score[piece_position[itr]]; break;
+                case K: score += king_score[piece_position[itr]]; break;
 
                 // evaluate black pieces
-                case p: score -= pawn_score[mirror_score[square]]; break;
-                case n: score -= knight_score[mirror_score[square]]; break;
-                case b: score -= bishop_score[mirror_score[square]]; break;
-                case r: score -= rook_score[mirror_score[square]]; break;
-                case k: score -= king_score[mirror_score[square]]; break;
+                case p: score -= pawn_score[mirror_score[piece_position[itr]]]; break;
+                case n: score -= knight_score[mirror_score[piece_position[itr]]]; break;
+                case b: score -= bishop_score[mirror_score[piece_position[itr]]]; break;
+                case r: score -= rook_score[mirror_score[piece_position[itr]]]; break;
+                case k: score -= king_score[mirror_score[piece_position[itr]]]; break;
             }
         }
     }
@@ -142,38 +144,42 @@ int Engine::evaluate(BitBoard* piece){
 uint64_t Engine::perft(Board& board, int depth, bool turn) {
     if (depth == 0) return 1;
     uint64_t nodes = 0;
-    std::vector<std::string> moveList = board.getMoveList(turn);
-    for (auto& move : moveList) {
+    uint8_t size{};
+    uint16_t moveList[218];
+    board.getMoveList(moveList, size, turn);
+    for (uint8_t i{}; i<size; i++) {
         Board boardCpy(board);
-        boardCpy.makeMove(move);
+        boardCpy.makeMove(moveList[i]);
         nodes += perft(boardCpy, depth - 1, !turn);
     }
     return nodes;
 }
 
 
-std::pair<int, std::string> Engine::minimax(Board& board, size_t depth,int alpha, int beta, bool turn, std::string initialMove, uint64_t& total)
+std::pair<int, uint16_t> Engine::minimax(Board& board, size_t depth,int alpha, int beta, bool turn, uint16_t initialMove, uint64_t& total)
 {
     total++;
     if(depth == 0) return {evaluate(board.piece.pieceBitboards), initialMove};
     
-    std::pair<int, std::string> maxEval;
+    std::pair<int, uint16_t> maxEval;
     maxEval.first = turn ? INT_MAX: INT_MIN;
     
-    std::vector<std::string> moveList = board.getMoveList(turn);
+    uint8_t size{};
+    uint16_t moveList[218];
+    board.getMoveList(moveList, size, turn);
 
     if(board.emptyTurns_ >= 50) return {0, initialMove};
     
-    if(moveList.size() == 0){
+    if(size == 0){
         if (board.piece.isKingSafe(turn)) return {0, initialMove};
         return turn? std::make_pair(1000000+depth, initialMove) : std::make_pair(-1000000-depth, initialMove);
     }
-    for(auto& move: moveList)
+    for(uint8_t i{}; i<size; i++)
     {
-        if(depth == Globals::depth) initialMove = move;
+        if(depth == Globals::depth) initialMove = moveList[i];
         Board boardCpy(board);
-        boardCpy.makeMove(move);
-        std::pair<int, std::string> eval = minimax(boardCpy, depth-1, alpha, beta, !turn, initialMove, total);
+        boardCpy.makeMove(moveList[i]);
+        std::pair<int, uint16_t> eval = minimax(boardCpy, depth-1, alpha, beta, !turn, initialMove, total);
 
         if(!turn)
         {

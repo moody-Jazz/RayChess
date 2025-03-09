@@ -351,6 +351,7 @@ uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
             // check if queenside castling is avialble
             castleAvailable = (bitmaskCastle & bitmaskQueenside) == bitmaskQueenside;
             castleAvailable = castleAvailable && kingSafety && castle[side][queenside];
+            castleAvailable = castleAvailable && ((~(bitboards_[both]) & Globals::occupancyBitmask[side]) == Globals::occupancyBitmask[side]);
             res = res | (bitmaskQueenside * castleAvailable);
             
             break;
