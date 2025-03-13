@@ -16,6 +16,8 @@ public:
     // Utility Functions
     void drawSidePanel() const;
 
+    void runSelf(bool mode);
+    void promotionHandler(uint16_t& promo);
     void boardInteractionHandler();
     void sidePanelInteractionHandler();
     void interactionHandler();
@@ -27,8 +29,8 @@ private:
     std::string logo_;
     Button btnCopyFEN_;
     Button btnStart_;
-    Button btnPlayWhite_;
-    Button btnPlayBlack_;
+    Button btnFlipBoard_;
+    Button btnResetBoard_;
     char currPieceType_;
     int clickedOnRow_;
     int clickedOnCol_;

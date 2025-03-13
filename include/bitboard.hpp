@@ -14,7 +14,7 @@ public:
     uint64_t getVal() const;               // Returns the current value of val_
     void printBinary() const;              // Prints val_ in binary representation
     bool getBit(size_t square) const;      // Returns the bit state at the given index (0 to 63)
-    uint8_t getSetBitCount() const;         // Returns the number of set bits in val_
+    uint16_t getSetBitCount() const;         // Returns the number of set bits in val_
     int getLSBIndex() const;               // Returns the rightmoset set bit index if theres none return -1
 
     // Mutator Functions
@@ -23,7 +23,7 @@ public:
     void popBit(size_t square);            // Resets the bit at the given index (0 to 63)
     BitBoard operator = (const BitBoard& obj);
 
-    void getSetBitIndices(uint8_t* arr, uint8_t& size) const; // Returns indices of all bits set to 1 in val_
+    void getSetBitIndices(uint16_t* arr, uint16_t& size) const; // Returns indices of all bits set to 1 in val_
 
 private:
     uint64_t val_;                         // Internal value of the bitboard

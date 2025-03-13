@@ -11,6 +11,17 @@ Board::Board()
     setupInitialBoardState();
 }
 
+Board::Board(const Board& obj) :
+    turn(obj.turn),
+    piece(obj.piece),
+    capturedPieceString(obj.capturedPieceString),     
+    emptyTurns(obj.emptyTurns),
+    totalTurns(obj.totalTurns)
+{
+    for(uint16_t i{}; i<8; i++)
+        for(uint16_t j{}; j<8; j++) matrixBoard[i][j] = obj.matrixBoard[i][j];
+}
+
 // Draw the Checkers pattern
 void Board::drawTiles() const
 {
@@ -112,9 +123,9 @@ void Board::drawBoardAndPieces() const
         row = i / 8;
         col = i % 8;
        
-        if(matrixBoard_[row][col] != '.')
+        if(matrixBoard[row][col] != '.')
         {
-            Texture2D currTexture =  Globals::pieceTextures[charPieces.at(matrixBoard_[row][col])];
+            Texture2D currTexture =  Globals::pieceTextures[charPieces.at(matrixBoard[row][col])];
             
             if(Globals::player)
             { 
@@ -184,10 +195,18 @@ void Board::print() const
 {
     for(size_t i{}; i<8; i++)
     {
-        for(size_t j{}; j<8; j++) std::cout<<matrixBoard_[i][j];
-
+        for(size_t j{}; j<8; j++) std::cout<<matrixBoard[i][j];
         std::cout<<"\n";
     }
+    printf("\nCurrent Turn: %s",(this->turn)? "Black": "White");
+    printf("\nEnPassant available on: %s",( piece.enPassant != noSq)? coordinate[piece.enPassant].c_str(): "none");
+    std::cout<<"\nCastle Available for White on:";
+    if(piece.castle[white][kingside]) std::cout<<" kingside ";
+    if(piece.castle[white][queenside]) std::cout<<" queenside ";
+    std::cout<<"\nCastle Available for black on:";
+    if(piece.castle[black][kingside]) std::cout<<" kingside ";
+    if(piece.castle[black][queenside]) std::cout<<" queenside ";
+    std::cout<<"\n\n";
     std::cout<<Globals::FENString<<"\n";
 }
 
@@ -225,42 +244,48 @@ void Board::highlightTiles(BitBoard tiles) const
     }
 }
 
-void Board::getMoveList(uint16_t* res, uint8_t&curr, bool side) const
+void Board::getMoveList(uint16_t* res, uint16_t&curr, bool side) const
 {
     int offSet = side? 6 : 0;
     for(int i = P+offSet; i<=K+offSet; i++)
     {
         BitBoard currPiece(piece.pieceBitboards[i]);
 
-        uint8_t size = currPiece.getSetBitCount();
-        uint8_t setBitList[size];
+        uint16_t size = currPiece.getSetBitCount();
+        uint16_t setBitList[size];
         currPiece.getSetBitIndices(setBitList, size);
 
-        for(uint8_t itr{}; itr<size; itr++)
+        for(uint16_t itr{}; itr<size; itr++)
         {
             BitBoard legalMove(const_cast<Piece&>(piece).getLegalMoves(asciiPieces[i], setBitList[itr]));
-            uint8_t legalMoveListSize = legalMove.getSetBitCount();
-            uint8_t legalMoveList[legalMoveListSize];
+            uint16_t legalMoveListSize = legalMove.getSetBitCount();
+            uint16_t legalMoveList[legalMoveListSize];
             legalMove.getSetBitIndices(legalMoveList, legalMoveListSize);
-            for(uint8_t j{}; j<legalMoveListSize; j++)
+            for(uint16_t j{}; j<legalMoveListSize; j++)
             {
-                uint16_t move = moveEncoder(setBitList[itr], legalMoveList[j], '0');
-                res[curr++] = move;
+                // if this move is pawn promotion add three moves in the list
+                if((i == p || i== P) && (legalMoveList[j] < 8 || legalMoveList[j] > 55))
+                {
+                    uint16_t arr[] = {knightProm, bishopProm, rookProm, queenProm};
+                    for(uint16_t i{}; i < 4; i++)
+                        res[curr++] = moveEncoder(setBitList[itr], legalMoveList[j], arr[i]);
+                }
+                else 
+                    res[curr++] = moveEncoder(setBitList[itr], legalMoveList[j], 0);
             }
         }
     }
 }
 
-uint8_t Board::printMoveList(bool side) const
+uint16_t Board::printMoveList(bool side) const
 {
-    uint8_t size{};
+    uint16_t size{};
     uint16_t moveList[218];
     getMoveList(moveList, size, side);
-    uint8_t src, dest;
-    for(uint8_t i{}; i<size; i++)
+    for(uint16_t i{}; i<size; i++)
     {
-        moveDecoder(src, dest, moveList[i]);
-        std::cout<<coordinate[63-src] + coordinate[63-dest]<<" ";
+        printAlgebricNotation(moveList[i], side);
+        std::cout<<" ";
     }
     std::cout<<"\n";
     return size;
@@ -268,9 +293,8 @@ uint8_t Board::printMoveList(bool side) const
 
 void Board::setupInitialBoardState()
 {
-    turn            = white;
-    emptyTurns_     = 0;
-    totalTurns_     = 0;
+    emptyTurns     = 0;
+    totalTurns     = 0;
     legalMoves.setVal(0ULL);
     capturedPieceString = "";
     piece.setupInitialFlagsAndPositions();
@@ -292,9 +316,69 @@ void Board::updateMatrixBoard()
         i = itr / 8;
         j = itr % 8;
         char pieceType = piece.getPieceType(63-(i * 8 + j));
-        if(pieceType != '0') matrixBoard_[i][j] = pieceType;
-        else matrixBoard_[i][j] = '.';
+        if(pieceType != '0') matrixBoard[i][j] = pieceType;
+        else matrixBoard[i][j] = '.';
     }
+}
+
+void Board::copyPosition(std::string& FEN)
+{
+    uint16_t row{}, col{};
+    char pieceType;
+
+    this->piece.enPassant = noSq;
+    this->piece.castle[white][kingside]   = false;
+    this->piece.castle[white][queenside]  = false;
+    this->piece.castle[black][kingside]   = false;
+    this->piece.castle[black][queenside]  = false;
+    
+    for(auto& piece: piece.pieceBitboards) piece.setVal(0ULL);
+    size_t i{};
+
+    for (; i<FEN.size(); i++) 
+    {
+        if (FEN[i] == ' ') break;
+        if (FEN[i] == '/')
+        {
+            row++;
+            col = 0;
+        }
+        else if (isdigit(FEN[i]))
+            col += FEN[i] - '0';
+        
+        else 
+        {
+            uint16_t indx = 63 - (row * 8 + col);
+            pieceType = FEN[i];
+
+            if(pieceType == 'k') piece.kingPosition[black] = indx;
+            else if(pieceType == 'K') piece.kingPosition[white] = indx;
+
+            piece.pieceBitboards[charPieces.at(pieceType)].setVal(piece.pieceBitboards[charPieces.at(pieceType)].getVal() | (1ULL << (int)indx));
+            col++;
+        }
+    }
+    this->turn = FEN[++i] == 'w'?  white: black;
+    i += 2;
+    while(FEN[i] != ' '){
+        if(FEN[i] == 'K') this->piece.castle[white][kingside]   = true;
+        if(FEN[i] == 'Q') this->piece.castle[white][queenside]  = true;
+        if(FEN[i] == 'k') this->piece.castle[black][kingside]   = true;
+        if(FEN[i] == 'q') this->piece.castle[black][queenside]  = true;
+        i++;
+    }
+    if(FEN[i+1] != '-')
+    {
+        std::string str = "";
+        str += FEN[++i];
+        str += FEN[i+1];
+        this->piece.enPassant = 63 - coordsToAbsolute.at(str);
+    }
+    i += 2;
+    this->piece.updateCombinedBitboards();
+    this->piece.updateUnsafeTiles();
+    updateMatrixBoard();
+    updateFENViamatrixBoard();
 }
 
 void Board::updateFENViamatrixBoard()
@@ -305,14 +389,14 @@ void Board::updateFENViamatrixBoard()
         int emptyCol{};
         for(size_t j{}; j<8; j++)
         {
-            if(matrixBoard_[i][j] != '.')
+            if(matrixBoard[i][j] != '.')
             {
                 if(emptyCol)
                 {
                     str += std::to_string(emptyCol);
                     emptyCol = 0;
                 }
-                str += matrixBoard_[i][j];
+                str += matrixBoard[i][j];
             }
             else emptyCol++;
         }
@@ -341,10 +425,10 @@ void Board::updateFENViamatrixBoard()
         str += coordinate[63 - piece.enPassant];
     else str += "-";
     str += " ";
-    str += std::to_string(emptyTurns_);
+    str += std::to_string(emptyTurns);
     str += " ";
-    if(!totalTurns_) str += std::to_string(1);
-    else str += std::to_string(totalTurns_);
+    if(!totalTurns) str += std::to_string(1);
+    else str += std::to_string(totalTurns);
     Globals::FENString = str;
 }
 
@@ -381,9 +465,11 @@ size_t Board::getGameEndState(bool side)
 size_t Board::makeMove(uint16_t move)
 {
     size_t moveType = regular;
-    uint8_t srcTile{};
-    uint8_t destTile{};
-    moveDecoder(srcTile, destTile, move);
+    uint16_t srcTile{};
+    uint16_t destTile{};
+    uint16_t promo{};
+
+    moveDecoder(srcTile, destTile, promo, move);
     char movedType = piece.getPieceType(srcTile);
     char capturedType = piece.getPieceType(destTile);
     piece.enPassant = noSq;
@@ -391,7 +477,7 @@ size_t Board::makeMove(uint16_t move)
 
     bool isPieceReleasedOnEmptyTile = (capturedType == '0')? true : false;
 
-    // If condtion to handle en passant related conditions
+    // If condtion to handle enpassant related conditions
     if(toupper(movedType) == 'P')
     {
         // check if current move activates any enpassant on the board
@@ -413,38 +499,33 @@ size_t Board::makeMove(uint16_t move)
             }
             moveType = capture;
         }
-       // handle pawn promotion later
-       
     }
-
-    // logic to update all the required variables if king has moved
-    if(toupper(movedType) == 'K')
-    {
-        piece.kingPosition[side] = destTile; //update the global king position
-        size_t movedSide = 2;
-
-        // if king has castled update the rook position too
-        if(srcTile == Globals::kingsInitPos[side] && destTile == Globals::castleKingTargetTile[side][kingside])
-            movedSide = kingside;
-        else if(srcTile == Globals::kingsInitPos[side] && destTile == Globals::castleKingTargetTile[side][queenside])
-            movedSide = queenside;
-
-        if(movedSide < 2) // if any of the above condition is true then it means king has moved two tiles/castled
-        {
-            piece.updatePieceBitboards
-            (
+    
+    if (toupper(movedType) == 'K') {
+        
+        int16_t movedSide = -1; // Start with an invalid value
+        
+        // If king has castled, update the rook position too
+        if (destTile < srcTile && abs(srcTile - destTile) == 2)
+            movedSide = kingside;  // Kingside castling
+        else if (destTile > srcTile && abs(srcTile - destTile) == 2)
+            movedSide = queenside; // Queenside castling
+        
+        if (movedSide != -1) { // Only update if castling happened
+            piece.updatePieceBitboards(
+                (side)? 'r': 'R',
                 Globals::rookInitPos[side][movedSide], 
                 Globals::castleRookTargetTiles[side][movedSide]
             );
             moveType = castle;
         }
 
-        if(piece.castle[side][kingside] || piece.castle[side][queenside])
-        {
-            piece.castle[side][kingside] = false;
-            piece.castle[side][queenside] = false;
-        }
-    }
+    piece.kingPosition[side] = destTile; // Update global king position
+    // Disable castling rights
+    piece.castle[side][kingside] = false;
+    piece.castle[side][queenside] = false;
+}
+
 
     // logic to update the casteling states if any rook is moved or captured
     if(toupper(movedType) == 'R' || toupper(capturedType) == 'R')
@@ -468,17 +549,22 @@ size_t Board::makeMove(uint16_t move)
         if(rookPos == destTile) side = !side; // reset the side
     }
     if(capturedType != '0') capturedPieceString += capturedType;
+
     piece.updatePieceBitboards(movedType, srcTile, destTile);
+
+    // handle pawn promotion
+    if(promo) piece.promotePawn(srcTile, destTile, promo);
+   
     piece.updateCombinedBitboards();
     piece.updateUnsafeTiles();
     flipTurn();
     if(!isPieceReleasedOnEmptyTile) moveType = capture;
     if(!piece.isKingSafe(!side)) moveType = check;
 
-    if(isPieceReleasedOnEmptyTile && std::toupper(movedType) != 'P') emptyTurns_++;
-    totalTurns_++;
+    if(isPieceReleasedOnEmptyTile && std::toupper(movedType) != 'P') emptyTurns++;
+    totalTurns++;
     // if pawn is moved or piece is captured reset empty moves
-    if(std::toupper(movedType) == 'P' || !isPieceReleasedOnEmptyTile) emptyTurns_ = 0; 
+    if(std::toupper(movedType) == 'P' || !isPieceReleasedOnEmptyTile) emptyTurns = 0; 
     if(getGameEndState(!side)) moveType = getGameEndState(!side);
     return moveType;
 }

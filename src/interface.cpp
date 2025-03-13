@@ -1,4 +1,6 @@
 #include "interface.hpp"
+#include <chrono>
+#include <thread>
 #include <iostream>
 
 Interface::Interface(Board& board, Engine& engine):
@@ -10,8 +12,8 @@ Interface::Interface(Board& board, Engine& engine):
     leftPadding_(Globals::leftPadding),
     topPadding_(Globals::topPadding),
     logo_("Ray Chess"),
-    btnPlayWhite_(),
-    btnPlayBlack_(),
+    btnFlipBoard_(),
+    btnResetBoard_(),
     currPieceType_('0'),
     clickedOnRow_(-1),
     clickedOnCol_(-1),
@@ -35,90 +37,33 @@ Interface::Interface(Board& board, Engine& engine):
     btnStart_ = Button(startBase,  Colors::btnBase, Colors::btnBorder, "Start Game", Globals::tileSize/4, Colors::labelColor, [&](){});
 
     // Create the play white button
-    Rectangle playWhiteBase
+    Rectangle flipBoard
     {
         static_cast<float>(sidePanelX_ + leftPadding_), 
         static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
-    btnPlayWhite_ = Button(playWhiteBase, WHITE, BLACK, "Play White", Globals::tileSize/4, BLACK, [&]()
+    btnFlipBoard_ = Button(flipBoard, WHITE, BLACK, "Flip Board", Globals::tileSize/4, BLACK, [&]()
         {
-            if(Globals::player != white) invertPieceTextures();
-            Globals::player = white;
-
-            Globals::kingsInitPos[white]                        = 3;
-            Globals::kingsInitPos[black]                        = 59;
-            Globals::queenInitPos[white]                        = 4;
-            Globals::queenInitPos[black]                        = 60;
-
-            Globals::rookInitPos[white][kingside]               = 0;
-            Globals::rookInitPos[white][queenside]              = 7;
-            Globals::rookInitPos[black][kingside]               = 56;
-            Globals::rookInitPos[black][queenside]              = 63;
-
-            Globals::castleRookTargetTiles[white][kingside]     = 2;
-            Globals::castleRookTargetTiles[white][queenside]    = 4;
-            Globals::castleRookTargetTiles[black][kingside]     = 58;
-            Globals::castleRookTargetTiles[black][queenside]    = 60;
-
-            Globals::castleKingTargetTile[white][kingside]      = 1;
-            Globals::castleKingTargetTile[white][queenside]     = 5;
-            Globals::castleKingTargetTile[black][kingside]      = 57;
-            Globals::castleKingTargetTile[black][queenside]     = 61;
-
-            Globals::castleBitmasks[white][kingside]            = 6ULL;
-            Globals::castleBitmasks[white][queenside]           = 48UL;
-            Globals::castleBitmasks[black][kingside]            = 432345564227567616ULL;
-            Globals::castleBitmasks[black][queenside]           = 3458764513820540928ULL;
-            Globals::castleBitmasks[white][both]                = 54ULL;
-            Globals::castleBitmasks[black][both]                = 3891110078048108544ULL;
-
-            board.setupInitialBoardState();
+            Globals::player = !Globals::player;
         }
     );
 
     // Create the play black button
-    Rectangle playBlackBase
+    Rectangle resetBoard
     {
         static_cast<float>(sidePanelX_ + leftPadding_*3 + Globals::btnWidth),
         static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
-    btnPlayBlack_ = Button(playBlackBase, BLACK, WHITE, "Play Black", Globals::tileSize/4, WHITE, [&]()
+    btnResetBoard_ = Button(resetBoard, BLACK, WHITE, "Reset Board", Globals::tileSize/4, WHITE, [&]()
         {
-            if(Globals::player != black) invertPieceTextures();
-            Globals::player = black;
-
-            Globals::kingsInitPos[white]                        = 4;
-            Globals::kingsInitPos[black]                        = 60;
-            Globals::queenInitPos[white]                        = 3;
-            Globals::queenInitPos[black]                        = 59;
-
-            Globals::rookInitPos[white][kingside]               = 7;
-            Globals::rookInitPos[white][queenside]              = 0;
-            Globals::rookInitPos[black][kingside]               = 63;
-            Globals::rookInitPos[black][queenside]              = 56;
-
-            Globals::castleRookTargetTiles[white][kingside]     = 5;
-            Globals::castleRookTargetTiles[white][queenside]    = 3;
-            Globals::castleRookTargetTiles[black][kingside]     = 61;
-            Globals::castleRookTargetTiles[black][queenside]    = 59;
-
-            Globals::castleKingTargetTile[white][kingside]      = 6;
-            Globals::castleKingTargetTile[white][queenside]     = 2;
-            Globals::castleKingTargetTile[black][kingside]      = 62;
-            Globals::castleKingTargetTile[black][queenside]     = 58;
-
-            Globals::castleBitmasks[white][kingside]            = 96ULL;
-            Globals::castleBitmasks[white][queenside]           = 12UL;
-            Globals::castleBitmasks[black][kingside]            = 6917529027641081856ULL;
-            Globals::castleBitmasks[black][queenside]           = 864691128455135232ULL;
-            Globals::castleBitmasks[white][both]                = 108ULL;
-            Globals::castleBitmasks[black][both]                = 7782220156096217088ULL;
-
             board.setupInitialBoardState();
+            Globals::outFile.open("fen_log.txt", std::ofstream::trunc);
+            Globals::outFile<<Globals::FENString<<std::endl;
+            Globals::outFile.close();
         }
     );
 }
@@ -155,13 +100,95 @@ void Interface::drawSidePanel() const
     // Draw all the button
     btnCopyFEN_.draw();
     btnStart_.draw();
-    btnPlayWhite_.draw();
-    btnPlayBlack_.draw();
+    btnFlipBoard_.draw();
+    btnResetBoard_.draw();
+}
+
+void Interface::runSelf(bool mode)
+{
+    std::this_thread::sleep_for(std::chrono::nanoseconds(0));
+    std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(0));
+
+    uint16_t temp[218];
+    uint16_t size{};
+    board.getMoveList(temp, size, board.turn);
+    Globals::outFile.open("fen_log.txt", std::ios::app);
+    Globals::outFile<<Globals::FENString<<std::endl;
+    Globals::outFile<<(int)size<<std::endl;
+    Globals::outFile.close();
+    
+    uint64_t total{};
+    char moveType;
+    if(mode){
+        uint16_t bestMove = engine.minimax(board, Globals::depth, INT_MIN, INT_MAX, board.turn, 0, total).second;
+        uint16_t src, dest;
+        uint16_t promo{};
+        moveDecoder(src, dest, promo, bestMove);
+        this->bestMove = coordinate[src] + coordinate[dest];
+        moveType = board.makeMove(bestMove);
+        nodesSearched = total;
+    }
+    else  moveType = board.makeMove(temp[rand() % size]);
+    playSound(moveType);
+
+    board.updateMatrixBoard();
+    board.updateFENViamatrixBoard();
+
+}
+
+void Interface::promotionHandler(uint16_t& promo)
+{
+
+    // queen is default promotion if player click outside of promotion panel queen promotion will be considered
+    size_t x = Globals::tileSize * 2 + Globals::leftPadding;
+    float y = Globals::tileSize * 3.5 + Globals::topPadding;
+    promo = queenProm;
+    Vector2 mousePos = GetMousePosition();
+    bool isMouseInsideHorizontally = false, isMouseInsideVertically = false;
+
+    while(!IsMouseButtonPressed(MouseButton::MOUSE_BUTTON_LEFT))
+    {
+        mousePos = GetMousePosition();
+        isMouseInsideHorizontally   = (size_t)mousePos.x >= x && (size_t)mousePos.x < Globals::tileSize * 6 + Globals::leftPadding;
+        isMouseInsideVertically     = (size_t)mousePos.y >= y && (size_t)mousePos.y < Globals::tileSize * 4.5 + Globals::topPadding;
+        
+        BeginDrawing();
+        ClearBackground(Colors::background);
+        board.drawBoardAndPieces();
+        board.drawCapturedPieces();
+
+        // draw all the texture for all four options
+        for (uint16_t i = 0; i < 4; i++) 
+        {
+            uint16_t piece = (N + i) + (board.turn * 6);
+            DrawRectangle(Globals::tileSize * i + x, y, Globals::tileSize, Globals::tileSize, GRAY);
+            DrawTexture(Globals::pieceTextures[piece], Globals::tileSize * i + x, y, RAYWHITE);
+        }
+        Rectangle rec = 
+        {   
+            static_cast<float>(((size_t)mousePos.x - Globals::leftPadding)/Globals::tileSize * Globals::tileSize + Globals::leftPadding), 
+            static_cast<float>(Globals::tileSize * 3.5 + Globals::topPadding), 
+            static_cast<float>(Globals::tileSize),
+            static_cast<float>(Globals::tileSize)
+        };
+        if(isMouseInsideHorizontally && isMouseInsideVertically) 
+            DrawRectangleLinesEx (rec, Globals::tileSize/20, RAYWHITE);
+        
+        drawSidePanel();
+        EndDrawing();
+    }
+    // if player made a choice by clicking inside one of options then make it promotion choice
+    if(isMouseInsideHorizontally && isMouseInsideVertically) 
+        promo= (((size_t)mousePos.x - Globals::leftPadding)/Globals::tileSize - 1) * knightProm;
 }
 
 void Interface::boardInteractionHandler()
-{
-    // check if mouse is clicked inside the board
+{   
+    if(board.getGameEndState(board.turn) == checkmate || board.getGameEndState(board.turn) == stalemate || board.emptyTurns >= 50)
+        return;
+    
+    //runSelf(false);
+
     bool isMouseInsideBoard =
         GetMousePosition().x > board.padding[left] && GetMousePosition().x < board.padding[right] &&
         GetMousePosition().y > board.padding[top] && GetMousePosition().y < board.padding[bottom];
@@ -172,20 +199,16 @@ void Interface::boardInteractionHandler()
         clickedOnCol_ = ((size_t)GetMousePosition().x-Globals::leftPadding)/Globals::tileSize; // this will give the column of the tile clicked
 
         size_t srcTile = 63-(clickedOnRow_ * 8 + clickedOnCol_);
+        if(Globals::player) srcTile = 63 - srcTile;
         currPieceType_ = board.piece.getPieceType(srcTile);
 
         char currPieceCase(currPieceType_);
-        if(Globals::player) currPieceCase = flipCase(currPieceCase);
 
         // if a piece is bieng clicked
         if(currPieceType_ != '0')
         {
             pieceSelected_ = true;
-
             SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
-
-            size_t currTurn = (currPieceType_>= 'a')?black : white; 
-
             // if a valid piece is clicked then insert its corrosponding legal moves into the bitboard
             if(getType(currPieceCase) == board.turn)
                 board.legalMoves.setVal(board.piece.getLegalMoves(currPieceType_, srcTile));
@@ -213,7 +236,7 @@ void Interface::boardInteractionHandler()
                 (float)Globals::tileSize, (float)Globals::tileSize
             };
             // draw an outline and highlight the square bieng clicked
-            DrawRectangleLinesEx(rec, 4, WHITE);
+            DrawRectangleLinesEx(rec, Globals::tileSize/20, WHITE);
         }
         Color temp = {255, 150, 84, 100};
         DrawRectangle
@@ -247,28 +270,37 @@ void Interface::boardInteractionHandler()
         size_t srcTile = 63-(clickedOnRow_ * 8 + clickedOnCol_);
         size_t destTile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
 
-        bool isMoveLegal = (board.legalMoves.getVal() & (1ULL << destTile));
-        
+        if(Globals::player)
+        {
+            srcTile = 63-srcTile;
+            destTile = 63-destTile;
+        }
+
+        bool isMoveLegal = (board.legalMoves.getVal() & (1ULL <<  destTile));
         if(isMoveLegal)
         {
-            std::string move = moveEncoder(srcTile, destTile, '0');
-            size_t moveType = board.makeMove(move);
-            
+            uint16_t promo{};
+            if(toupper(currPieceType_) == 'P' && (destTile < 8 || destTile > 55)) promotionHandler(promo);
+            size_t moveType = board.makeMove(moveEncoder(srcTile, destTile, promo));
             playSound(moveType);
         
             board.updateMatrixBoard();
             board.updateFENViamatrixBoard();
-            std::cout<<Globals::FENString<<"\n";
+            Globals::outFile.open("fen_log.txt", std::ios::app);
+            Globals::outFile<<Globals::FENString<<std::endl;
+            Globals::outFile.close();
         };
         board.legalMoves.setVal(0ULL);
         currPieceType_ = '0';
         pieceSelected_ = false;
         clickedOnRow_ = -1;
         clickedOnCol_ = -1;
-
         // testing for minimax
+        // std::cout<<engine.perft(board, 5, board.turn)<<"\n";
         uint64_t total{};
-        bestMove = engine.minimax(board, Globals::depth, INT_MIN, INT_MAX, board.turn, "", total).second;
+        uint16_t src{}, dest{};
+        //moveDecoder(src, dest, promo, engine.minimax(board, Globals::depth, INT_MIN, INT_MAX, board.turn, 0, total).second);
+        bestMove = (coordinate[63-src] + coordinate[63-dest]);
         nodesSearched = total;
     }
 }
@@ -277,8 +309,8 @@ void Interface::sidePanelInteractionHandler()
 {
     btnCopyFEN_.interactionHandler();
     btnStart_.interactionHandler();
-    btnPlayWhite_.interactionHandler();
-    btnPlayBlack_.interactionHandler();
+    btnFlipBoard_.interactionHandler();
+    btnResetBoard_.interactionHandler();
 }
 
 void Interface::interactionHandler()

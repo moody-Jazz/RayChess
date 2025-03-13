@@ -192,16 +192,25 @@ void playSound(size_t moveType)
     }
 }
 
-uint16_t moveEncoder(uint8_t srcTile, uint8_t destTile, char promo)
+uint16_t moveEncoder(uint16_t srcTile, uint16_t destTile, uint16_t promo)
 {
-    uint16_t res = srcTile;
-    res <<= 6;
+    uint16_t res(promo);
+    res |= (srcTile << 6);
     res |= destTile;
     return res;
 }
 
-void moveDecoder(uint8_t& srcTile, uint8_t& destTile, uint16_t move)
+void moveDecoder(uint16_t& srcTile, uint16_t& destTile, uint16_t& promo, uint16_t move)
 {
     destTile = move & 63;
     srcTile = (move & 4032) >> 6;
+    promo = (move & 28672);
+}
+
+void printAlgebricNotation(uint16_t& move, bool side)
+{
+    uint16_t src{}, dest{}, promo{};
+    moveDecoder(src, dest, promo, move);
+    std::cout<<coordinate[63-src] + coordinate[63-dest];
+    if(promo) std::cout<<asciiPieces[promo/knightProm + (side * 6)];
 }

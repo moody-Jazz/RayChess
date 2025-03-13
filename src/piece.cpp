@@ -6,19 +6,19 @@ Piece::Piece(const Piece& obj):
     enPassant(obj.enPassant)
 {
     for(int i{}; i<12; i++) pieceBitboards[i].setVal(obj.pieceBitboards[i].getVal());
-    castle[white][kingside]  = obj.castle[white][kingside];
-    castle[white][queenside] = obj.castle[white][queenside];
-    castle[black][kingside]  = obj.castle[black][kingside];
-    castle[black][queenside] = obj.castle[black][queenside];
-    check[white]        = obj.check[white];
-    check[black]        = obj.check[black];
-    kingPosition[white] = obj.kingPosition[white];
-    kingPosition[black] = obj.kingPosition[black];
-    bitboards_[white]   = obj.bitboards_[white];
-    bitboards_[black]   = obj.bitboards_[black];
-    bitboards_[both]    = obj.bitboards_[both];
-    unsafeTiles_[white] = obj.unsafeTiles_[white];
-    unsafeTiles_[black] = obj.unsafeTiles_[black];
+    castle[white][kingside]     = obj.castle[white][kingside];
+    castle[white][queenside]    = obj.castle[white][queenside];
+    castle[black][kingside]     = obj.castle[black][kingside];
+    castle[black][queenside]    = obj.castle[black][queenside];
+    check[white]                = obj.check[white];
+    check[black]                = obj.check[black];
+    kingPosition[white]         = obj.kingPosition[white];
+    kingPosition[black]         = obj.kingPosition[black];
+    bitboards_[white]           = obj.bitboards_[white];
+    bitboards_[black]           = obj.bitboards_[black];
+    bitboards_[both]            = obj.bitboards_[both];
+    unsafeTiles_[white]         = obj.unsafeTiles_[white];
+    unsafeTiles_[black]         = obj.unsafeTiles_[black];
 }
 
 /*  Below are all the functions which are used to generate possible moves for every type of piece
@@ -232,14 +232,22 @@ void Piece::setupInitialFlagsAndPositions()
 
 void Piece::updatePieceBitboards(char type, size_t source, size_t dest)
 {
-    // remove any captured piece
-    char captured = getPieceType(dest);
-    if(captured != '0')
-        pieceBitboards[charPieces.at(captured)].popBit(dest);
+    try
+    {
+        // remove any captured piece
+        char captured = getPieceType(dest);
+        if(captured != '0')
+            pieceBitboards[charPieces.at(captured)].popBit(dest);
 
-    // update moved piece bitboards
-    pieceBitboards[charPieces.at(type)].setBit(dest);
-    pieceBitboards[charPieces.at(type)].popBit(source);
+        // update moved piece bitboards
+        pieceBitboards[charPieces.at(type)].setBit(dest);
+        pieceBitboards[charPieces.at(type)].popBit(source);
+    }
+    catch(std::exception& e)
+    {
+        std::cerr<<"issue with updating piece bitboards\npiece type: "<<
+            type<<" "<<source<<" "<<dest<<"\n";
+    }
 }
 
 void Piece::updatePieceBitboards(size_t srcTile, size_t destTile)
@@ -267,7 +275,7 @@ bool Piece::isKingSafe(bool side) const
 char Piece::getPieceType(size_t source) const
 {
     for (int i = P; i <= k; i++)
-        if(((1ULL << source) & pieceBitboards[i].getVal())) return asciiPieces[i];
+        if((1ULL << source) & pieceBitboards[i].getVal()) return asciiPieces[i];
     
     return '0';
 }
@@ -374,6 +382,17 @@ uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
         default: break;
     }
     return res;
+}
+
+void Piece::promotePawn(uint16_t src, uint16_t dest, uint16_t promo)
+{
+    char type = getPieceType(dest);
+    bool side = getType(type);
+    char promoteTo = asciiPieces[promo/knightProm + (side * 6)];
+
+    // delete the lvl 1 crook to replace it with lvl 100 mafia
+    updatePieceBitboards(type, dest, dest);
+    updatePieceBitboards(promoteTo, 0, dest);
 }
 
 void Piece::updateUnsafeTiles()

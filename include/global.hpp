@@ -64,9 +64,10 @@ namespace Colors
 // Enums to organize constants
 enum { white, black, both };
 enum { regular, capture, castle, check, checkmate, stalemate };
-enum { P, N, B, R, Q, K, p, n, b, r, q, k };// used to iterate to all the pieces and acess a piece like 'P' for white pawn
+enum { P, N, B, R, Q, K, p, n, b, r, q, k };  // used to iterate to all the pieces and acess a piece like 'P' for white pawn
 enum { kingside, queenside };
 enum { left, top, right, bottom };
+enum { knightProm = 4096, bishopProm = 8192, rookProm = 12288, queenProm = 16384 };
 enum {
     a8, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
@@ -91,5 +92,6 @@ bool getType(char type);
 bool flipType(char type);
 char flipCase(char ch);
 void playSound(size_t moveType);
-uint16_t moveEncoder(uint8_t srcTile, uint8_t destTile, char promo);
-void moveDecoder(uint8_t& srcTile, uint8_t& destTile, uint16_t move);
+uint16_t moveEncoder(uint16_t srcTile, uint16_t destTile, uint16_t promo);
+void moveDecoder(uint16_t& srcTile, uint16_t& destTile, uint16_t& promo, uint16_t move);
+void printAlgebricNotation(uint16_t& move, bool side);

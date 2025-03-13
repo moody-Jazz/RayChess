@@ -114,11 +114,11 @@ int Engine::evaluate(BitBoard* piece){
 
         score += (piececpy.getSetBitCount() * material_score[i]);
 
-        uint8_t size = piececpy.getSetBitCount();
-        uint8_t piece_position[size];
+        uint16_t size = piececpy.getSetBitCount();
+        uint16_t piece_position[size];
         piececpy.getSetBitIndices(piece_position, size);
 
-        for(uint8_t itr{}; itr<size; itr++){
+        for(uint16_t itr{}; itr<size; itr++){
             piece_position[itr] = 63 - piece_position[itr];
             switch (i)
             {
@@ -144,17 +144,16 @@ int Engine::evaluate(BitBoard* piece){
 uint64_t Engine::perft(Board& board, int depth, bool turn) {
     if (depth == 0) return 1;
     uint64_t nodes = 0;
-    uint8_t size{};
+    uint16_t size{};
     uint16_t moveList[218];
     board.getMoveList(moveList, size, turn);
-    for (uint8_t i{}; i<size; i++) {
+    for (uint16_t i{}; i<size; i++) {
         Board boardCpy(board);
         boardCpy.makeMove(moveList[i]);
         nodes += perft(boardCpy, depth - 1, !turn);
     }
     return nodes;
 }
-
 
 std::pair<int, uint16_t> Engine::minimax(Board& board, size_t depth,int alpha, int beta, bool turn, uint16_t initialMove, uint64_t& total)
 {
@@ -164,17 +163,17 @@ std::pair<int, uint16_t> Engine::minimax(Board& board, size_t depth,int alpha, i
     std::pair<int, uint16_t> maxEval;
     maxEval.first = turn ? INT_MAX: INT_MIN;
     
-    uint8_t size{};
+    uint16_t size{};
     uint16_t moveList[218];
     board.getMoveList(moveList, size, turn);
 
-    if(board.emptyTurns_ >= 50) return {0, initialMove};
+    if(board.emptyTurns >= 50) return {0, initialMove};
     
     if(size == 0){
         if (board.piece.isKingSafe(turn)) return {0, initialMove};
         return turn? std::make_pair(1000000+depth, initialMove) : std::make_pair(-1000000-depth, initialMove);
     }
-    for(uint8_t i{}; i<size; i++)
+    for(uint16_t i{}; i<size; i++)
     {
         if(depth == Globals::depth) initialMove = moveList[i];
         Board boardCpy(board);

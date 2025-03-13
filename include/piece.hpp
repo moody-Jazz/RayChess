@@ -130,6 +130,7 @@ public:
     void updatePieceBitboards(char type, size_t source, size_t dest);       // updates given piece bitboard
     void updatePieceBitboards(size_t srcTile, size_t destTile);
     void updateCombinedBitboards();
+    void promotePawn(uint16_t src, uint16_t dest, uint16_t promo);
     void updateUnsafeTiles();                                // update the unsafe tile bitboard for both players after each turn
 
 private:

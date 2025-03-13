@@ -32,9 +32,9 @@ bool BitBoard::getBit(size_t square) const
     return (val_) & (1ULL << square);
 }
 
-uint8_t BitBoard::getSetBitCount() const
+uint16_t BitBoard::getSetBitCount() const
 {
-    uint8_t count{};
+    uint16_t count{};
     uint64_t bitboard = val_;
     // keep reseting least significatn 1st bit until bitboard is 0
     while(bitboard)
@@ -75,11 +75,11 @@ BitBoard BitBoard::operator = (const BitBoard& obj)
     return *this;
 }
 
-void BitBoard::getSetBitIndices(uint8_t* arr, uint8_t& size) const
+void BitBoard::getSetBitIndices(uint16_t* arr, uint16_t& size) const
 {
     // insert the index of all the set bit into vec
     BitBoard temp(getVal());
-    uint8_t itr{};
+    uint16_t itr{};
     while(temp.getVal() && itr<size){
         size_t lsbIndex = temp.getLSBIndex();
         arr[itr++] = lsbIndex;
