@@ -8,23 +8,24 @@
 
 namespace Globals 
 {   extern bool player;                  // Stores the color which player has chosen
+    extern bool engineToggleOn;          // stores whether the player want to play against engine or not
     extern size_t depth;                 // stores the depth of search tree
-    extern size_t tileSize;              // Dimension of single tile
-    extern float capturedSize;           // Stores the size of textures of captured pieces
+    extern size_t tileSize;              // Size of single tile, tiles is square so width and hight is same
+    extern float capturedSize;           // Stores the size of captured piece texture
     extern size_t totalPiece;            // Stores the number of total Pieces which are still on the board
-    extern size_t totalCaptured;         // Stores the number of total pieces that have been captured
     extern size_t topPadding;            // Stores the height of top File strip
     extern size_t leftPadding;           // Stores the width of left Rank strip
-    extern size_t btnHeight;
-    extern size_t btnWidth;
+    extern size_t btnHeight;             
+    extern size_t btnWidth;              
     extern size_t boardSize;             // Stores the size of chessboard
     extern size_t windowWidth;           // Stores the width of the game window
     extern size_t windowHeight;          // Stores the height of the game window
 
     extern std::string FENString;        // Stores the state of the board in FEN notation
-    extern std::ofstream outFile;
+    extern std::ofstream outFile;        // TXT file to store state of board after each turn
+    extern std::string testPosition[5];  // Array to store positions for testing purpose
 
-    extern GameSound sound;              // Stores all the sound like capture, move etc        
+    extern GameSound sound;              // Stores all the sound like capture, castle etc        
 
     extern std::string pieceDir[12];     // Stores the path of all the pieces in image folder
     extern Texture2D pieceTextures[12];  // Stores all the texture in order of "PNBRQKpnbrqk";
@@ -35,15 +36,15 @@ namespace Globals
     extern const uint64_t notGHFile;     // Stores a binary representation where A file is set to 0
     extern const uint64_t notABFile;     // Stores a binary representation where A file is set to 0
 
-    extern size_t kingsInitPos[2];
-    extern size_t queenInitPos[2];
-    extern size_t rookInitPos[2][2];
+    extern size_t kingsInitPos[2];       // Stores initial position of black and white king
+    extern size_t queenInitPos[2];       // Stores initial position of black and white queen
+    extern size_t rookInitPos[2][2];     // Stores initial position of all the rooks
 
-    extern size_t castleRookTargetTiles[2][2];
-    extern size_t castleKingTargetTile[2][2];
+    extern size_t castleRookTargetTiles[2][2];  // Stores the tiles on which rook moves while casteling
+    extern size_t castleKingTargetTile[2][2];   // stores the tiles on which king moves while casteling
 
-    extern uint64_t castleBitmasks[2][3];// stores the absolute bitmask used to check castle availability
-    extern uint64_t occupancyBitmask[2];
+    extern uint64_t castleBitmasks[2][3];       // stores the absolute bitmask used to check castle availability    
+    extern uint64_t occupancyBitmask[2];        // Stores the bitmask where tiles between king and rook set to 1
 }
 
 namespace Colors
@@ -79,19 +80,18 @@ enum {
     a1, b1, c1, d1, e1, f1, g1, h1, noSq
 };
 
-extern const std::string asciiPieces;// "PNBRQKpnbrqk" stores this string 
-extern const std::unordered_map<char, int> charPieces; // Map piece character to its corrosponding enum 
-
+extern const std::string asciiPieces;                               // "PNBRQKpnbrqk" stores this string 
+extern const std::unordered_map<char, int> charPieces;              // Map piece character to its corrosponding enum 
 extern const std::string coordinate[64];
-
-extern const std::unordered_map<std::string, int> coordsToAbsolute; // map the coordinates to thier absolute value
+extern const std::unordered_map<std::string, int> coordsToAbsolute;     // map the coordinates to thier absolute value
 
 // Function declarations
-void loadPieceTextures();
-bool getType(char type);
-bool flipType(char type);
-char flipCase(char ch);
-void playSound(size_t moveType);
-uint16_t moveEncoder(uint16_t srcTile, uint16_t destTile, uint16_t promo);
-void moveDecoder(uint16_t& srcTile, uint16_t& destTile, uint16_t& promo, uint16_t move);
-void printAlgebricNotation(uint16_t& move, bool side);
+void loadPieceTextures();               // loads the texture of pieces into the VRAM
+bool getType(char type);                // Returns the color type of the piece
+bool flipType(char type);               // flips the color type of piece
+char flipCase(char ch);                 // flips the piece to its counter type
+void playSound(size_t moveType);        // plays sound based on the movetype
+uint16_t moveEncoder(uint16_t srcTile, uint16_t destTile, uint16_t promo);  // encodes move into 16bit positive integer
+void moveDecoder(uint16_t& srcTile, uint16_t& destTile, uint16_t& promo, uint16_t move); // extract src, destination and promotion from encoded move
+std::string getAlgebricNotation(uint16_t& move, bool side); // returns the algebric notation of the encoeded move
+void writeInFile(std::string FEN);      // this function writes teh fen value of current position in a text file

@@ -284,7 +284,7 @@ uint16_t Board::printMoveList(bool side) const
     getMoveList(moveList, size, side);
     for(uint16_t i{}; i<size; i++)
     {
-        printAlgebricNotation(moveList[i], side);
+        std::cout<<getAlgebricNotation(moveList[i], side);
         std::cout<<" ";
     }
     std::cout<<"\n";

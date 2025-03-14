@@ -4,8 +4,9 @@
 namespace Globals 
 {
     bool player             = white;
+    bool engineToggleOn     = true;
     size_t depth            = 3;
-    size_t tileSize         = 110;
+    size_t tileSize         = 105;
     float capturedSize      = tileSize/2.5;
     size_t totalPiece       = 32;
     size_t totalCaptured    = 0;
@@ -19,6 +20,15 @@ namespace Globals
 
     std::string FENString   = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     std::ofstream outFile("fen_log.txt", std::ios::app);
+
+    std::string testPosition[] = 
+    {
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 1 2",
+        "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 1 3",
+        "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+        "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
+        "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 "
+    };
 
     GameSound sound;
    
@@ -207,10 +217,28 @@ void moveDecoder(uint16_t& srcTile, uint16_t& destTile, uint16_t& promo, uint16_
     promo = (move & 28672);
 }
 
-void printAlgebricNotation(uint16_t& move, bool side)
+std::string getAlgebricNotation(uint16_t& move, bool side)
 {
     uint16_t src{}, dest{}, promo{};
+    std::string res = "";
     moveDecoder(src, dest, promo, move);
-    std::cout<<coordinate[63-src] + coordinate[63-dest];
-    if(promo) std::cout<<asciiPieces[promo/knightProm + (side * 6)];
+    res += coordinate[63-src];
+    res +=  coordinate[63-dest];
+    if(promo) res += asciiPieces[promo/knightProm + (side * 6)];
+    return res;
+}
+
+void writeInFile(std::string FEN)
+{
+    try
+    {
+        Globals::outFile.open("fen_log.txt", std::ios::app);
+        Globals::outFile<<Globals::FENString<<std::endl;
+        Globals::outFile.close();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "Couldn't open the file\n";
+        std::cerr <<"Exception Occured: "<< e.what() << '\n';
+    }
 }

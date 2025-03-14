@@ -3,27 +3,27 @@
 #include <vector>
 
 /*
-♙ =   100   = ♙
-♘ =   300   = ♙ * 3
-♗ =   350   = ♙ * 3 + ♙ * 0.5
-♖ =   500   = ♙ * 5
-♕ =   1000  = ♙ * 10
-♔ =   10000 = ♙ * 100
+    ♙ =   100   = ♙
+    ♘ =   300   = ♙ * 3
+    ♗ =   350   = ♙ * 3 + ♙ * 0.5
+    ♖ =   500   = ♙ * 5
+    ♕ =   1000  = ♙ * 10
+    ♔ =   10000 = ♙ * 100
 */
 
 const int material_score[12] = {
-    100,      // white pawn score
-    300,      // white knight scrore
-    350,      // white bishop score
-    500,      // white rook score
-    1000,      // white queen score
+    100,        // white pawn score
+    300,        // white knight scrore
+    350,        // white bishop score
+    500,        // white rook score
+    1000,       // white queen score
     10000,      // white king score
-    -100,      // black pawn score
-    -300,      // black knight scrore
-    -350,      // black bishop score
-    -500,      // black rook score
+    -100,       // black pawn score
+    -300,       // black knight scrore
+    -350,       // black bishop score
+    -500,       // black rook score
     -1000,      // black queen score
-    -10000,      // black king score
+    -10000,     // black king score
 };
 
 // pawn positional score
@@ -155,6 +155,24 @@ uint64_t Engine::perft(Board& board, int depth, bool turn) {
     return nodes;
 }
 
+void Engine::perfomenceCheck(Board& board)
+{
+    uint16_t d = Globals::depth;
+    while (d > 0) {
+        // Record start time
+        auto start_time = std::chrono::high_resolution_clock::now();
+        
+        // Run perft
+        std::cout<<perft(board, d, board.turn)<<" terminal nodes, at depth: "<< d<<" .Time taken in: ";
+        // Record end time and calculate duration
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        std::cout<<duration.count()<<"ms\n";
+
+        d--;
+    }
+}
+
 std::pair<int, uint16_t> Engine::minimax(Board& board, size_t depth,int alpha, int beta, bool turn, uint16_t initialMove, uint64_t& total)
 {
     total++;
@@ -173,7 +191,7 @@ std::pair<int, uint16_t> Engine::minimax(Board& board, size_t depth,int alpha, i
         if (board.piece.isKingSafe(turn)) return {0, initialMove};
         return turn? std::make_pair(1000000+depth, initialMove) : std::make_pair(-1000000-depth, initialMove);
     }
-    for(uint16_t i{}; i<size; i++)
+    for(uint16_t i{}; i<size; i++) // execute all the possible moves to see which move leads to better result
     {
         if(depth == Globals::depth) initialMove = moveList[i];
         Board boardCpy(board);

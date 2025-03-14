@@ -19,121 +19,149 @@ Interface::Interface(Board& board, Engine& engine):
     clickedOnCol_(-1),
     pieceSelected_(false)
 {
-    Rectangle copyFENBase
-    {
+    Rectangle copyFENBase{
         static_cast<float>(sidePanelX_ + leftPadding_), 
-        static_cast<float>((Globals::tileSize*6 + topPadding_) - Globals::btnHeight),
+        static_cast<float>((Globals::tileSize*6.1 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
-    btnCopyFEN_ = Button(copyFENBase,  Colors::btnBase, Colors::btnBorder, "Copy FEN", Globals::tileSize/4, Colors::labelColor, [&](){});
-    Rectangle startBase 
-    {
+    btnCopyFEN_ = 
+        Button(
+            copyFENBase,  Colors::btnBase, Colors::btnBorder, "Copy FEN",
+            Globals::tileSize/4, Colors::labelColor, [&](){}
+        );
+    
+    Rectangle engineToggleBase {
         static_cast<float>(sidePanelX_ + leftPadding_*3 + Globals::btnWidth),
-        static_cast<float>((Globals::tileSize*6 + topPadding_) - Globals::btnHeight),
+        static_cast<float>((Globals::tileSize*6.1 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
-    btnStart_ = Button(startBase,  Colors::btnBase, Colors::btnBorder, "Start Game", Globals::tileSize/4, Colors::labelColor, [&](){});
+    btnEngineToggle_ =
+        Button(
+            engineToggleBase,  Colors::btnBase, Colors::btnBorder, "Toggle Engine", 
+            Globals::tileSize/4, Colors::labelColor, 
+            [&](){
+                Globals::engineToggleOn = !Globals::engineToggleOn;
+            }
+        );
 
-    // Create the play white button
-    Rectangle flipBoard
-    {
+    Rectangle flipBoard{
         static_cast<float>(sidePanelX_ + leftPadding_), 
         static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
-    btnFlipBoard_ = Button(flipBoard, WHITE, BLACK, "Flip Board", Globals::tileSize/4, BLACK, [&]()
-        {
-            Globals::player = !Globals::player;
-        }
-    );
+    btnFlipBoard_ = 
+        Button(
+            flipBoard, WHITE, BLACK, "Flip Board", Globals::tileSize/4, BLACK, 
+            [&](){
+                Globals::player = !Globals::player;
+            }
+        );
 
-    // Create the play black button
-    Rectangle resetBoard
-    {
+    Rectangle resetBoard{
         static_cast<float>(sidePanelX_ + leftPadding_*3 + Globals::btnWidth),
         static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
         static_cast<float>(Globals::btnWidth), 
         static_cast<float>(Globals::btnHeight)
     };
-    btnResetBoard_ = Button(resetBoard, BLACK, WHITE, "Reset Board", Globals::tileSize/4, WHITE, [&]()
-        {
-            board.setupInitialBoardState();
-            Globals::outFile.open("fen_log.txt", std::ofstream::trunc);
-            Globals::outFile<<Globals::FENString<<std::endl;
-            Globals::outFile.close();
-        }
-    );
+    btnResetBoard_ = 
+        Button(
+            resetBoard, BLACK, WHITE, "Reset Board", Globals::tileSize/4, WHITE,
+            [&](){
+                board.turn = white;
+                nodesSearched = 0;
+                bestMove = "Null";
+                board.setupInitialBoardState();
+                Globals::outFile.open("fen_log.txt", std::ofstream::trunc);
+                Globals::outFile<<Globals::FENString<<std::endl;
+                Globals::outFile.close();
+            }
+        );
 }
 
 void Interface::drawSidePanel() const
 {
     size_t posX = sidePanelX_ + leftPadding_;
-
+    
     // Draw the logo
     DrawText(logo_.c_str(), posX, Globals::topPadding, Globals::tileSize, RAYWHITE);
-
-    // Draw the FEN string
+    
+    // display the FEN string after splitting it into two lines
     std::string str1 = Globals::FENString.substr(0, Globals::FENString.length()/2);
     std::string str2 = Globals::FENString.substr(Globals::FENString.length()/2);
     DrawText(str1.c_str(), posX, Globals::tileSize*2.5, Globals::tileSize/5, RAYWHITE);
     DrawText(str2.c_str(), posX, Globals::tileSize*2.5+Globals::tileSize/4, Globals::tileSize/5, RAYWHITE);
+    
+    // display the info like current best mvoes, total position searched etc
+    std::string engineToggle = "Engine is currently";
+    engineToggle += (Globals::engineToggleOn)? " On": " Off"; 
+    DrawText(engineToggle.c_str(), sidePanelX_ + leftPadding_, Globals::tileSize*3.3, Globals::tileSize/5, RAYWHITE);
+    
+    std::string depthMessage = "Current Global depth : " + std::to_string(Globals::depth);
+    DrawText(depthMessage.c_str(), sidePanelX_ + leftPadding_, Globals::tileSize*3.8, Globals::tileSize/5, RAYWHITE);
 
+    std::string bestMoveStr = "Current best move : ";
+    bestMoveStr += bestMove;
+    DrawText(bestMoveStr.c_str(), posX, Globals::tileSize*4.3, Globals::tileSize/5, RAYWHITE);
+
+    std::string totalNodes = "Total positions Searched : " + std::to_string(nodesSearched);
+    DrawText(totalNodes.c_str(), posX, Globals::tileSize*4.8, Globals::tileSize/5, RAYWHITE);
     
     std::string totalMoves = "Total moves available for ";
     totalMoves += (board.turn)? "black : ": "white : ";
-    totalMoves += std::to_string(board.findTotalLegalMoves(board.turn));
-
-    std::string depthMessage = "Current Global depth : " + std::to_string(Globals::depth);
-    std::string bestMoveStr = "Current best move : ";
-    bestMoveStr += bestMove;
-    std::string totalNodes = "Total positions Searched : " + std::to_string(nodesSearched);
-    
-    DrawText(depthMessage.c_str(), sidePanelX_ + leftPadding_, Globals::tileSize*3.5, Globals::tileSize/5, RAYWHITE);
-    DrawText(totalMoves.c_str(), sidePanelX_ + leftPadding_, Globals::tileSize*5, Globals::tileSize/5, RAYWHITE);
-  
-    DrawText(bestMoveStr.c_str(), posX, Globals::tileSize*4, Globals::tileSize/5, RAYWHITE);
-    DrawText(totalNodes.c_str(), posX, Globals::tileSize*4.5, Globals::tileSize/5, RAYWHITE);
+    totalMoves += std::to_string(board.findTotalLegalMoves(board.turn));    
+    DrawText(totalMoves.c_str(), sidePanelX_ + leftPadding_, Globals::tileSize*5.3, Globals::tileSize/5, RAYWHITE);
 
     // Draw all the button
     btnCopyFEN_.draw();
-    btnStart_.draw();
+    btnEngineToggle_.draw();
     btnFlipBoard_.draw();
     btnResetBoard_.draw();
 }
 
+void Interface::reset()
+{
+    board.legalMoves.setVal(0ULL);
+    currPieceType_ = '0';
+    pieceSelected_ = false;
+    clickedOnRow_ = -1;
+    clickedOnCol_ = -1;
+}
+
 void Interface::runSelf(bool mode)
 {
+    // this is here to add delay between each automatic move
     std::this_thread::sleep_for(std::chrono::nanoseconds(0));
     std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(0));
 
     uint16_t temp[218];
     uint16_t size{};
-    board.getMoveList(temp, size, board.turn);
-    Globals::outFile.open("fen_log.txt", std::ios::app);
-    Globals::outFile<<Globals::FENString<<std::endl;
-    Globals::outFile<<(int)size<<std::endl;
-    Globals::outFile.close();
-    
     uint64_t total{};
+
+    board.getMoveList(temp, size, board.turn);
+
+    // store the resultent board state(in FEN), and total moves, after making move for testing purpose
+    writeInFile(Globals::FENString);
+    
     char moveType;
-    if(mode){
+    if(mode) // if this function is invoked for making calculated moves using the engine
+    { 
         uint16_t bestMove = engine.minimax(board, Globals::depth, INT_MIN, INT_MAX, board.turn, 0, total).second;
         uint16_t src, dest;
         uint16_t promo{};
         moveDecoder(src, dest, promo, bestMove);
-        this->bestMove = coordinate[src] + coordinate[dest];
+        this->bestMove = getAlgebricNotation(bestMove, board.turn);
         moveType = board.makeMove(bestMove);
         nodesSearched = total;
     }
+    // if this function is invoked for making random moves 
     else  moveType = board.makeMove(temp[rand() % size]);
-    playSound(moveType);
 
+    playSound(moveType);
     board.updateMatrixBoard();
     board.updateFENViamatrixBoard();
-
 }
 
 void Interface::promotionHandler(uint16_t& promo)
@@ -184,24 +212,43 @@ void Interface::promotionHandler(uint16_t& promo)
 
 void Interface::boardInteractionHandler()
 {   
+    // if the game has been ended in a draw or or checkmate return
     if(board.getGameEndState(board.turn) == checkmate || board.getGameEndState(board.turn) == stalemate || board.emptyTurns >= 50)
         return;
     
+    // if this is engine's turn find the best move using engine and execute it on board
+    if(Globals::engineToggleOn && board.turn != Globals::player) 
+    {
+        uint64_t total{};
+        uint16_t src{}, dest{}, promo{};
+        uint16_t bestMove = engine.minimax(board, Globals::depth, INT_MIN, INT_MAX, board.turn, 0, total).second;
+        playSound(board.makeMove(bestMove));
+        board.updateMatrixBoard();
+        board.updateFENViamatrixBoard();
+        writeInFile(Globals::FENString);
+        this->bestMove = getAlgebricNotation(bestMove, board.turn);
+        nodesSearched = total;
+        reset();
+        return;
+    }
+
     //runSelf(false);
 
     bool isMouseInsideBoard =
         GetMousePosition().x > board.padding[left] && GetMousePosition().x < board.padding[right] &&
         GetMousePosition().y > board.padding[top] && GetMousePosition().y < board.padding[bottom];
 
-    if(isMouseInsideBoard && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    if(isMouseInsideBoard && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) // if mouse is clicked
     {
-        clickedOnRow_ = ((size_t)GetMousePosition().y-Globals::topPadding)/Globals::tileSize; // this will give the row of the tile clicked
-        clickedOnCol_ = ((size_t)GetMousePosition().x-Globals::leftPadding)/Globals::tileSize; // this will give the column of the tile clicked
+        // this will give the row of the tile clicked
+        clickedOnRow_ = ((size_t)GetMousePosition().y-Globals::topPadding)/Globals::tileSize; 
+        // this will give the column of the tile clicked
+        clickedOnCol_ = ((size_t)GetMousePosition().x-Globals::leftPadding)/Globals::tileSize; 
 
         size_t srcTile = 63-(clickedOnRow_ * 8 + clickedOnCol_);
-        if(Globals::player) srcTile = 63 - srcTile;
-        currPieceType_ = board.piece.getPieceType(srcTile);
+        if(Globals::player) srcTile = 63 - srcTile; // if player is black invert the tile value as the board is inverted
 
+        currPieceType_ = board.piece.getPieceType(srcTile);
         char currPieceCase(currPieceType_);
 
         // if a piece is bieng clicked
@@ -227,7 +274,7 @@ void Interface::boardInteractionHandler()
             return;
         }
         
-        if(isMouseInsideBoard) // Outline the tiles on which piece is bieng dragged to
+        if(isMouseInsideBoard) // Outline the tiles on which piece is bieng dragged on
         {    
             Rectangle rec = 
             {
@@ -253,7 +300,7 @@ void Interface::boardInteractionHandler()
         );
     }
 
-    if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && pieceSelected_)
+    if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && pieceSelected_) // if a piece was released
     {
         SetMouseCursor(MOUSE_CURSOR_ARROW);
         size_t releasedOnTileCol = (GetMousePosition().x-Globals::leftPadding)/Globals::tileSize;
@@ -265,19 +312,18 @@ void Interface::boardInteractionHandler()
 
         /*  
         subtracting 63 to get source and destination tile because in and array we start from left to right
-        but in binary we start from right to left hence ith position in array will be 63-i position in binary/bitboard
-        */
+        but in binary we start from right to left hence ith position in array will be 63-i position in binary/bitboard */
         size_t srcTile = 63-(clickedOnRow_ * 8 + clickedOnCol_);
         size_t destTile = 63-(releasedOnTileRow * 8 + releasedOnTileCol);
 
-        if(Globals::player)
+        if(Globals::player) // if player is black invert the tile values to make changes in bitboards
         {
             srcTile = 63-srcTile;
             destTile = 63-destTile;
         }
 
-        bool isMoveLegal = (board.legalMoves.getVal() & (1ULL <<  destTile));
-        if(isMoveLegal)
+        bool isMoveLegal = (board.legalMoves.getVal() & (1ULL << destTile));
+        if(isMoveLegal) // if piece was released on legal tile
         {
             uint16_t promo{};
             if(toupper(currPieceType_) == 'P' && (destTile < 8 || destTile > 55)) promotionHandler(promo);
@@ -286,29 +332,17 @@ void Interface::boardInteractionHandler()
         
             board.updateMatrixBoard();
             board.updateFENViamatrixBoard();
-            Globals::outFile.open("fen_log.txt", std::ios::app);
-            Globals::outFile<<Globals::FENString<<std::endl;
-            Globals::outFile.close();
+            writeInFile(Globals::FENString);
         };
-        board.legalMoves.setVal(0ULL);
-        currPieceType_ = '0';
-        pieceSelected_ = false;
-        clickedOnRow_ = -1;
-        clickedOnCol_ = -1;
-        // testing for minimax
-        // std::cout<<engine.perft(board, 5, board.turn)<<"\n";
-        uint64_t total{};
-        uint16_t src{}, dest{};
-        //moveDecoder(src, dest, promo, engine.minimax(board, Globals::depth, INT_MIN, INT_MAX, board.turn, 0, total).second);
-        bestMove = (coordinate[63-src] + coordinate[63-dest]);
-        nodesSearched = total;
+        reset();
+        board.drawBoardAndPieces();
     }
 }
 
 void Interface::sidePanelInteractionHandler()
 {
     btnCopyFEN_.interactionHandler();
-    btnStart_.interactionHandler();
+    btnEngineToggle_.interactionHandler();
     btnFlipBoard_.interactionHandler();
     btnResetBoard_.interactionHandler();
 }
