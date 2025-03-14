@@ -17,6 +17,7 @@ namespace Globals
     size_t boardSize        = tileSize * 8;
     size_t windowWidth      = boardSize * 1.9;
     size_t windowHeight     = boardSize + topPadding * 2;
+    Image icon              = LoadImage("images/icon.png");
 
     std::string FENString   = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     std::ofstream outFile("fen_log.txt", std::ios::app);

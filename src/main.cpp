@@ -4,6 +4,7 @@
 int main()
 {
     InitWindow(Globals::windowWidth, Globals::windowHeight, "Ray Chess");
+    SetWindowIcon(Globals::icon);
     SetTargetFPS(60);
     loadPieceTextures();
     Board board;
@@ -20,4 +21,5 @@ int main()
         EndDrawing();
     }
     CloseWindow();
+    UnloadImage(Globals::icon);
 }

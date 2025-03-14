@@ -20,6 +20,7 @@ namespace Globals
     extern size_t boardSize;             // Stores the size of chessboard
     extern size_t windowWidth;           // Stores the width of the game window
     extern size_t windowHeight;          // Stores the height of the game window
+    extern Image icon;                   // icons for the application
 
     extern std::string FENString;        // Stores the state of the board in FEN notation
     extern std::ofstream outFile;        // TXT file to store state of board after each turn
