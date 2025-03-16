@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include <iostream>
 #include <vector>
+#include <climits>
 
 /*
     ♙ =   100   = ♙

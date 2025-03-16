@@ -2,6 +2,7 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <climits>
 
 Interface::Interface(Board& board, Engine& engine):
     board(board),
