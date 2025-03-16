@@ -16,6 +16,7 @@ public:
     // Utility Functions
     void drawSidePanel() const;             // Draws the panel on the right side containing all the buttons and texts
     void reset();                           // Resets the variable like currPieceType, clickedOnRow, and piece selected
+    void setUIparams();                     // set values of paramteres required to display ui at correct position
     void runSelf(bool mode);                // Provides an option for the engine to play automatically with itself
     void promotionHandler(uint16_t& promo); // this funciton proveds the options to choose which piece to promote to
     void boardInteractionHandler();         // handles all the interaction related to the chess board

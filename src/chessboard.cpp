@@ -291,6 +291,14 @@ uint16_t Board::printMoveList(bool side) const
     return size;
 }
 
+void Board::setUIparams()
+{
+    padding[left]   = Globals::leftPadding;
+    padding[right]  = Globals::tileSize * 8 + Globals::leftPadding;
+    padding[top]    = Globals::topPadding;
+    padding[bottom] = Globals::tileSize * 8 + Globals::topPadding;
+}
+
 void Board::setupInitialBoardState()
 {
     emptyTurns     = 0;
@@ -520,12 +528,11 @@ size_t Board::makeMove(uint16_t move)
             moveType = castle;
         }
 
-    piece.kingPosition[side] = destTile; // Update global king position
-    // Disable castling rights
-    piece.castle[side][kingside] = false;
-    piece.castle[side][queenside] = false;
-}
-
+        piece.kingPosition[side] = destTile; // Update global king position
+        // Disable castling rights
+        piece.castle[side][kingside] = false;
+        piece.castle[side][queenside] = false;
+    }
 
     // logic to update the casteling states if any rook is moved or captured
     if(toupper(movedType) == 'R' || toupper(capturedType) == 'R')
@@ -551,7 +558,6 @@ size_t Board::makeMove(uint16_t move)
     if(capturedType != '0') capturedPieceString += capturedType;
 
     piece.updatePieceBitboards(movedType, srcTile, destTile);
-
     // handle pawn promotion
     if(promo) piece.promotePawn(srcTile, destTile, promo);
    

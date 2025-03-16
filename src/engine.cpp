@@ -155,21 +155,21 @@ uint64_t Engine::perft(Board& board, int depth, bool turn) {
     return nodes;
 }
 
-void Engine::perfomenceCheck(Board& board)
+void Engine::perfomenceCheck(Board& board, uint16_t depth)
 {
-    uint16_t d = Globals::depth;
-    while (d > 0) {
+    uint16_t itr = 1;
+    while (itr <= depth) {
         // Record start time
         auto start_time = std::chrono::high_resolution_clock::now();
         
         // Run perft
-        std::cout<<perft(board, d, board.turn)<<" terminal nodes, at depth: "<< d<<" .Time taken in: ";
+        std::cout<<perft(board, itr, board.turn)<<" terminal nodes, at depth: "<< itr<<" .Time taken in: ";
         // Record end time and calculate duration
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         std::cout<<duration.count()<<"ms\n";
 
-        d--;
+        itr++;;
     }
 }
 

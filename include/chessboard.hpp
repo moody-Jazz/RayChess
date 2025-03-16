@@ -30,6 +30,7 @@ class Board
     uint16_t printMoveList(bool side) const;       // prints Move list of the pieces of a side
 
     // Mutator Functions
+    void setUIparams();                          // set value of the padding 
     void setupInitialBoardState();               // Setup all the flags and varaibles to their initial state also used to reset the board
     void flipTurn();                             // Flips turn after every move
     void copyPosition(std::string& FEN);         // copies a position using FEN string

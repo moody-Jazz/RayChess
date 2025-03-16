@@ -130,6 +130,44 @@ void Interface::reset()
     clickedOnCol_ = -1;
 }
 
+void Interface::setUIparams()
+{
+    resizeWindow();
+    sidePanelX_     = Globals::boardSize + Globals::leftPadding*2;
+    leftPadding_    = Globals::leftPadding;
+    topPadding_     = Globals::topPadding;
+    Rectangle copyFENBase{
+        static_cast<float>(sidePanelX_ + leftPadding_), 
+        static_cast<float>((Globals::tileSize*6.1 + topPadding_) - Globals::btnHeight),
+        static_cast<float>(Globals::btnWidth), 
+        static_cast<float>(Globals::btnHeight)
+    };
+    Rectangle engineToggleBase {
+        static_cast<float>(sidePanelX_ + leftPadding_*3 + Globals::btnWidth),
+        static_cast<float>((Globals::tileSize*6.1 + topPadding_) - Globals::btnHeight),
+        static_cast<float>(Globals::btnWidth), 
+        static_cast<float>(Globals::btnHeight)
+    };
+    Rectangle flipBase{
+        static_cast<float>(sidePanelX_ + leftPadding_), 
+        static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
+        static_cast<float>(Globals::btnWidth), 
+        static_cast<float>(Globals::btnHeight)
+    };
+    Rectangle resetBase{
+        static_cast<float>(sidePanelX_ + leftPadding_*3 + Globals::btnWidth),
+        static_cast<float>((Globals::tileSize*7 + topPadding_) - Globals::btnHeight),
+        static_cast<float>(Globals::btnWidth), 
+        static_cast<float>(Globals::btnHeight)
+    };
+
+    btnCopyFEN_.setUIparams(copyFENBase, Colors::btnBase, Colors::btnBorder, "Copy FEN", Globals::tileSize/4, Colors::labelColor);
+    btnEngineToggle_.setUIparams(engineToggleBase, Colors::btnBase, Colors::btnBorder, "Toggle Engine", Globals::tileSize/4, Colors::labelColor);
+    btnFlipBoard_.setUIparams(flipBase, WHITE, Colors::btnBorder, "Flip Board", Globals::tileSize/4, BLACK);
+    btnResetBoard_.setUIparams(resetBase, BLACK, Colors::btnBorder, "Reset Board", Globals::tileSize/4, Colors::labelColor);
+    board.setUIparams();
+}
+
 void Interface::runSelf(bool mode)
 {
     // this is here to add delay between each automatic move
@@ -333,7 +371,7 @@ void Interface::boardInteractionHandler()
             board.updateMatrixBoard();
             board.updateFENViamatrixBoard();
             writeInFile(Globals::FENString);
-        };
+        }
         reset();
         board.drawBoardAndPieces();
     }

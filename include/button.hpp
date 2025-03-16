@@ -20,6 +20,11 @@ public:
 
     // Interacting Functions
     void interactionHandler();          // What to do when user interact with button 
+    void setUIparams(
+        Rectangle base, Color baseColor, Color borderColor,
+        std::string label, size_t labelHeight,
+        Color labelColor
+    );
 
 private:
     Rectangle base_;

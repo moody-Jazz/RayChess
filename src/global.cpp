@@ -1,22 +1,23 @@
 #include "global.hpp"
 #include "iostream"
 
+
 namespace Globals 
 {
     bool player             = white;
     bool engineToggleOn     = true;
     size_t depth            = 3;
-    size_t tileSize         = 105;
-    float capturedSize      = tileSize/2.5;
-    size_t totalPiece       = 32;
+    size_t tileSize         = 0;
+    float capturedSize      = 0;
+    size_t totalPiece       = 0;
     size_t totalCaptured    = 0;
-    size_t topPadding       = tileSize/3;
-    size_t leftPadding      = tileSize/3;
-    size_t btnHeight        = tileSize/2;
-    size_t btnWidth         = tileSize * 2 + leftPadding;
-    size_t boardSize        = tileSize * 8;
-    size_t windowWidth      = boardSize * 1.9;
-    size_t windowHeight     = boardSize + topPadding * 2;
+    size_t topPadding       = 0;
+    size_t leftPadding      = 0;
+    size_t btnHeight        = 0;
+    size_t btnWidth         = 0;
+    size_t boardSize        = 0;
+    size_t windowWidth      = 0;
+    size_t windowHeight     = 0;
     Image icon              = LoadImage("images/icon.png");
 
     std::string FENString   = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -90,6 +91,18 @@ namespace Globals
     };
     uint64_t occupancyBitmask[2] = {112ULL, 8070450532247928832ULL};
 
+    void setUIparams()
+    {
+        if(windowWidth == 0) windowWidth = GetMonitorWidth(0) * 0.8;
+        if(windowHeight == 0) windowHeight = GetMonitorHeight(0) * 0.8;
+        tileSize         = (windowHeight <= windowWidth)? windowHeight * 0.116 : windowWidth * 0.11;
+        capturedSize     = tileSize/2.5;
+        topPadding       = tileSize/3;
+        leftPadding      = tileSize/3;
+        btnHeight        = tileSize/2;
+        btnWidth         = tileSize * 2 + leftPadding;
+        boardSize        = tileSize * 8;
+    }
 }
 
 namespace Colors
@@ -152,6 +165,15 @@ void loadPieceTextures()
         Texture2D captureTexture = LoadTextureFromImage(pieceImage);
         Globals::captureTextures[i] = captureTexture;
         UnloadImage(pieceImage);
+    }
+}
+
+void unloadPieceTextures()
+{
+    for(int i{}; i < 12; i++)
+    {
+        UnloadTexture(Globals::pieceTextures[i]);
+        UnloadTexture(Globals::captureTextures[i]);
     }
 }
 
@@ -242,4 +264,22 @@ void writeInFile(std::string FEN)
         std::cerr << "Couldn't open the file\n";
         std::cerr <<"Exception Occured: "<< e.what() << '\n';
     }
+}
+
+void centerWindow()
+{
+    int posX = GetMonitorWidth(0) - GetScreenWidth();
+    int posY = GetMonitorHeight(0) - GetScreenHeight();
+    posX /= 2;
+    posY /= 2;
+    SetWindowPosition(posX, posY);
+}
+
+void resizeWindow()
+{
+    Globals::windowHeight = GetScreenHeight();
+    Globals::windowWidth  = GetScreenWidth();
+    Globals::setUIparams();
+    unloadPieceTextures();
+    loadPieceTextures();
 }

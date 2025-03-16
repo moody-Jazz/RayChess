@@ -389,10 +389,10 @@ void Piece::promotePawn(uint16_t src, uint16_t dest, uint16_t promo)
     char type = getPieceType(dest);
     bool side = getType(type);
     char promoteTo = asciiPieces[promo/knightProm + (side * 6)];
-
+    
     // delete the lvl 1 crook to replace it with lvl 100 mafia
-    updatePieceBitboards(type, dest, dest);
-    updatePieceBitboards(promoteTo, 0, dest);
+    pieceBitboards[charPieces.at(type)].popBit(dest);
+    pieceBitboards[charPieces.at(promoteTo)].setBit(dest);
 }
 
 void Piece::updateUnsafeTiles()
@@ -426,6 +426,11 @@ uint64_t Piece::getLegalMoves(char type, size_t source) const
         size_t destTile = possibleMoves.getLSBIndex();
         char capturedPieceType = pieceCpy.getPieceType(destTile);
 
+        if(toupper(type) == 'P' && destTile == 63-enPassant) // check if this enpassant is legal
+        {
+            if(side) pieceCpy.pieceBitboards[charPieces.at('P')].popBit(destTile + 8);
+            else pieceCpy.pieceBitboards[charPieces.at('p')].popBit(destTile - 8);
+        }
         if(capturedPieceType != '0') // if the possible move is capture of enemy piece
             pieceCpy.updatePieceBitboards(capturedPieceType, destTile, destTile);
        

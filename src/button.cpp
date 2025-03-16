@@ -48,3 +48,22 @@ void Button::interactionHandler()
         onClick_();
     }
 }
+
+void Button::setUIparams( 
+    Rectangle base, Color baseColor, Color borderColor,
+    std::string label, size_t labelHeight,
+    Color labelColor
+)
+{
+    base_           = base;
+    baseColor_      = baseColor;
+    borderColor_    = borderColor;
+    topRightX_      = base.x + base.width; 
+    bottomleftY_    = base.y + base.height;
+    label_          = label; 
+    labelHeight_    = labelHeight;
+    labelWidth_     = MeasureText(label.c_str(), labelHeight);
+    labelColor_     = labelColor;
+    labelX_         = base.x + (base.width - labelWidth_) / 2;
+    labelY_         = base.y + (base.height - labelHeight_) / 2;
+}

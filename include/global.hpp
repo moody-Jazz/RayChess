@@ -10,6 +10,8 @@ namespace Globals
 {   extern bool player;                  // Stores the color which player has chosen
     extern bool engineToggleOn;          // stores whether the player want to play against engine or not
     extern size_t depth;                 // stores the depth of search tree
+    extern size_t windowWidth;           // Stores the width of the game window
+    extern size_t windowHeight;          // Stores the height of the game window
     extern size_t tileSize;              // Size of single tile, tiles is square so width and hight is same
     extern float capturedSize;           // Stores the size of captured piece texture
     extern size_t totalPiece;            // Stores the number of total Pieces which are still on the board
@@ -18,8 +20,6 @@ namespace Globals
     extern size_t btnHeight;             
     extern size_t btnWidth;              
     extern size_t boardSize;             // Stores the size of chessboard
-    extern size_t windowWidth;           // Stores the width of the game window
-    extern size_t windowHeight;          // Stores the height of the game window
     extern Image icon;                   // icons for the application
 
     extern std::string FENString;        // Stores the state of the board in FEN notation
@@ -46,6 +46,8 @@ namespace Globals
 
     extern uint64_t castleBitmasks[2][3];       // stores the absolute bitmask used to check castle availability    
     extern uint64_t occupancyBitmask[2];        // Stores the bitmask where tiles between king and rook set to 1
+
+    void setUIparams();                         // initialises all the paramter related to the scale of all ui elements
 }
 
 namespace Colors
@@ -88,6 +90,7 @@ extern const std::unordered_map<std::string, int> coordsToAbsolute;     // map t
 
 // Function declarations
 void loadPieceTextures();               // loads the texture of pieces into the VRAM
+void unloadPieceTextures();              // function to unload textures from VRAM
 bool getType(char type);                // Returns the color type of the piece
 bool flipType(char type);               // flips the color type of piece
 char flipCase(char ch);                 // flips the piece to its counter type
@@ -96,3 +99,5 @@ uint16_t moveEncoder(uint16_t srcTile, uint16_t destTile, uint16_t promo);  // e
 void moveDecoder(uint16_t& srcTile, uint16_t& destTile, uint16_t& promo, uint16_t move); // extract src, destination and promotion from encoded move
 std::string getAlgebricNotation(uint16_t& move, bool side); // returns the algebric notation of the encoeded move
 void writeInFile(std::string FEN);      // this function writes teh fen value of current position in a text file
+void centerWindow();
+void resizeWindow();
