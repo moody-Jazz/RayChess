@@ -1,5 +1,5 @@
 #include "piece.hpp"
-#include "global.hpp"
+#include "precomputed.hpp"
 #include <iostream>
 
 Piece::Piece(const Piece& obj):
@@ -30,7 +30,7 @@ Piece::Piece(const Piece& obj):
     we can do similar to slider pieces while doing bit operation with blocker pieces(which may contian 
     friendly and enemy bitboard) to find correct possible moves
 */
-uint64_t Piece::pawnAttackBitmaskInit(size_t side, size_t square) const
+uint64_t Piece::pawnAttackBitmaskInit(size_t side, size_t square)
 {
     uint64_t attacks(0ULL);
     uint64_t bitboard(0ULL);
@@ -49,7 +49,8 @@ uint64_t Piece::pawnAttackBitmaskInit(size_t side, size_t square) const
     }
     return attacks;
 }
-uint64_t Piece::pawnPushBitmaskInit(size_t side, size_t square) const
+
+uint64_t Piece::pawnPushBitmaskInit(size_t side, size_t square)
 {
     uint64_t attacks(0ULL);
     uint64_t bitboard(0ULL);
@@ -78,7 +79,8 @@ uint64_t Piece::pawnPushBitmaskInit(size_t side, size_t square) const
     }
     return attacks;
 }
-uint64_t Piece::knightAttackBitmaskInit(size_t square) const
+
+uint64_t Piece::knightAttackBitmaskInit(size_t square)
 {
     uint64_t attacks(0ULL);
     uint64_t bitboard(0ULL);
@@ -94,7 +96,8 @@ uint64_t Piece::knightAttackBitmaskInit(size_t square) const
     if((bitboard << 6) & Globals::notGHFile) attacks |= (bitboard << 6); 
     return attacks;
 }
-uint64_t Piece::kingAttackBitmaskInit(size_t square) const
+
+uint64_t Piece::kingAttackBitmaskInit(size_t square) 
 {
     uint64_t attacks(0ULL);
     uint64_t bitboard(0ULL); 
@@ -112,7 +115,8 @@ uint64_t Piece::kingAttackBitmaskInit(size_t square) const
     
     return attacks;
 }
-uint64_t Piece::getBishopAttacks(size_t square, uint64_t block) const
+
+uint64_t Piece::getBishopAttacks(size_t square, uint64_t block) 
 {
     uint64_t attacks(0ULL);
     int r, f;
@@ -141,7 +145,8 @@ uint64_t Piece::getBishopAttacks(size_t square, uint64_t block) const
     } 
     return attacks;
 }
-uint64_t Piece::getRookAttacks(size_t square, uint64_t block) const
+
+uint64_t Piece::getRookAttacks(size_t square, uint64_t block)
 {
     uint64_t attacks(0ULL);
     int r,f;
@@ -170,12 +175,49 @@ uint64_t Piece::getRookAttacks(size_t square, uint64_t block) const
     }
     return attacks;
 }
-uint64_t Piece::getQueenAttacks(size_t square, uint64_t block) const
+
+uint64_t Piece::getQueenAttacks(size_t square, uint64_t block)
 {
     uint64_t attacks(0ULL);
     attacks |= getBishopAttacks(square, block);
     attacks |= getRookAttacks(square, block);
     return attacks;
+}
+
+void Piece::initRookAttacksWithoutBorder()
+{
+    for(uint16_t square{}; square<64; square++)
+    {
+        uint64_t x = rookAttackBitmask[square];
+        
+        if(square == 0)                                  x &= (~Globals::rankEight & Globals::notAFile);
+        else if(square == 7)                             x &= (~Globals::rankEight & Globals::notHFile);
+        else if(square == 56)                            x &= (~Globals::rankZero & Globals::notAFile);
+        else if(square == 63)                            x &= (~Globals::rankZero & Globals::notHFile);
+        else if(((1ULL << square) & Globals::rankZero))  x &= (~Globals::rankEight & Globals::notHFile & Globals::notAFile);
+        else if(((1ULL << square) & Globals::rankEight)) x &= (~Globals::rankZero & Globals::notHFile & Globals::notAFile);
+        else if(((1ULL << square) & ~Globals::notHFile)) x &= (~Globals::rankEight & ~Globals::rankZero & Globals::notAFile);
+        else if(((1ULL << square) & ~Globals::notAFile)) x &= (~Globals::rankEight & ~Globals::rankZero & Globals::notHFile);
+        else                                             x &= 0x7E7E7E7E7E7E00;
+        
+        //BitBoard(x).printBinary()
+        std::cout<<x<<"ULL, ";
+        if(square % 8 == 0)std::cout<<"\n";
+    }
+}
+
+void Piece::initBishopAttacksWithoutBorder()
+{
+    for(uint16_t square{}; square<64; square++)
+    {
+        uint64_t x = bishopAttackBitmask[square];
+
+        x &= 0x7E7E7E7E7E7E00;
+
+        //BitBoard(x).printBinary();
+        std::cout<<x<<"ULL, ";
+        if(square % 8 == 0)std::cout<<"\n";
+    }
 }
 
 void Piece::initPieceBitboards()
@@ -283,7 +325,7 @@ uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
 {
     bool side = getType(type);
     char piece = toupper(type);
-    uint64_t res = 0ULL;
+    pseudoLegalRes = 0ULL;
     
     switch (piece)
     {
@@ -314,17 +356,17 @@ uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
             */ 
             if((!side && 1ULL<<(square+8) & bitboards_[both]) || (side && 1ULL<<(square-8) & bitboards_[both]))
                 pawn_push = 0ULL; 
-            res = pawn_attack | pawn_push;
+            pseudoLegalRes = pawn_attack | pawn_push;
             break;
         }
         case 'N': 
         {
-            res = knightAttackBitmask[square] & ~(bitboards_[side]);
+            pseudoLegalRes = knightAttackBitmask[square] & ~(bitboards_[side]);
             break;
         }
         case 'K': 
         {
-            res = kingAttackBitmask[square] & ~(bitboards_[side]);
+            pseudoLegalRes = kingAttackBitmask[square] & ~(bitboards_[side]);
             bool kingSafety = isKingSafe(side);
             /* 
             below are the bitmanipulation operations to find whether casteling is available or not
@@ -354,34 +396,51 @@ uint64_t Piece::getPseudoLegalMoves(char type, size_t square) const
             // check if kingside castling is available
             bool castleAvailable = (bitmaskCastle & bitmaskKingside) == bitmaskKingside;
             castleAvailable = castleAvailable && kingSafety && castle[side][kingside];
-            res = res | (bitmaskKingside * castleAvailable);
+            pseudoLegalRes |= (bitmaskKingside * castleAvailable);
 
             // check if queenside castling is avialble
             castleAvailable = (bitmaskCastle & bitmaskQueenside) == bitmaskQueenside;
             castleAvailable = castleAvailable && kingSafety && castle[side][queenside];
             castleAvailable = castleAvailable && ((~(bitboards_[both]) & Globals::occupancyBitmask[side]) == Globals::occupancyBitmask[side]);
-            res = res | (bitmaskQueenside * castleAvailable);
+            pseudoLegalRes |= (bitmaskQueenside * castleAvailable);
             
             break;
         }
         case 'R': 
         {
-            res = getRookAttacks(square, bitboards_[both]) & ~(bitboards_[side]);
+            index = bitboards_[both] & rookAttackMinusBorder[square];
+            index *= rookMagics[square];
+            index >>= rookShifts[square];
+            pseudoLegalRes = rookLookup[square][index];
+            pseudoLegalRes &= ~(bitboards_[side]);
             break;
         }
         case 'B': 
         {
-            res = getBishopAttacks(square, bitboards_[both]) & ~(bitboards_[side]);
+            index = bitboards_[both] & bishopAttackMinusBorder[square];
+            index *= bishopMagics[square];
+            index >>= bishopShifts[square];
+            pseudoLegalRes = bishopLookup[square][index];
+            pseudoLegalRes &= ~(bitboards_[side]);
             break;
         }
         case 'Q': 
         {
-            res = getQueenAttacks(square, bitboards_[both]) & ~(bitboards_[side]);
+            index = bitboards_[both] & rookAttackMinusBorder[square];
+            index *= rookMagics[square];
+            index >>= rookShifts[square];
+            pseudoLegalRes = rookLookup[square][index];
+
+            index = bitboards_[both] & bishopAttackMinusBorder[square];
+            index *= bishopMagics[square];
+            index >>= bishopShifts[square];
+            pseudoLegalRes |= bishopLookup[square][index];
+            pseudoLegalRes &= ~(bitboards_[side]);
             break;
         }
         default: break;
     }
-    return res;
+    return pseudoLegalRes;
 }
 
 void Piece::promotePawn(uint16_t src, uint16_t dest, uint16_t promo)
@@ -412,7 +471,8 @@ void Piece::updateUnsafeTiles()
         }
     }
 }
-uint64_t Piece::getLegalMoves(char type, size_t source) const
+
+uint64_t Piece::getLegalMoves(char type, size_t source)
 {
     Piece pieceCpy(*this);
     size_t side = getType(type);

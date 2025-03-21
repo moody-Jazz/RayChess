@@ -1,108 +1,15 @@
 #pragma once
 
 #include "bitboard.hpp"
-/*
-Below are the absolute values of bitmask that is required to find the pseudo legal move of a piece 
-for example a white pawn that is on b2 will have attack bitmask as 
+#include "global.hpp"
+#include <string>
 
-        8  0 0 0 0 0 0 0 0
-        7  0 0 0 0 0 0 0 0
-        6  0 0 0 0 0 0 0 0
-        5  0 0 0 0 0 0 0 0
-        4  0 0 0 0 0 0 0 0
-        3  1 0 1 0 0 0 0 0
-        2  0 P 0 0 0 0 0 0
-        1  0 0 0 0 0 0 0 0
-           a b c d e f g h
-
-this bitmask can be used to perform some bitmanipulation with the enemy piece bitboard and the friendly piece bitboard to find
-the pseudo legal move.
-*/
-
-// the pawn attack bitmask is only of size 56 and not 64 is because we dont need the last 8 bits as the black pawns start from 
-// the 9th bit from left and white pawns promote after reaching the last rank
-
-static const uint64_t pawnAttackBitmask[2][56] // Stores pawn attacking bitmask for each position for both black and white
-{
-    {
-        512ULL, 1280ULL, 2560ULL, 5120ULL, 10240ULL, 20480ULL, 40960ULL, 16384ULL, 131072ULL, 327680ULL, 
-        655360ULL, 1310720ULL, 2621440ULL, 5242880ULL, 10485760ULL, 4194304ULL, 33554432ULL, 83886080ULL, 
-        167772160ULL, 335544320ULL, 671088640ULL, 1342177280ULL, 2684354560ULL, 1073741824ULL, 8589934592ULL, 
-        21474836480ULL, 42949672960ULL, 85899345920ULL, 171798691840ULL, 343597383680ULL, 687194767360ULL, 274877906944ULL,
-        2199023255552ULL, 5497558138880ULL, 10995116277760ULL, 21990232555520ULL, 43980465111040ULL, 87960930222080ULL,
-        175921860444160ULL, 70368744177664ULL, 562949953421312ULL, 1407374883553280ULL, 2814749767106560ULL,
-        5629499534213120ULL, 11258999068426240ULL, 22517998136852480ULL, 45035996273704960ULL,
-        18014398509481984ULL, 144115188075855872ULL, 360287970189639680ULL, 720575940379279360ULL,
-        1441151880758558720ULL, 2882303761517117440ULL, 5764607523034234880ULL, 11529215046068469760ULL,
-        4611686018427387904ULL
-    },
-    {
-        0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 2ULL, 5ULL, 10ULL, 20ULL, 40ULL, 80ULL, 160ULL, 64ULL, 512ULL,
-        1280ULL, 2560ULL, 5120ULL, 10240ULL, 20480ULL, 40960ULL, 16384ULL, 131072ULL, 327680ULL, 655360ULL, 1310720ULL,
-        2621440ULL, 5242880ULL, 10485760ULL, 4194304ULL, 33554432ULL, 83886080ULL, 167772160ULL, 335544320ULL,
-        671088640ULL, 1342177280ULL, 2684354560ULL, 1073741824ULL, 8589934592ULL, 21474836480ULL, 42949672960ULL,
-        85899345920ULL, 171798691840ULL, 343597383680ULL, 687194767360ULL, 274877906944ULL, 2199023255552ULL,
-        5497558138880ULL, 10995116277760ULL, 21990232555520ULL, 43980465111040ULL, 87960930222080ULL,
-        175921860444160ULL, 70368744177664ULL
-    }
-};
-
-static const uint64_t pawnPushBitmask[2][56] // Stores pawn push bitmask for each position for both black and white
-{
-    {
-        256ULL, 512ULL, 1024ULL, 2048ULL, 4096ULL, 8192ULL, 16384ULL, 32768ULL, 16842752ULL, 33685504ULL, 67371008ULL, 
-        134742016ULL, 269484032ULL, 538968064ULL, 1077936128ULL, 2155872256ULL, 16777216ULL, 33554432ULL, 67108864ULL,
-        134217728ULL, 268435456ULL, 536870912ULL, 1073741824ULL, 2147483648ULL, 4294967296ULL, 8589934592ULL, 17179869184ULL,
-        34359738368ULL, 68719476736ULL, 137438953472ULL, 274877906944ULL, 549755813888ULL, 1099511627776ULL,
-        2199023255552ULL, 4398046511104ULL, 8796093022208ULL, 17592186044416ULL, 35184372088832ULL, 70368744177664ULL,
-        140737488355328ULL, 281474976710656ULL, 562949953421312ULL, 1125899906842624ULL, 2251799813685248ULL,
-        4503599627370496ULL, 9007199254740992ULL, 18014398509481984ULL, 36028797018963968ULL, 72057594037927936ULL,
-        144115188075855872ULL, 288230376151711744ULL, 576460752303423488ULL, 1152921504606846976ULL,
-        2305843009213693952ULL, 4611686018427387904ULL, 9223372036854775808ULL
-    },
-    {
-        0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 1ULL, 2ULL, 4ULL, 8ULL, 16ULL, 32ULL, 64ULL, 128ULL, 256ULL,
-        512ULL, 1024ULL, 2048ULL, 4096, 8192, 16384, 32768ULL, 65536ULL, 131072ULL, 262144ULL, 524288ULL, 1048576ULL,
-        2097152ULL, 4194304ULL, 8388608ULL, 16777216ULL, 33554432ULL, 67108864ULL, 134217728ULL, 268435456ULL, 536870912ULL,
-        1073741824ULL, 2147483648ULL, 4294967296ULL, 8589934592ULL, 17179869184ULL, 34359738368ULL, 68719476736ULL,
-        137438953472ULL, 274877906944ULL, 549755813888ULL, 1103806595072ULL, 2207613190144ULL, 4415226380288ULL, 
-        8830452760576ULL, 17660905521152ULL, 35321811042304ULL, 70643622084608ULL, 141287244169216ULL
-    }
-};
-
-static const uint64_t knightAttackBitmask[64] // Stores knight attack bitmask for each position
-{
-    132096ULL, 329728ULL, 659712ULL, 1319424ULL, 2638848ULL, 5277696ULL, 10489856ULL, 4202496ULL, 33816580ULL,
-    84410376ULL, 168886289ULL,  337772578ULL, 675545156ULL, 1351090312ULL, 2685403152ULL, 1075839008ULL, 8657044482ULL,
-    21609056261ULL, 43234889994ULL, 86469779988ULL, 172939559976ULL, 345879119952ULL, 687463207072ULL, 275414786112ULL, 
-    2216203387392ULL, 5531918402816ULL, 11068131838464ULL, 22136263676928ULL, 44272527353856ULL, 88545054707712ULL, 
-    175990581010432ULL, 70506185244672ULL, 567348067172352ULL, 1416171111120896ULL, 2833441750646784ULL, 
-    5666883501293568ULL, 11333767002587136ULL, 22667534005174272ULL, 45053588738670592ULL, 18049583422636032ULL, 
-    145241105196122112ULL, 362539804446949376ULL, 725361088165576704ULL, 1450722176331153408ULL, 2901444352662306816ULL, 
-    5802888705324613632ULL, 11533718717099671552ULL, 4620693356194824192ULL, 288234782788157440ULL, 576469569871282176ULL,
-    1224997833292120064ULL, 2449995666584240128ULL, 4899991333168480256ULL, 9799982666336960512ULL, 1152939783987658752ULL, 
-    2305878468463689728ULL, 1128098930098176ULL, 2257297371824128ULL, 4796069720358912ULL, 9592139440717824ULL, 
-    19184278881435648ULL, 38368557762871296ULL, 4679521487814656ULL, 9077567998918656ULL
-};
-
-static const uint64_t kingAttackBitmask[64] // stores king attack bitmask for each position
-{
-    770ULL, 1797ULL, 3594ULL, 7188ULL, 14376ULL, 28752ULL, 57504ULL, 49216ULL, 197123ULL, 460039ULL, 920078ULL, 
-    1840156ULL, 3680312ULL, 7360624ULL, 14721248ULL, 12599488ULL, 50463488ULL, 117769984ULL, 235539968ULL, 471079936ULL,
-    942159872ULL, 1884319744ULL, 3768639488ULL, 3225468928ULL, 12918652928ULL, 30149115904ULL, 60298231808ULL, 
-    120596463616ULL, 241192927232ULL, 482385854464ULL, 964771708928ULL, 825720045568ULL, 3307175149568ULL, 
-    7718173671424ULL, 15436347342848ULL, 30872694685696ULL, 61745389371392ULL, 123490778742784ULL, 246981557485568ULL, 
-    211384331665408ULL, 846636838289408ULL, 1975852459884544ULL, 3951704919769088ULL, 7903409839538176ULL,
-    15806819679076352ULL, 31613639358152704ULL, 63227278716305408ULL, 54114388906344448ULL, 216739030602088448ULL,
-    505818229730443264ULL, 1011636459460886528ULL, 2023272918921773056ULL, 4046545837843546112ULL, 8093091675687092224ULL,
-    16186183351374184448ULL, 13853283560024178688ULL, 144959613005987840ULL, 362258295026614272ULL, 724516590053228544ULL,
-    1449033180106457088ULL, 2898066360212914176ULL, 5796132720425828352ULL, 11592265440851656704ULL, 4665729213955833856ULL
-};
+static uint64_t index{}, pseudoLegalRes{};
 
 class Piece
 {
-public:
-
+    public:
+    
     Piece() = default;
     Piece(const Piece& obj);
     BitBoard pieceBitboards[12];           // Stores bitboard of each piece set for example for all the white pawns
@@ -110,19 +17,21 @@ public:
     bool castle[2][2];                     // Stores the casteling state
     size_t kingPosition[2];                // Stores white and black king positions
     size_t enPassant;                       
-
+    
     // Utility Functions
-    uint64_t pawnAttackBitmaskInit(size_t side, size_t square) const;  // Used to populate pawnAttackBitmask array
-    uint64_t pawnPushBitmaskInit(size_t side, size_t square) const;    // Used to populate pawnPushBitmask array
-    uint64_t knightAttackBitmaskInit(size_t square) const;             // Used to populate knightAttackBitmask array
-    uint64_t kingAttackBitmaskInit(size_t square) const;               // Used to populate kingAttackBitmask array
-    uint64_t getBishopAttacks(size_t square, uint64_t block) const;    // Used to get a bitboard indicating all the possible Bishop moves
-    uint64_t getRookAttacks(size_t square, uint64_t block) const;      // Used to get a bitboard indicating all the possible Rook moves
-    uint64_t getQueenAttacks(size_t square, uint64_t block) const;     // Used to get a bitboard indicating all the possible Queen moves
-    bool isKingSafe(bool white) const;                                 // Returns true or false based on king safety
-    char getPieceType(size_t tile) const;                              // if theres a piece on tile it returns it char type else returns '0'
-    uint64_t getPseudoLegalMoves(char type, size_t square) const;      // returns a bitboard indicating all the possible move of a piece
-    uint64_t getLegalMoves(char type, size_t source) const;            // Convert possible moves generated by getPseudoLegalMoves() into valid mvoes
+    static uint64_t pawnAttackBitmaskInit(size_t side, size_t square);  // Used to populate pawnAttackBitmask array
+    static uint64_t pawnPushBitmaskInit(size_t side, size_t square);    // Used to populate pawnPushBitmask array
+    static uint64_t knightAttackBitmaskInit(size_t square);             // Used to populate knightAttackBitmask array
+    static uint64_t kingAttackBitmaskInit(size_t square);               // Used to populate kingAttackBitmask array
+    static uint64_t getBishopAttacks(size_t square, uint64_t block);    // Used to get a bitboard indicating all the possible Bishop moves
+    static uint64_t getRookAttacks(size_t square, uint64_t block);      // Used to get a bitboard indicating all the possible Rook moves
+    static uint64_t getQueenAttacks(size_t square, uint64_t block);     // Used to get a bitboard indicating all the possible Queen moves
+    static void initRookAttacksWithoutBorder();                         // same as rook attack but any attack on border tile is not considered
+    static void initBishopAttacksWithoutBorder();                       // same as bishop attack but any attack on border tile is not considered
+    bool isKingSafe(bool white) const;                                  // Returns true or false based on king safety
+    char getPieceType(size_t tile) const;                               // if theres a piece on tile it returns it char type else returns '0'
+    uint64_t getPseudoLegalMoves(char type, size_t square) const;       // returns a bitboard indicating all the possible move of a piece
+    uint64_t getLegalMoves(char type, size_t source);                   // Convert possible moves generated by getPseudoLegalMoves() into valid mvoes
 
     // Mutator Functions
     void initPieceBitboards();

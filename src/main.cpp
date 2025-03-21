@@ -1,8 +1,10 @@
 #include "interface.hpp"
 #include <iostream>
+#include "magic.hpp"
 
 int main()
 {
+    initRookBishopLookupTable();
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(0,0,"Ray Chess");
     Globals::setUIparams();
@@ -15,14 +17,14 @@ int main()
     Board board;
     Engine engine;
     Interface interface(board, engine);
-
+    
     while (!WindowShouldClose())
     {  
         if(IsWindowResized())
         {   
             interface.setUIparams();
             centerWindow();
-        } 
+        }
         BeginDrawing();
         ClearBackground(Colors::background);
         board.drawBoardAndPieces();

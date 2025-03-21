@@ -32,6 +32,8 @@ namespace Globals
     extern Texture2D pieceTextures[12];  // Stores all the texture in order of "PNBRQKpnbrqk";
     extern Texture2D captureTextures[12];// Stores the textures for captured pieces
 
+    extern const uint64_t rankZero;
+    extern const uint64_t rankEight;
     extern const uint64_t notAFile;      // Stores a binary representation where A file is set to 0
     extern const uint64_t notHFile;      // Stores a binary representation where A file is set to 0
     extern const uint64_t notGHFile;     // Stores a binary representation where A file is set to 0

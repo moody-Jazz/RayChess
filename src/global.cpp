@@ -57,8 +57,10 @@ namespace Globals
         a b c d e f g h     a b c d e f g h     a b c d e f g h     a b c d e f g h  
     */
     // Below are the Decimal representation of above binary
-    const uint64_t notAFile  = 18374403900871474942ULL;   
-    const uint64_t notHFile  = 9187201950435737471ULL;
+    const uint64_t rankZero  = 0x00000000000000FF;
+    const uint64_t rankEight = 0xFF00000000000000;
+    const uint64_t notAFile  = 9187201950435737471ULL;   
+    const uint64_t notHFile  = 18374403900871474942ULL;
     const uint64_t notGHFile = 4557430888798830399ULL;
     const uint64_t notABFile = 18229723555195321596ULL;
 
