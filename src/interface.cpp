@@ -284,7 +284,7 @@ void Interface::boardInteractionHandler()
         // this will give the column of the tile clicked
         clickedOnCol_ = ((size_t)GetMousePosition().x-Globals::leftPadding)/Globals::tileSize; 
 
-        size_t srcTile = 63-(clickedOnRow_ * 8 + clickedOnCol_);
+        uint16_t srcTile = 63-(clickedOnRow_ * 8 + clickedOnCol_);
         if(Globals::player) srcTile = 63 - srcTile; // if player is black invert the tile value as the board is inverted
 
         currPieceType_ = board.piece.getPieceType(srcTile);

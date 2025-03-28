@@ -307,6 +307,7 @@ void Board::setupInitialBoardState()
     capturedPieceString = "";
     piece.setupInitialFlagsAndPositions();
     piece.initPieceBitboards();
+    piece.initFunctionPointers();
     updateMatrixBoard();
     updateFENViamatrixBoard();
 }
@@ -450,7 +451,7 @@ size_t Board::findTotalLegalMoves(bool side)
         BitBoard tempPiece(piece.pieceBitboards[peiceType].getVal());
         while(tempPiece.getVal())
         {
-            size_t setBitIndx(tempPiece.getLSBIndex());
+            uint16_t setBitIndx(tempPiece.getLSBIndex());
             uint64_t movesBitboard = piece.getLegalMoves(asciiPieces[peiceType], setBitIndx);
             totalMovesCount += BitBoard(movesBitboard).getSetBitCount();
             tempPiece.popBit(setBitIndx);
